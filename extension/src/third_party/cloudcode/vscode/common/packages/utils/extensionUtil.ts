@@ -1,0 +1,58 @@
+/**
+ * Copyright 2025 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/**
+ * @fileoverview added by tsickle
+ * Generated from: third_party/cloudcode/vscode/common/packages/utils/extensionUtil.ts
+ * @suppress {checkTypes} added by tsickle
+ * @suppress {extraRequire} added by tsickle
+ * @suppress {missingRequire} added by tsickle
+ * @suppress {uselessCode} added by tsickle
+ * @suppress {suspiciousCode} added by tsickle
+ * @suppress {missingReturn} added by tsickle
+ * @suppress {unusedLocalVariables} added by tsickle
+ * @suppress {missingOverride} added by tsickle
+ * @suppress {const} added by tsickle
+ */
+goog.module('google3.third_party.cloudcode.vscode.common.packages.utils.extensionUtil');
+var module = module || { id: 'third_party/cloudcode/vscode/common/packages/utils/extensionUtil.closure.js' };
+goog.require('google3.third_party.javascript.tslib.tslib');
+const tsickle_vscode_1 = goog.requireType("vscode");
+/**
+ * @param {!tsickle_vscode_1.ExtensionContext} extensionContext
+ * @return {string}
+ */
+function getExtensionDisplayName(extensionContext) {
+    /** @type {?} */
+    const displayName = extensionContext.extension.packageJSON.displayName;
+    if (!displayName) {
+        throw new Error('displayName is undefined in package.json');
+    }
+    return displayName;
+}
+exports.getExtensionDisplayName = getExtensionDisplayName;
+/**
+ * @param {!tsickle_vscode_1.ExtensionContext} extensionContext
+ * @return {string}
+ */
+function getExtensionName(extensionContext) {
+    /** @type {?} */
+    const name = extensionContext.extension.packageJSON.name;
+    if (!name) {
+        throw new Error('name is undefined in package.json');
+    }
+    return name;
+}
+exports.getExtensionName = getExtensionName;
