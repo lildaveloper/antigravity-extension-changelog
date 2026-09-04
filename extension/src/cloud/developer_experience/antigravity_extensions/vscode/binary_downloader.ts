@@ -82,6 +82,146 @@ function getDefaultReleaseBaseUrl() {
 }
 exports.getDefaultReleaseBaseUrl = getDefaultReleaseBaseUrl;
 /**
+ * Error thrown when an HTTP request fails with a non-2xx status code.
+ * Preserves the HTTP status code for structured error inspection and retry filtering.
+ * Uses Object.setPrototypeOf and a static type-guard to ensure reliable instanceof checks
+ * across compilation targets and bundling environments.
+ * @extends {Error}
+ */
+class HttpError extends Error {
+    /**
+     * @public
+     * @param {number} status
+     * @param {(undefined|string)=} message
+     */
+    constructor(status, message) {
+        super(message ?? `HTTP status ${status}`);
+        this.status = status;
+        this.isHttpError = true;
+        this.name = 'HttpError';
+        Object.setPrototypeOf(this, HttpError.prototype);
+    }
+    /**
+     * Checks whether an unknown error is an instance of HttpError.
+     * @public
+     * @param {*} error
+     * @return {boolean}
+     */
+    static isHttpError(error) {
+        return (error instanceof HttpError ||
+            (typeof error === 'object' &&
+                error !== null &&
+                'isHttpError' in error &&
+                ((/** @type {{isHttpError: (undefined|boolean)}} */ (error))).isHttpError === true));
+    }
+}
+exports.HttpError = HttpError;
+/* istanbul ignore if */
+if (false) {
+    /**
+     * @const {boolean}
+     * @public
+     */
+    HttpError.prototype.isHttpError;
+    /**
+     * @const {number}
+     * @public
+     */
+    HttpError.prototype.status;
+}
+/**
+ * Options to configure exponential backoff retry behavior for network operations.
+ * @record
+ */
+function RetryOptions() { }
+exports.RetryOptions = RetryOptions;
+/* istanbul ignore if */
+if (false) {
+    /**
+     * Maximum number of execution attempts before throwing the last error. Default: 3
+     * @const {(undefined|number)}
+     * @public
+     */
+    RetryOptions.prototype.maxAttempts;
+    /**
+     * Initial delay in milliseconds before the first retry attempt. Default: 500ms
+     * @const {(undefined|number)}
+     * @public
+     */
+    RetryOptions.prototype.initialDelayMs;
+    /**
+     * Exponential multiplier applied to the delay after each retry attempt. Default: 2
+     * @const {(undefined|number)}
+     * @public
+     */
+    RetryOptions.prototype.backoffFactor;
+    /**
+     * Upper bound cap for the delay duration between retry attempts. Default: 3000ms
+     * @const {(undefined|number)}
+     * @public
+     */
+    RetryOptions.prototype.maxDelayMs;
+}
+/**
+ * Default retry settings for network operations (3 attempts with 500ms initial delay).
+ * @type {?}
+ */
+exports.DEFAULT_RETRY_OPTIONS = {
+    maxAttempts: 3,
+    initialDelayMs: 500,
+    backoffFactor: 2,
+    maxDelayMs: 3000,
+};
+/**
+ * Executes an asynchronous operation with exponential backoff retry logic.
+ *
+ * @template T
+ * @param {function(number): !Promise<T>} operation The async function to execute, receiving the 1-based attempt index.
+ * @param {(undefined|!RetryOptions)=} options Configuration for attempts, initial delay, backoff multiplier, and delay cap.
+ * @param {(undefined|function(*, number, number): void)=} onRetry Optional callback invoked whenever an attempt fails and a retry will follow.
+ * @param {function(*): boolean=} shouldRetry Optional predicate to determine if a caught error is retryable.
+ *                    If this returns false, retries abort immediately and the error is thrown.
+ * @return {!Promise<T>} The resolved value of the operation upon success.
+ */
+async function withRetry(operation, options, onRetry, shouldRetry = (/**
+ * @return {boolean}
+ */
+() => true)) {
+    /** @type {number} */
+    const maxAttempts = options?.maxAttempts ?? exports.DEFAULT_RETRY_OPTIONS.maxAttempts;
+    /** @type {number} */
+    const initialDelay = options?.initialDelayMs ?? exports.DEFAULT_RETRY_OPTIONS.initialDelayMs;
+    /** @type {number} */
+    const factor = options?.backoffFactor ?? exports.DEFAULT_RETRY_OPTIONS.backoffFactor;
+    /** @type {number} */
+    const maxDelay = options?.maxDelayMs ?? exports.DEFAULT_RETRY_OPTIONS.maxDelayMs;
+    /** @type {number} */
+    let currentDelay = initialDelay;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            return await operation(attempt);
+        }
+        catch (error) {
+            if (attempt >= maxAttempts || !shouldRetry(error)) {
+                throw error;
+            }
+            if (onRetry) {
+                onRetry(error, attempt, currentDelay);
+            }
+            await new Promise((/**
+             * @param {function((void|!PromiseLike<void>)): void} resolve
+             * @return {void}
+             */
+            (resolve) => {
+                setTimeout(resolve, currentDelay);
+            }));
+            currentDelay = Math.min(currentDelay * factor, maxDelay);
+        }
+    }
+    throw new Error('Unreachable retry loop termination');
+}
+exports.withRetry = withRetry;
+/**
  * Information for a platform-specific binary inside a release manifest.
  * @record
  */
@@ -152,7 +292,13 @@ function isVersionAtLeast(actualVersion, minVersion) {
         const match = actualVersion.match(/(\d+\.\d+\.\d+[^ \t\n\r]*)/);
         /** @type {string} */
         const parsedActual = match ? match[1] : actualVersion.trim();
-        return (0, semver_1.gte)(parsedActual, minVersion);
+        // Normalize date-based versions (e.g., 2026.08.24 or 1970.01.01) by stripping
+        // leading zeros from dot-separated numeric segments to satisfy SemVer 2.0.0.
+        /** @type {string} */
+        const normalizedActual = parsedActual.replace(/\.0+(\d+)/g, '.$1');
+        /** @type {string} */
+        const normalizedMin = minVersion.trim().replace(/\.0+(\d+)/g, '.$1');
+        return (0, semver_1.gte)(normalizedActual, normalizedMin);
     }
     catch (e) {
         return false;
@@ -216,81 +362,115 @@ async function getBinaryVersionString(binaryPath) {
 }
 exports.getBinaryVersionString = getBinaryVersionString;
 /**
- * Downloads a file from URL to destPath with HTTP/HTTPS redirect following and progress reporting.
+ * Downloads a file from URL to destPath with HTTP/HTTPS redirect following, progress reporting, and retry logic.
+ *
+ * Retry policy:
+ * - Automatically cleans up any partially downloaded file before starting each attempt.
+ * - Retries transient connection drops, stream timeouts, and 5xx server errors with exponential backoff.
+ * - Immediately aborts on non-retryable 4xx client errors (e.g. 400 Bad Request, 401/403 Auth, 404 Not Found)
+ *   since repeating identical requests will not resolve client-side errors.
  * @param {string} url
  * @param {string} destPath
  * @param {(undefined|function(number, (undefined|number)=): void)=} progressCallback
+ * @param {(undefined|!RetryOptions)=} retryOptions
+ * @param {(undefined|function(*, number, number): void)=} onRetry
  * @return {!Promise<void>}
  */
-async function downloadFile(url, destPath, progressCallback) {
-    /** @type {!Response} */
-    const response = await fetch(url);
-    if (!response.ok) {
-        throw new Error(`Failed to download ${url}: HTTP status ${response.status}`);
-    }
-    /** @type {(null|string)} */
-    const totalBytesStr = response.headers.get('content-length');
-    /** @type {(undefined|number)} */
-    let totalBytes;
-    if (totalBytesStr) {
-        /** @type {number} */
-        const parsedBytes = Number(totalBytesStr);
-        if (!isNaN(parsedBytes)) {
-            totalBytes = parsedBytes;
-        }
-    }
-    if (!response.body) {
-        throw new Error('Response body is empty');
-    }
-    // Convert Web ReadableStream to Node.js Readable stream using safe cast
-    const nodeReadable = stream_1.Readable.fromWeb((/** @type {?} */ ((/** @type {*} */ (response.body)))));
-    const fileStream = (0, fs_1.createWriteStream)(destPath);
-    // Async generator to intercept chunks and track progress in-flight
-    /**
-     * @return {!AsyncGenerator<?, void, *>}
+async function downloadFile(url, destPath, progressCallback, retryOptions, onRetry) {
+    /** @type {function(): !Promise<void>} */
+    const singleAttempt = (/**
+     * @return {!Promise<void>}
      */
-    async function* progressTracker() {
-        /** @type {number} */
-        let downloadedBytes = 0;
-        for await (const chunk of nodeReadable) {
-            /** @type {?} */
-            let buffer;
-            if (Buffer.isBuffer(chunk)) {
-                buffer = chunk;
-            }
-            else if (chunk instanceof Uint8Array) {
-                buffer = Buffer.from((/** @type {!Uint8Array} */ (chunk)).buffer, (/** @type {!Uint8Array} */ (chunk)).byteOffset, (/** @type {!Uint8Array} */ (chunk)).byteLength);
-            }
-            else if (typeof chunk === 'string') {
-                buffer = Buffer.from(chunk);
-            }
-            else if (chunk instanceof ArrayBuffer) {
-                buffer = Buffer.from(chunk);
-            }
-            else {
-                throw new Error('Unsupported stream chunk type');
-            }
-            downloadedBytes += buffer.length;
-            if (progressCallback) {
-                progressCallback(downloadedBytes, totalBytes);
-            }
-            yield buffer;
-        }
-    }
-    try {
-        // pipeline handles clean closure, error propagation, and stream destruction
-        await (0, promises_1.pipeline)(progressTracker(), fileStream);
-    }
-    catch (error) {
-        // Clean up partially downloaded file on failure
+    async () => {
         if (await pathExists(destPath)) {
             await fs_1.promises.unlink(destPath).catch((/**
              * @return {void}
              */
             () => { }));
         }
-        throw error;
-    }
+        /** @type {!Response} */
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new HttpError(response.status, `Failed to download ${url}: HTTP status ${response.status}`);
+        }
+        /** @type {(null|string)} */
+        const totalBytesStr = response.headers.get('content-length');
+        /** @type {(undefined|number)} */
+        let totalBytes;
+        if (totalBytesStr) {
+            /** @type {number} */
+            const parsedBytes = Number(totalBytesStr);
+            if (!isNaN(parsedBytes)) {
+                totalBytes = parsedBytes;
+            }
+        }
+        if (!response.body) {
+            throw new Error('Response body is empty');
+        }
+        // Convert Web ReadableStream to Node.js Readable stream using safe cast
+        const nodeReadable = stream_1.Readable.fromWeb((/** @type {?} */ ((/** @type {*} */ (response.body)))));
+        const fileStream = (0, fs_1.createWriteStream)(destPath);
+        // Async generator to intercept chunks and track progress in-flight
+        /**
+         * @return {!AsyncGenerator<?, void, *>}
+         */
+        async function* progressTracker() {
+            /** @type {number} */
+            let downloadedBytes = 0;
+            for await (const chunk of nodeReadable) {
+                /** @type {?} */
+                let buffer;
+                if (Buffer.isBuffer(chunk)) {
+                    buffer = chunk;
+                }
+                else if (chunk instanceof Uint8Array) {
+                    buffer = Buffer.from((/** @type {!Uint8Array} */ (chunk)).buffer, (/** @type {!Uint8Array} */ (chunk)).byteOffset, (/** @type {!Uint8Array} */ (chunk)).byteLength);
+                }
+                else if (typeof chunk === 'string') {
+                    buffer = Buffer.from(chunk);
+                }
+                else if (chunk instanceof ArrayBuffer) {
+                    buffer = Buffer.from(chunk);
+                }
+                else {
+                    throw new Error('Unsupported stream chunk type');
+                }
+                downloadedBytes += buffer.length;
+                if (progressCallback) {
+                    progressCallback(downloadedBytes, totalBytes);
+                }
+                yield buffer;
+            }
+        }
+        try {
+            // pipeline handles clean closure, error propagation, and stream destruction
+            await (0, promises_1.pipeline)(progressTracker(), fileStream);
+        }
+        catch (error) {
+            // Clean up partially downloaded file on failure
+            if (await pathExists(destPath)) {
+                await fs_1.promises.unlink(destPath).catch((/**
+                 * @return {void}
+                 */
+                () => { }));
+            }
+            throw error;
+        }
+    });
+    await withRetry((/**
+     * @return {!Promise<void>}
+     */
+    () => singleAttempt()), retryOptions, onRetry, (/**
+     * @param {*} err
+     * @return {boolean}
+     */
+    (err) => {
+        // Non-retryable HTTP client errors (e.g. 400 Bad Request, 401/403 Auth, 404 Not Found)
+        if (HttpError.isHttpError(err) && (/** @type {!HttpError} */ (err)).status >= 400 && (/** @type {!HttpError} */ (err)).status < 500) {
+            return false;
+        }
+        return true;
+    }));
 }
 exports.downloadFile = downloadFile;
 /**
@@ -329,10 +509,22 @@ exports.resolvePlatformBinaryInfo = resolvePlatformBinaryInfo;
 /**
  * Fetches and parses a ReleaseManifest from the release server.
  * Supports both direct .json manifest URLs and base service URLs (/manifests/{goos}_{goarch}.json).
+ *
+ * Candidate probing and retry strategy:
+ * - Probes candidate endpoint formats sequentially:
+ *     1. Production manifest: /manifests/{goos}_{goarch}.json
+ *     2. Test / Custom build manifest: /latest -> /{version}/manifest.json
+ *     3. Legacy manifest: /releases/latest/manifest.json
+ * - 404 Not Found errors are deliberately NOT retried during candidate probing to avoid delaying
+ *   fallback to subsequent candidate endpoints.
+ * - Transient errors (e.g. 5xx server errors, connection resets, network drops) ARE retried with
+ *   exponential backoff before abandoning each candidate endpoint.
  * @param {string} releaseBaseUrl
+ * @param {(undefined|!RetryOptions)=} retryOptions
+ * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
  * @return {!Promise<!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest>}
  */
-async function fetchReleaseManifest(releaseBaseUrl) {
+async function fetchReleaseManifest(releaseBaseUrl, retryOptions, outputChannel) {
     /** @type {!Array<string>} */
     const errors = [];
     /** @type {function(string): !Promise<!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest>} */
@@ -341,17 +533,42 @@ async function fetchReleaseManifest(releaseBaseUrl) {
      * @return {!Promise<!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest>}
      */
     async (url) => {
-        /** @type {!Response} */
-        const response = await fetch(url);
-        if (response.status !== 200) {
-            throw new Error(`HTTP status ${response.status}`);
-        }
-        /** @type {*} */
-        const data = await response.json();
-        if (isValidReleaseManifestShape(data)) {
-            return data;
-        }
-        throw new Error(`Invalid manifest shape: ${JSON.stringify(data)}`);
+        return await withRetry((/**
+         * @return {!Promise<!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest>}
+         */
+        async () => {
+            /** @type {!Response} */
+            const response = await fetch(url);
+            if (response.status !== 200) {
+                throw new HttpError(response.status);
+            }
+            /** @type {*} */
+            const data = await response.json();
+            if (isValidReleaseManifestShape(data)) {
+                return data;
+            }
+            throw new Error(`Invalid manifest shape: ${JSON.stringify(data)}`);
+        }), retryOptions, (/**
+         * @param {*} err
+         * @param {number} attempt
+         * @param {number} delayMs
+         * @return {void}
+         */
+        (err, attempt, delayMs) => {
+            /** @type {string} */
+            const errMsg = err instanceof Error ? (/** @type {!Error} */ (err)).message : String(err);
+            outputChannel?.appendLine(`[INSTALL] Manifest fetch attempt ${attempt} from ${url} failed: ${errMsg}. Retrying in ${delayMs}ms...`);
+        }), (/**
+         * @param {*} err
+         * @return {boolean}
+         */
+        (err) => {
+            // Do not retry 404 since it's normal during candidate endpoint probing
+            if (HttpError.isHttpError(err) && (/** @type {!HttpError} */ (err)).status === 404) {
+                return false;
+            }
+            return true;
+        }));
     });
     /** @type {function(string): !Promise<(undefined|!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest)>} */
     const tryFetch = (/**
@@ -402,27 +619,38 @@ async function fetchReleaseManifest(releaseBaseUrl) {
     // Candidate 2 (Fallback / Test Build): try /latest -> /<version>/manifest.json based on data shape
     try {
         /** @type {!Response} */
-        const latestResponse = await fetch(`${baseUrlNoSlash}/latest`);
-        if (latestResponse.status === 200) {
-            /** @type {string} */
-            const latestText = await latestResponse.text();
-            /** @type {(null|!RegExpMatchArray)} */
-            const versionMatch = latestText.match(/(\d+\.\d+\.\d+[^ \t\n\r]*)/);
-            /** @type {string} */
-            const version = versionMatch ? versionMatch[1] : latestText.trim();
-            if (version) {
-                /** @type {(undefined|!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest)} */
-                const testManifest = await tryFetch(`${baseUrlNoSlash}/${version}/manifest.json`);
-                if (testManifest) {
-                    return testManifest;
-                }
+        const latestResponse = await withRetry((/**
+         * @return {!Promise<!Response>}
+         */
+        async () => {
+            /** @type {!Response} */
+            const res = await fetch(`${baseUrlNoSlash}/latest`);
+            if (res.status !== 200) {
+                throw new HttpError(res.status);
             }
-            else {
-                errors.push(`- ${baseUrlNoSlash}/latest: No version found in response text: "${latestText.substring(0, 100)}"`);
+            return res;
+        }), retryOptions, undefined, (
+        // Do not retry 404 on /latest check to allow fallback to Candidate 3
+        /**
+         * @param {*} err
+         * @return {boolean}
+         */
+        (err) => !(HttpError.isHttpError(err) && (/** @type {!HttpError} */ (err)).status === 404)));
+        /** @type {string} */
+        const latestText = await latestResponse.text();
+        /** @type {(null|!RegExpMatchArray)} */
+        const versionMatch = latestText.match(/(\d+\.\d+\.\d+[^ \t\n\r]*)/);
+        /** @type {string} */
+        const version = versionMatch ? versionMatch[1] : latestText.trim();
+        if (version) {
+            /** @type {(undefined|!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest)} */
+            const testManifest = await tryFetch(`${baseUrlNoSlash}/${version}/manifest.json`);
+            if (testManifest) {
+                return testManifest;
             }
         }
         else {
-            errors.push(`- ${baseUrlNoSlash}/latest: HTTP status ${latestResponse.status}`);
+            errors.push(`- ${baseUrlNoSlash}/latest: No version found in response text: "${latestText.substring(0, 100)}"`);
         }
     }
     catch (err) {
@@ -480,9 +708,10 @@ exports.getInstalledTargetPath = getInstalledTargetPath;
  * @param {string} destPath
  * @param {!tsickle_vscode_11.OutputChannel} outputChannel
  * @param {(undefined|!tsickle_vscode_11.Progress<{message: (undefined|string), increment: (undefined|number)}>)=} progress
+ * @param {(undefined|!RetryOptions)=} retryOptions
  * @return {!Promise<void>}
  */
-async function downloadWithProgress(url, destPath, outputChannel, progress) {
+async function downloadWithProgress(url, destPath, outputChannel, progress, retryOptions) {
     /** @type {number} */
     let lastPercent = 0;
     await downloadFile(url, destPath, (/**
@@ -503,6 +732,20 @@ async function downloadWithProgress(url, destPath, outputChannel, progress) {
                 lastPercent = percent;
             }
         }
+    }), retryOptions, (/**
+     * @param {*} error
+     * @param {number} attempt
+     * @param {number} delayMs
+     * @return {void}
+     */
+    (error, attempt, delayMs) => {
+        /** @type {string} */
+        const errMsg = error instanceof Error ? (/** @type {!Error} */ (error)).message : String(error);
+        outputChannel.appendLine(`[INSTALL] Download attempt ${attempt} failed: ${errMsg}. Retrying in ${delayMs}ms...`);
+        progress?.report({
+            message: `Download attempt ${attempt} failed, retrying in ${delayMs}ms...`,
+        });
+        lastPercent = 0;
     }));
 }
 /**
@@ -677,6 +920,11 @@ if (false) {
      * @public
      */
     AcquireBinaryOptions.prototype.targetPathOverride;
+    /**
+     * @const {(undefined|!RetryOptions)}
+     * @public
+     */
+    AcquireBinaryOptions.prototype.retryOptions;
 }
 /**
  * Ensures the correct version of the Antigravity binary is installed and returns its path.
@@ -685,7 +933,7 @@ if (false) {
  * @return {!Promise<string>}
  */
 async function acquireInstalledBinaryPath(options) {
-    const { context, outputChannel, progress, configOverride, targetPathOverride } = options;
+    const { context, outputChannel, progress, configOverride, targetPathOverride, retryOptions, } = options;
     /** @type {string} */
     const installPath = targetPathOverride ?? getInstalledTargetPath();
     /** @type {?} */
@@ -717,7 +965,7 @@ async function acquireInstalledBinaryPath(options) {
     let manifestFetched = false;
     try {
         /** @type {!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest} */
-        const manifest = await fetchReleaseManifest(releaseBaseUrl);
+        const manifest = await fetchReleaseManifest(releaseBaseUrl, retryOptions, outputChannel);
         if (manifest && manifest.version) {
             targetVersion = manifest.version;
             manifestFetched = true;
@@ -760,7 +1008,7 @@ async function acquireInstalledBinaryPath(options) {
             }
             outputChannel.appendLine(`[INSTALL] Fetching manifest from releaseBaseUrl=${releaseBaseUrl}...`);
             /** @type {!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest} */
-            const manifest = await fetchReleaseManifest(releaseBaseUrl);
+            const manifest = await fetchReleaseManifest(releaseBaseUrl, retryOptions, outputChannel);
             /** @type {(undefined|!PlatformBinaryInfo)} */
             const binaryInfo = resolvePlatformBinaryInfo(manifest, process.platform, process.arch);
             if (!binaryInfo) {
@@ -783,8 +1031,30 @@ async function acquireInstalledBinaryPath(options) {
                 message: `Downloading Antigravity Backend (${process.platform}-${process.arch})...`,
             });
             outputChannel.appendLine(`[INSTALL] Downloading Antigravity Backend to temporary path ${stagingPath}...`);
-            await downloadWithProgress(binaryInfo.url, stagingPath, outputChannel, installProgress);
-            await verifyBinaryChecksum(stagingPath, binaryInfo, outputChannel, installProgress);
+            // Download the platform binary and verify its cryptographic hash.
+            // Both download and checksum verification are wrapped in withRetry: if a network dropout or corruption
+            // causes a checksum mismatch, the invalid staging file is unlinked and the download is cleanly retried.
+            await withRetry((/**
+             * @param {number} attempt
+             * @return {!Promise<void>}
+             */
+            async (attempt) => {
+                if (attempt > 1) {
+                    outputChannel.appendLine(`[INSTALL] Retrying backend binary download and verification (attempt ${attempt})...`);
+                }
+                await downloadWithProgress(binaryInfo.url, stagingPath, outputChannel, installProgress, { ...retryOptions, maxAttempts: 1 });
+                await verifyBinaryChecksum(stagingPath, binaryInfo, outputChannel, installProgress);
+            }), retryOptions, (/**
+             * @param {*} error
+             * @param {number} attempt
+             * @param {number} delayMs
+             * @return {void}
+             */
+            (error, attempt, delayMs) => {
+                /** @type {string} */
+                const errMsg = error instanceof Error ? (/** @type {!Error} */ (error)).message : String(error);
+                outputChannel.appendLine(`[INSTALL] Binary acquisition attempt ${attempt} failed: ${errMsg}. Retrying in ${delayMs}ms...`);
+            }));
             await unpackAndPromote({
                 stagingPath,
                 installPath,

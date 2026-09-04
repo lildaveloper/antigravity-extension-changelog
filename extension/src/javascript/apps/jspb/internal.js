@@ -752,7 +752,7 @@ class TransformingIteratorIterable {
 
   /**
    * @override
-   * @return {!Iterator<B>}
+   * @return {!IteratorLike<B>}
    */
   [Symbol.iterator]() {
     return this;

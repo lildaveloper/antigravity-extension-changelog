@@ -57,3 +57,25 @@ function isNotebook(uriStr) {
     return uriStr.split('#')[0].split('?')[0].endsWith('.ipynb');
 }
 exports.isNotebook = isNotebook;
+/**
+ * Finds an active or visible text editor matching the given URI.
+ * Checks activeTextEditor first, and falls back to visibleTextEditors if focus
+ * is currently in another pane (e.g., side panel webview).
+ * @param {string} fileUri
+ * @return {(undefined|!tsickle_vscode_1.TextEditor)}
+ */
+function findEditorForUri(fileUri) {
+    /** @type {string} */
+    const normalizedUri = normalizeUri(fileUri);
+    return ((vscode.window.activeTextEditor &&
+        normalizeUri(vscode.window.activeTextEditor.document.uri.toString()) ===
+            normalizedUri
+        ? vscode.window.activeTextEditor
+        : undefined) ??
+        vscode.window.visibleTextEditors.find((/**
+         * @param {!tsickle_vscode_1.TextEditor} editor
+         * @return {boolean}
+         */
+        (editor) => normalizeUri(editor.document.uri.toString()) === normalizedUri)));
+}
+exports.findEditorForUri = findEditorForUri;

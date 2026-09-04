@@ -61,6 +61,7 @@ jspb$o$devtools_jetski_provisioning$DeploymentConfig.internal_toObject = functio
     generativeServiceAddr: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getStringFieldLegacyNullable(msg, 24)),
     additionalLsArgsList: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getRepeatedStringField(msg, 27, jspb_internal_adapters.RepeatedArrayReturnType.EITHER_FROZEN_OR_UNFROZEN)),
     extraFilesMap: jspb_internal_public_for_gencode.mapToObject(msg.getExtraFilesMap()),
+    enableControlPlaneMonitoring: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getBooleanFieldLegacyNullable(msg, 31)),
   }));
 
 };
@@ -137,6 +138,7 @@ jspb$o$devtools_jetski_provisioning$DeploymentConfig.fromObject = function(obj) 
   jspb_internal_adapters.setStringField(msg, 24, obj.generativeServiceAddr);
   jspb_internal_adapters.setRepeatedStringField(msg, 27, obj.additionalLsArgsList);
   obj.extraFilesMap && jspb_internal_public_for_gencode.mapFromObject(msg.getExtraFilesMap(), obj.extraFilesMap);
+  jspb_internal_adapters.setBooleanField(msg, 31, obj.enableControlPlaneMonitoring);
   return msg;
 };
 }

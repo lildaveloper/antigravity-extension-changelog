@@ -9,6 +9,7 @@
 goog.provide('jspb$exa$project_pb$MutableProjectSettings');
 goog.provide('jspb$ro.exa$project_pb$ReadonlyProjectSettings');
 
+goog.require('jspb$exa$project_pb$MutableSecurityPluginSettings');
 goog.require('jspb_internal_adapters');
 goog.require('jspb_internal_public_for_gencode');
 /** @suppress {extraRequire} */
@@ -19,7 +20,9 @@ goog.requireType('jspb$e.exa$codeium_common_pb$AgentSettingPolicy');
 goog.requireType('jspb$e.exa$codeium_common_pb$ArtifactReviewMode');
 goog.requireType('jspb$e.exa$codeium_common_pb$CascadeCommandsAutoExecution');
 goog.requireType('jspb$exa$project_pb$ImmutableProjectSettings');
+goog.requireType('jspb$exa$project_pb$ImmutableSecurityPluginSettings');
 goog.requireType('jspb$r$exa$project_pb$ProjectSettings$internalDoNotUseReader');
+goog.requireType('jspb$ro.exa$project_pb$ReadonlySecurityPluginSettings');
 
 /**
  * @final
@@ -200,6 +203,7 @@ jspb$exa$project_pb$MutableProjectSettings = class extends jspb_internal_public_
    * optional bool enable_permissioned_github = 6;
    * @override
    * @return {boolean}
+   * @deprecated
    */
   getEnablePermissionedGithub() {
     return jspb_internal_adapters.getBooleanFieldWithDefault(this, 6);
@@ -209,6 +213,7 @@ jspb$exa$project_pb$MutableProjectSettings = class extends jspb_internal_public_
   /**
    * @param {boolean|null|undefined} value
    * @return {!jspb$exa$project_pb$MutableProjectSettings} returns this
+   * @deprecated
    */
   setEnablePermissionedGithub(value) {
     return jspb_internal_adapters.setProto3BooleanField(this, 6, value);
@@ -218,6 +223,7 @@ jspb$exa$project_pb$MutableProjectSettings = class extends jspb_internal_public_
   /**
    * Clears the field.
    * @return {!jspb$exa$project_pb$MutableProjectSettings} returns this
+   * @deprecated
    */
   clearEnablePermissionedGithub() {
     return jspb_internal_adapters.clearField(this, 6);
@@ -280,6 +286,74 @@ jspb$exa$project_pb$MutableProjectSettings = class extends jspb_internal_public_
   }
 
 
+  /**
+   * map<string, SecurityPluginSettings> security_plugins = 9;
+   * @override
+   * @return {!Map<string,!jspb$exa$project_pb$MutableSecurityPluginSettings>}
+   */
+  getSecurityPluginsMap() {
+    return jspb_internal_adapters.getStringWrapperMapField(this, 9,
+        jspb$exa$project_pb$MutableSecurityPluginSettings);}
+
+
+
+  /**
+   * map<string, SecurityPluginSettings> security_plugins = 9;
+   * @override
+   * @return {!Map<string,!jspb$ro.exa$project_pb$ReadonlySecurityPluginSettings>}
+   */
+  getReadonlySecurityPluginsMap() {
+    return jspb_internal_adapters.getReadonlyStringWrapperMapField(this, 9,
+        jspb$exa$project_pb$MutableSecurityPluginSettings);}
+
+
+
+  /**
+   * @param {string} key The key of value to set or replace.
+   * @param {!jspb$ro.exa$project_pb$ReadonlySecurityPluginSettings} value The new value.
+   * @return {!jspb$exa$project_pb$MutableProjectSettings} returns this
+   */
+  putSecurityPlugins(key, value) {
+    return jspb_internal_adapters.putStringWrapperMapField(this, 9, key, value, jspb$exa$project_pb$MutableSecurityPluginSettings);
+  }
+
+
+  /**
+   * @param {!ReadonlyMap<string,!jspb$ro.exa$project_pb$ReadonlySecurityPluginSettings>} value The new values.
+   * @return {!jspb$exa$project_pb$MutableProjectSettings} returns this
+   */
+  putAllSecurityPlugins(value) {
+    return jspb_internal_adapters.putAllStringWrapperMapField(this, 9, value, jspb$exa$project_pb$MutableSecurityPluginSettings);
+  }
+
+
+  /**
+   * @param {!ReadonlyMap<string,!jspb$ro.exa$project_pb$ReadonlySecurityPluginSettings>|undefined} value The new values.
+   * @return {!jspb$exa$project_pb$MutableProjectSettings} returns this
+   */
+  setSecurityPluginsMap(value) {
+    return jspb_internal_adapters.setStringWrapperMapField(this, 9, value, jspb$exa$project_pb$MutableSecurityPluginSettings);
+  }
+
+
+  /**
+   * @param {string} key The key of value to remove.
+   * @return {!jspb$exa$project_pb$MutableProjectSettings} returns this
+   */
+  deleteSecurityPlugins(key) {
+    return jspb_internal_adapters.deleteStringWrapperMapField(this, 9, key, jspb$exa$project_pb$MutableSecurityPluginSettings);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$exa$project_pb$MutableProjectSettings} returns this
+   */
+  clearSecurityPluginsMap() {
+    return jspb_internal_adapters.clearMapField(this, 9);
+  }
+
+
 };
 
 /**
@@ -313,7 +387,8 @@ jspb$exa$project_pb$MutableProjectSettings.hasInstance = /** @pureOrBreakMyCode 
  *  artifactReviewMode: (?number|undefined),
  *  enablePermissionedGithub: (?boolean|undefined),
  *  shellSetupScript: (?string|undefined),
- *  permissionPreset: (?number|undefined)
+ *  permissionPreset: (?number|undefined),
+ *  securityPluginsMap: (?Array<!Array<!jspb$exa$project_pb$MutableSecurityPluginSettings.ObjectFormat|string>>|undefined)
  * }}
  */
 jspb$exa$project_pb$MutableProjectSettings.ObjectFormat;
@@ -379,7 +454,8 @@ if (goog.DEBUG && !COMPILED) {
  *  artifactReviewMode: (!jspb$e.exa$codeium_common_pb$ArtifactReviewMode|undefined),
  *  enablePermissionedGithub: (boolean|undefined),
  *  shellSetupScript: (string|undefined),
- *  permissionPreset: (!jspb$e.exa$codeium_common_pb$AgentPermissionPreset|undefined)
+ *  permissionPreset: (!jspb$e.exa$codeium_common_pb$AgentPermissionPreset|undefined),
+ *  securityPluginsMap: (!ReadonlyMap<string,!jspb$ro.exa$project_pb$ReadonlySecurityPluginSettings>|!ReadonlyMap<string,!jspb$exa$project_pb$ImmutableSecurityPluginSettings>|undefined)
  * }}
  */
 jspb$exa$project_pb$MutableProjectSettings.FieldsInterface;

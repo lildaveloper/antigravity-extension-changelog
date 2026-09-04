@@ -67,11 +67,14 @@ if (false) {
     DesktopWorkspaceManager.prototype.context;
 }
 /**
- * @param {!tsickle_vscode_1.ExtensionContext} context
- * @param {!tsickle_loading_message_impl_8.MessageNotifierImpl} messageNotifier
+ * Resolves or boots the Antigravity backend server process for desktop VS Code.
+ *
+ * @param {!tsickle_vscode_1.ExtensionContext} context The active VS Code extension context.
+ * @param {!tsickle_loading_message_impl_8.MessageNotifierImpl} messageNotifier Loading message notifier for status updates.
+ * @param {(undefined|!tsickle_delegate_interfaces_3.Telemetry)=} telemetry Telemetry service for recording start latency and diagnostics.
  * @return {!Promise<{effectiveUrl: string, humanReadable: string}>}
  */
-async function desktopSetup(context, messageNotifier) {
+async function desktopSetup(context, messageNotifier, telemetry) {
     /** @type {!tsickle_vscode_1.WorkspaceConfiguration} */
     const config = vscode.workspace.getConfiguration('antigravity');
     /** @type {(undefined|string)} */
@@ -84,7 +87,40 @@ async function desktopSetup(context, messageNotifier) {
     else {
         /** @type {!tsickle_server_manager_11.AntigravityServerManager} */
         const serverManager = server_manager_1.AntigravityServerManager.getInstance();
-        serverUrl = await serverManager.start(context, messageNotifier);
+        // Wrap server acquisition in a recovery loop. If automatic retries exhaust (e.g. on first-time install
+        // when offline), display the error in the sidebar webview with a "Retry" button via messageNotifier
+        // instead of crashing extension activation.
+        while (!serverUrl) {
+            try {
+                messageNotifier.notifyMessage('Setting up Antigravity server...');
+                serverUrl = await serverManager.start({
+                    context,
+                    messageNotifier,
+                    telemetry,
+                });
+            }
+            catch (e) {
+                /** @type {string} */
+                const errorMsg = e instanceof Error ? (/** @type {!Error} */ (e)).message : String(e);
+                messageNotifier.notifyError(errorMsg);
+                // Suspend until the user clicks the "Retry" button in the webview sidebar,
+                // which triggers onRetry and restarts the installation attempt.
+                await new Promise((/**
+                 * @param {function((void|!PromiseLike<void>)): void} resolve
+                 * @return {void}
+                 */
+                (resolve) => {
+                    /** @type {!tsickle_vscode_1.Disposable} */
+                    const disposable = messageNotifier.onRetry((/**
+                     * @return {void}
+                     */
+                    () => {
+                        disposable.dispose();
+                        resolve();
+                    }));
+                }));
+            }
+        }
         humanReadable = `Installed Antigravity`;
     }
     /** @type {!tsickle_vscode_1.Uri} */
@@ -232,7 +268,12 @@ function activate(context) {
         telemetry,
         workspaceManager,
         webviewDelegate,
-        setupFn: desktopSetup,
+        setupFn: (/**
+         * @param {!tsickle_vscode_1.ExtensionContext} ctx
+         * @param {!tsickle_loading_message_impl_8.MessageNotifierImpl} notifier
+         * @return {!Promise<{effectiveUrl: string, humanReadable: string}>}
+         */
+        (ctx, notifier) => desktopSetup(ctx, notifier, telemetry)),
     }, desktopNaming);
 }
 exports.activate = activate;

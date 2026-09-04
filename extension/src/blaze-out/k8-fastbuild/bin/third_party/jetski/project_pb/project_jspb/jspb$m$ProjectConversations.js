@@ -282,7 +282,7 @@ jspb$exa$project_pb$MutableProjectConversations.fromFields = /** @pureOrBreakMyC
  */
 jspb$exa$project_pb$MutableProjectConversations.getFields = /** @pureOrBreakMyCode */ (jspb_internal_public_for_gencode.makeGetFieldsForTesting());
 
-var jspb$exa$project_pb$MutableProjectSettings;
-Object.defineProperty(this, 'jspb$exa$project_pb$MutableProjectSettings', {
-  get() { return jspb$exa$project_pb$MutableProjectSettings; },
-  set(v) { jspb$exa$project_pb$MutableProjectSettings = v; },
+var jspb$exa$project_pb$SecurityPluginSettings$MutableCli;
+Object.defineProperty(this, 'jspb$exa$project_pb$SecurityPluginSettings$MutableCli', {
+  get() { return jspb$exa$project_pb$SecurityPluginSettings$MutableCli; },
+  set(v) { jspb$exa$project_pb$SecurityPluginSettings$MutableCli = v; },

@@ -8,7 +8,9 @@
 
 goog.provide('jspb$o$exa$config_pb$PluginUserConfig');
 
+goog.require('jspb$exa$config_pb$MutableMarketplaceInstall');
 goog.require('jspb$exa$config_pb$MutablePluginUserConfig');
+goog.require('jspb$o$exa$config_pb$MarketplaceInstall');
 goog.require('jspb_internal_adapters');
 goog.require('jspb_internal_public_for_gencode');
 
@@ -25,6 +27,7 @@ jspb$o$exa$config_pb$PluginUserConfig.internal_toObject = function(msg) {
   jspb_internal_public_for_gencode.checkCanCallToObject(msg);
   return /** @type {?} */ (/** @type {!jspb$exa$config_pb$MutablePluginUserConfig.ObjectFormat} */ ({
     enabled: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getBooleanFieldLegacyNullable(msg, 1)),
+    installedFrom: jspb$o$exa$config_pb$MarketplaceInstall.internal_toObject(msg.getInstalledFrom()),
   }));
 
 };
@@ -64,11 +67,14 @@ if (jspb_internal_public_for_gencode.GENERATE_FROM_OBJECT) {
 jspb$o$exa$config_pb$PluginUserConfig.fromObject = function(obj) {
   const msg = new jspb$exa$config_pb$MutablePluginUserConfig();
   jspb_internal_adapters.setBooleanField(msg, 1, obj.enabled);
+  jspb_internal_adapters.setWrapperField(msg,
+      jspb$exa$config_pb$MutableMarketplaceInstall,
+      2, jspb_internal_public_for_gencode.fromObjectNullable(obj.installedFrom, jspb$o$exa$config_pb$MarketplaceInstall.fromObject));
   return msg;
 };
 }
 
-var jspb$o$exa$cortex_pb$SidecarAgentPermissions;
-Object.defineProperty(this, 'jspb$o$exa$cortex_pb$SidecarAgentPermissions', {
-  get() { return jspb$o$exa$cortex_pb$SidecarAgentPermissions; },
-  set(v) { jspb$o$exa$cortex_pb$SidecarAgentPermissions = v; },
+var jspb$o$exa$config_pb$SkillUserConfig;
+Object.defineProperty(this, 'jspb$o$exa$config_pb$SkillUserConfig', {
+  get() { return jspb$o$exa$config_pb$SkillUserConfig; },
+  set(v) { jspb$o$exa$config_pb$SkillUserConfig = v; },

@@ -19,13 +19,15 @@ const tsickle_diff_helper_2 = goog.requireType("google3.devtools.cider.extension
 const tsickle_hunk_storage_3 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.hunk_storage");
 const tsickle_inline_diff_changes_4 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_changes");
 const tsickle_inline_diff_range_tracker_5 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_range_tracker");
-const tsickle_inline_diff_change_range_6 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_change_range");
+const tsickle_utils_6 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.utils");
+const tsickle_inline_diff_change_range_7 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_change_range");
 const vscode = goog.require('vscode'); // from //devtools/cider/extensions:vscode
 // from //devtools/cider/extensions:vscode
 const diff_helper_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.diff_helper');
 const hunk_storage_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.hunk_storage');
 const inline_diff_changes_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_changes');
 const inline_diff_range_tracker_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_range_tracker');
+const utils_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.utils');
 /**
  * String representation of a vscode.Uri (via uri.toString())
  * @typedef {string}
@@ -370,7 +372,7 @@ class InlineDiffManager {
             console.warn(`[Antigravity] acceptHunk failed: no active diff found for uriStr: ${uriStr}`);
             return;
         }
-        /** @type {!tsickle_inline_diff_change_range_6.InlineDiffChangeRange} */
+        /** @type {!tsickle_inline_diff_change_range_7.InlineDiffChangeRange} */
         const rangeToResolve = activeDiff.changes.ranges[index];
         if (!rangeToResolve) {
             console.warn(`[Antigravity] acceptHunk failed: no range found at index: ${index}`);
@@ -392,9 +394,9 @@ class InlineDiffManager {
             accept: true,
             hunkHash,
         });
-        /** @type {!Array<!tsickle_inline_diff_change_range_6.InlineDiffChangeRange>} */
+        /** @type {!Array<!tsickle_inline_diff_change_range_7.InlineDiffChangeRange>} */
         const remainingRanges = activeDiff.changes.ranges.filter((/**
-         * @param {!tsickle_inline_diff_change_range_6.InlineDiffChangeRange} _
+         * @param {!tsickle_inline_diff_change_range_7.InlineDiffChangeRange} _
          * @param {number} i
          * @return {boolean}
          */
@@ -435,6 +437,7 @@ class InlineDiffManager {
         else {
             this.codeLensProvider.refresh();
             this.refreshVisibleEditorDecorations(uriStr, activeDiff.changes);
+            this.focusNextHunk(uriStr, index);
         }
     }
     /**
@@ -456,7 +459,7 @@ class InlineDiffManager {
             console.warn(`[Antigravity] rejectHunk failed: no active diff found for uriStr: ${uriStr}`);
             return;
         }
-        /** @type {!tsickle_inline_diff_change_range_6.InlineDiffChangeRange} */
+        /** @type {!tsickle_inline_diff_change_range_7.InlineDiffChangeRange} */
         const rangeToResolve = activeDiff.changes.ranges[index];
         if (!rangeToResolve) {
             console.warn(`[Antigravity] rejectHunk failed: no range found at index: ${index}`);
@@ -478,9 +481,9 @@ class InlineDiffManager {
             accept: false,
             hunkHash,
         });
-        /** @type {!Array<!tsickle_inline_diff_change_range_6.InlineDiffChangeRange>} */
+        /** @type {!Array<!tsickle_inline_diff_change_range_7.InlineDiffChangeRange>} */
         const remainingRanges = activeDiff.changes.ranges.filter((/**
-         * @param {!tsickle_inline_diff_change_range_6.InlineDiffChangeRange} _
+         * @param {!tsickle_inline_diff_change_range_7.InlineDiffChangeRange} _
          * @param {number} i
          * @return {boolean}
          */
@@ -521,6 +524,40 @@ class InlineDiffManager {
         else {
             this.codeLensProvider.refresh();
             this.refreshVisibleEditorDecorations(uriStr, activeDiff.changes);
+            this.focusNextHunk(uriStr, index);
+        }
+    }
+    /**
+     * Scrolls the editor to reveal and select the next remaining hunk after a hunk resolution.
+     * @private
+     * @param {string} uriStr
+     * @param {number} resolvedIndex
+     * @return {void}
+     */
+    focusNextHunk(uriStr, resolvedIndex) {
+        /** @type {(undefined|!ActiveDiff)} */
+        const activeDiff = this.activeDiffs.get(uriStr);
+        if (!activeDiff || activeDiff.changes.ranges.length === 0) {
+            return;
+        }
+        /** @type {string} */
+        const targetUri = activeDiff.uri.toString();
+        /** @type {(undefined|!tsickle_vscode_1.TextEditor)} */
+        const editor = (0, utils_1.findEditorForUri)(targetUri);
+        if (!editor)
+            return;
+        // Target the same index (which now points to the next hunk) or clamp to the last remaining hunk.
+        /** @type {number} */
+        const nextIndex = Math.min(resolvedIndex, activeDiff.changes.ranges.length - 1);
+        /** @type {!tsickle_inline_diff_change_range_7.InlineDiffChangeRange} */
+        const nextHunk = activeDiff.changes.ranges[nextIndex];
+        if (!nextHunk)
+            return;
+        /** @type {(undefined|!tsickle_vscode_1.Range)} */
+        const targetRange = nextHunk.additionRange ?? nextHunk.deletionRange;
+        if (targetRange) {
+            editor.revealRange(targetRange, vscode.TextEditorRevealType.InCenter);
+            editor.selection = new vscode.Selection(targetRange.start, targetRange.start);
         }
     }
     /**
@@ -656,7 +693,7 @@ class InlineDiffManager {
         /** @type {!Array<!tsickle_vscode_1.Range>} */
         const additionRanges = changes.ranges
             .map((/**
-         * @param {!tsickle_inline_diff_change_range_6.InlineDiffChangeRange} r
+         * @param {!tsickle_inline_diff_change_range_7.InlineDiffChangeRange} r
          * @return {(undefined|!tsickle_vscode_1.Range)}
          */
         (r) => r.additionRange))
@@ -668,7 +705,7 @@ class InlineDiffManager {
         /** @type {!Array<!tsickle_vscode_1.Range>} */
         const deletionRanges = changes.ranges
             .map((/**
-         * @param {!tsickle_inline_diff_change_range_6.InlineDiffChangeRange} r
+         * @param {!tsickle_inline_diff_change_range_7.InlineDiffChangeRange} r
          * @return {(undefined|!tsickle_vscode_1.Range)}
          */
         (r) => r.deletionRange))
@@ -1022,7 +1059,7 @@ class InlineDiffCodeLensProvider {
         const codeLenses = [];
         for (const [index__tsickle_destructured_1, range__tsickle_destructured_2] of activeDiff.changes.ranges.entries()) {
             const index = /** @type {number} */ (index__tsickle_destructured_1);
-            const range = /** @type {!tsickle_inline_diff_change_range_6.InlineDiffChangeRange} */ (range__tsickle_destructured_2);
+            const range = /** @type {!tsickle_inline_diff_change_range_7.InlineDiffChangeRange} */ (range__tsickle_destructured_2);
             /** @type {!tsickle_vscode_1.Position} */
             const position = new vscode.Position(range.start, 0);
             /** @type {!tsickle_vscode_1.Range} */

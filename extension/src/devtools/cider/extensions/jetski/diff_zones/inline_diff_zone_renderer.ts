@@ -18,12 +18,13 @@ const tsickle_vscode_1 = goog.requireType("vscode");
 const tsickle_agent_edit_manager_2 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.agent_edit_manager");
 const tsickle_diff_helper_3 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.diff_helper");
 const tsickle_diff_zone_renderer_4 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.diff_zone_renderer");
-const tsickle_inline_diff_manager_5 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_manager");
-const tsickle_utils_6 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.utils");
-const tsickle_hunk_storage_7 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.hunk_storage");
+const tsickle_hunk_storage_5 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.hunk_storage");
+const tsickle_inline_diff_manager_6 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_manager");
+const tsickle_utils_7 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.utils");
 const tsickle_inline_diff_change_range_8 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_change_range");
 const vscode = goog.require('vscode');
 const diff_helper_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.diff_helper');
+const hunk_storage_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.hunk_storage');
 const inline_diff_manager_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_manager');
 const utils_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.utils');
 /**
@@ -33,7 +34,7 @@ const utils_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zone
 class InlineDiffZoneRenderer {
     /**
      * @public
-     * @param {!tsickle_inline_diff_manager_5.InlineDiffManager=} inlineDiffManager
+     * @param {!tsickle_inline_diff_manager_6.InlineDiffManager=} inlineDiffManager
      */
     constructor(inlineDiffManager = new inline_diff_manager_1.InlineDiffManager()) {
         this.inlineDiffManager = inlineDiffManager;
@@ -46,7 +47,7 @@ class InlineDiffZoneRenderer {
      * @param {!tsickle_vscode_1.Uri} uri
      * @param {!tsickle_vscode_1.TextDocument} _doc
      * @param {!tsickle_agent_edit_manager_2.AddAgentEditMessage} message
-     * @param {function(string): (undefined|!tsickle_hunk_storage_7.HunkResolutionAction)} _getStoredResolution
+     * @param {function(string): (undefined|!tsickle_hunk_storage_5.HunkResolutionAction)} _getStoredResolution
      * @param {function(!tsickle_diff_zone_renderer_4.HunkResolutionEvent): !Promise<void>} onHunkResolved
      * @return {!Promise<!tsickle_diff_zone_renderer_4.RenderTextEditResult>}
      */
@@ -87,6 +88,13 @@ class InlineDiffZoneRenderer {
              */
             (l) => l.substring(1))),
         })));
+        // Compute hashes for all diff hunks so AgentEditManager can track hunk resolutions.
+        /** @type {!Array<string>} */
+        const hunkHashes = hunkInfos.map((/**
+         * @param {!tsickle_diff_zone_renderer_4.DiffHunkInfo} h
+         * @return {string}
+         */
+        (h) => (0, hunk_storage_1.computeHunkHash)(h.insertions, h.deletions)));
         // Listen for hunk resolutions from InlineDiffManager
         /** @type {!tsickle_vscode_1.Disposable} */
         const resolveSub = this.inlineDiffManager.onDidResolveHunk((/**
@@ -97,7 +105,7 @@ class InlineDiffZoneRenderer {
             if (event.uri.toString() === uri.toString()) {
                 await onHunkResolved({
                     fileUri: event.uri.toString(),
-                    hunkIndex: 0,
+                    hunkIndex: event.hunkIndex,
                     hunkHash: event.hunkHash,
                     accept: event.accept,
                     final: false,
@@ -127,6 +135,7 @@ class InlineDiffZoneRenderer {
             added: success,
             fullyResolved: false,
             hunks: hunkInfos,
+            hunkHashes,
         };
     }
     /**
@@ -134,37 +143,77 @@ class InlineDiffZoneRenderer {
      * @param {!tsickle_vscode_1.Uri} _uri
      * @param {!tsickle_vscode_1.NotebookDocument} _document
      * @param {!tsickle_agent_edit_manager_2.AddAgentEditMessage} _message
-     * @param {!Array<!tsickle_vscode_1.NotebookCellSnapshot>} _originalCells
-     * @param {function(string): (undefined|!tsickle_hunk_storage_7.HunkResolutionAction)} _getStoredResolution
+     * @param {function(string): (undefined|!tsickle_hunk_storage_5.HunkResolutionAction)} _getStoredResolution
      * @param {function(!tsickle_diff_zone_renderer_4.HunkResolutionEvent): !Promise<void>} _onHunkResolved
      * @return {!Promise<!tsickle_diff_zone_renderer_4.RenderNotebookEditResult>}
      */
-    async renderNotebookEdit(_uri, _document, _message, _originalCells, _getStoredResolution, _onHunkResolved) {
+    async renderNotebookEdit(_uri, _document, _message, _getStoredResolution, _onHunkResolved) {
         console.warn('[Jetski] Inline diff view for notebooks is not supported.');
         return { added: false, fullyResolved: false, hunks: [] };
     }
     /**
+     * Focuses and reveals a targeted hunk range based on index or relative direction ('next' | 'previous').
      * @public
      * @param {string} fileUri
-     * @param {(number|string)} _target
+     * @param {(number|string)} target
      * @return {void}
      */
-    focusHunk(fileUri, _target) {
+    focusHunk(fileUri, target) {
+        /** @type {string} */
+        const normalizedUri = (0, utils_1.normalizeUri)(fileUri);
         /** @type {(undefined|!tsickle_vscode_1.TextEditor)} */
-        const editor = vscode.window.activeTextEditor;
-        if (!editor || editor.document.uri.toString() !== (0, utils_1.normalizeUri)(fileUri)) {
+        const editor = (0, utils_1.findEditorForUri)(normalizedUri);
+        if (!editor)
             return;
-        }
-        /** @type {(undefined|!tsickle_inline_diff_manager_5.ActiveDiff)} */
-        const activeDiff = this.inlineDiffManager.getActiveDiff(fileUri);
+        /** @type {(undefined|!tsickle_inline_diff_manager_6.ActiveDiff)} */
+        const activeDiff = this.inlineDiffManager.getActiveDiff(normalizedUri);
         if (!activeDiff || activeDiff.changes.ranges.length === 0)
             return;
+        /** @type {number} */
+        let targetIndex = 0;
+        if (typeof target === 'number') {
+            targetIndex = Math.max(0, Math.min(target, activeDiff.changes.ranges.length - 1));
+        }
+        else {
+            // Relative navigation based on current active cursor line position.
+            /** @type {number} */
+            const cursorLine = editor.selection.active.line;
+            if (target === 'next') {
+                /** @type {number} */
+                const found = activeDiff.changes.ranges.findIndex((/**
+                 * @param {!tsickle_inline_diff_change_range_8.InlineDiffChangeRange} r
+                 * @return {(undefined|boolean)}
+                 */
+                (r) => {
+                    /** @type {(undefined|!tsickle_vscode_1.Range)} */
+                    const range = r.additionRange ?? r.deletionRange;
+                    return range && range.start.line > cursorLine;
+                }));
+                targetIndex = found !== -1 ? found : 0;
+            }
+            else if (target === 'previous') {
+                /** @type {number} */
+                let found = -1;
+                for (let i = activeDiff.changes.ranges.length - 1; i >= 0; i--) {
+                    /** @type {(undefined|!tsickle_vscode_1.Range)} */
+                    const range = activeDiff.changes.ranges[i].additionRange ??
+                        activeDiff.changes.ranges[i].deletionRange;
+                    if (range && range.start.line < cursorLine) {
+                        found = i;
+                        break;
+                    }
+                }
+                targetIndex =
+                    found !== -1 ? found : activeDiff.changes.ranges.length - 1;
+            }
+        }
         /** @type {!tsickle_inline_diff_change_range_8.InlineDiffChangeRange} */
-        const firstChange = activeDiff.changes.ranges[0];
+        const targetChange = activeDiff.changes.ranges[targetIndex];
         /** @type {(undefined|!tsickle_vscode_1.Range)} */
-        const targetRange = firstChange.additionRange ?? firstChange.deletionRange;
+        const targetRange = targetChange.additionRange ?? targetChange.deletionRange;
         if (targetRange) {
             editor.revealRange(targetRange, vscode.TextEditorRevealType.InCenter);
+            editor.selection = new vscode.Selection(targetRange.start, targetRange.start);
         }
     }
     /**
@@ -221,7 +270,7 @@ if (false) {
      */
     InlineDiffZoneRenderer.prototype.subscriptions;
     /**
-     * @const {!tsickle_inline_diff_manager_5.InlineDiffManager}
+     * @const {!tsickle_inline_diff_manager_6.InlineDiffManager}
      * @private
      */
     InlineDiffZoneRenderer.prototype.inlineDiffManager;

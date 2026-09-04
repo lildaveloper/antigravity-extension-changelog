@@ -9,7 +9,9 @@
 goog.provide('jspb$exa$config_pb$MutableUserConfig');
 goog.provide('jspb$ro.exa$config_pb$ReadonlyUserConfig');
 
+goog.require('jspb$exa$config_pb$MutableConversationGroupRegistry');
 goog.require('jspb$exa$config_pb$MutablePluginUserConfig');
+goog.require('jspb$exa$config_pb$MutableSkillUserConfig');
 goog.require('jspb$exa$cortex_pb$MutableSidecarUserConfig');
 goog.require('jspb$jetbox_state_pb$MutableUserSettings');
 goog.require('jspb_internal_adapters');
@@ -18,10 +20,13 @@ goog.require('jspb_internal_public_for_gencode');
 goog.requireType('google3.javascript.apps.jspb.internal_records');
 goog.requireType('google3.javascript.common.asserts.asserts');
 goog.requireType('jspb$exa$config_pb$ImmutablePluginUserConfig');
+goog.requireType('jspb$exa$config_pb$ImmutableSkillUserConfig');
 goog.requireType('jspb$exa$config_pb$ImmutableUserConfig');
 goog.requireType('jspb$exa$cortex_pb$ImmutableSidecarUserConfig');
 goog.requireType('jspb$r$exa$config_pb$UserConfig$internalDoNotUseReader');
+goog.requireType('jspb$ro.exa$config_pb$ReadonlyConversationGroupRegistry');
 goog.requireType('jspb$ro.exa$config_pb$ReadonlyPluginUserConfig');
+goog.requireType('jspb$ro.exa$config_pb$ReadonlySkillUserConfig');
 goog.requireType('jspb$ro.exa$cortex_pb$ReadonlySidecarUserConfig');
 goog.requireType('jspb$ro.jetbox_state_pb$ReadonlyUserSettings');
 
@@ -248,6 +253,146 @@ jspb$exa$config_pb$MutableUserConfig = class extends jspb_internal_public_for_ge
   }
 
 
+  /**
+   * optional ConversationGroupRegistry conversation_groups = 4;
+   * @override
+   * @return {!jspb$exa$config_pb$MutableConversationGroupRegistry|undefined}
+   */
+  getConversationGroups() {
+    return jspb_internal_adapters.getWrapperFieldOrUndefined(this, jspb$exa$config_pb$MutableConversationGroupRegistry, 4);
+  }
+
+
+  /**
+   * optional ConversationGroupRegistry conversation_groups = 4;
+   * @override
+   * @return {!jspb$ro.exa$config_pb$ReadonlyConversationGroupRegistry}
+   */
+  getReadonlyConversationGroups() {
+    return jspb_internal_adapters.getReadonlyWrapperField(this, jspb$exa$config_pb$MutableConversationGroupRegistry, 4);
+  }
+
+
+  /**
+   * optional ConversationGroupRegistry conversation_groups = 4;
+   * @param {!jspb_internal_public_for_gencode.OrUndefinedToken<U>=} legacyOrUndefined
+   * @return {!jspb$exa$config_pb$MutableConversationGroupRegistry|R}
+   * @template U
+   * @template R := cond(eq(U, 'undefined'), 'undefined', 'jspb$exa$config_pb$MutableConversationGroupRegistry') =:
+   * @tsType (legacyOrUndefined: import('google3/javascript/apps/jspb/internal_public').OrUndefinedToken<undefined>): ಠ_ಠ.clutz.jspb$exa$config_pb$MutableConversationGroupRegistry|undefined
+   * @tsType (): ಠ_ಠ.clutz.jspb$exa$config_pb$MutableConversationGroupRegistry
+   */
+  getMutableConversationGroups(legacyOrUndefined) {
+    return jspb_internal_adapters.getMutableWrapperField(this, jspb$exa$config_pb$MutableConversationGroupRegistry, 4, legacyOrUndefined);
+  }
+
+
+  /**
+   * @param {!jspb$ro.exa$config_pb$ReadonlyConversationGroupRegistry|null|undefined} value
+   * @return {!jspb$exa$config_pb$MutableUserConfig} returns this
+   */
+  setConversationGroups(value) {
+    return jspb_internal_adapters.setWrapperField(this, jspb$exa$config_pb$MutableConversationGroupRegistry, 4, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$exa$config_pb$MutableUserConfig} returns this
+   */
+  clearConversationGroups() {
+    return jspb_internal_adapters.clearField(this, 4);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasConversationGroups() {
+    return jspb_internal_adapters.hasWrapperField(this, jspb$exa$config_pb$MutableConversationGroupRegistry, 4);
+  }
+
+
+  /**
+   * optional ConversationGroupRegistry conversation_groups = 4;
+   * @override
+   * @return {!jspb$ro.exa$config_pb$ReadonlyConversationGroupRegistry|undefined}
+   */
+  getConversationGroupsOrUndefined() {
+    return jspb_internal_adapters.getReadonlyWrapperFieldOrUndefined(this, jspb$exa$config_pb$MutableConversationGroupRegistry, 4);
+  }
+
+
+  /**
+   * map<string, SkillUserConfig> skills = 5;
+   * @override
+   * @return {!Map<string,!jspb$exa$config_pb$MutableSkillUserConfig>}
+   */
+  getSkillsMap() {
+    return jspb_internal_adapters.getStringWrapperMapField(this, 5,
+        jspb$exa$config_pb$MutableSkillUserConfig);}
+
+
+
+  /**
+   * map<string, SkillUserConfig> skills = 5;
+   * @override
+   * @return {!Map<string,!jspb$ro.exa$config_pb$ReadonlySkillUserConfig>}
+   */
+  getReadonlySkillsMap() {
+    return jspb_internal_adapters.getReadonlyStringWrapperMapField(this, 5,
+        jspb$exa$config_pb$MutableSkillUserConfig);}
+
+
+
+  /**
+   * @param {string} key The key of value to set or replace.
+   * @param {!jspb$ro.exa$config_pb$ReadonlySkillUserConfig} value The new value.
+   * @return {!jspb$exa$config_pb$MutableUserConfig} returns this
+   */
+  putSkills(key, value) {
+    return jspb_internal_adapters.putStringWrapperMapField(this, 5, key, value, jspb$exa$config_pb$MutableSkillUserConfig);
+  }
+
+
+  /**
+   * @param {!ReadonlyMap<string,!jspb$ro.exa$config_pb$ReadonlySkillUserConfig>} value The new values.
+   * @return {!jspb$exa$config_pb$MutableUserConfig} returns this
+   */
+  putAllSkills(value) {
+    return jspb_internal_adapters.putAllStringWrapperMapField(this, 5, value, jspb$exa$config_pb$MutableSkillUserConfig);
+  }
+
+
+  /**
+   * @param {!ReadonlyMap<string,!jspb$ro.exa$config_pb$ReadonlySkillUserConfig>|undefined} value The new values.
+   * @return {!jspb$exa$config_pb$MutableUserConfig} returns this
+   */
+  setSkillsMap(value) {
+    return jspb_internal_adapters.setStringWrapperMapField(this, 5, value, jspb$exa$config_pb$MutableSkillUserConfig);
+  }
+
+
+  /**
+   * @param {string} key The key of value to remove.
+   * @return {!jspb$exa$config_pb$MutableUserConfig} returns this
+   */
+  deleteSkills(key) {
+    return jspb_internal_adapters.deleteStringWrapperMapField(this, 5, key, jspb$exa$config_pb$MutableSkillUserConfig);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$exa$config_pb$MutableUserConfig} returns this
+   */
+  clearSkillsMap() {
+    return jspb_internal_adapters.clearMapField(this, 5);
+  }
+
+
 };
 
 /**
@@ -276,7 +421,9 @@ jspb$exa$config_pb$MutableUserConfig.hasInstance = /** @pureOrBreakMyCode */ (js
  * @typedef {{
  *  sidecarsMap: (?Array<!Array<!jspb$exa$cortex_pb$MutableSidecarUserConfig.ObjectFormat|string>>|undefined),
  *  userSettings: (?jspb$jetbox_state_pb$MutableUserSettings.ObjectFormat|undefined),
- *  pluginsMap: (?Array<!Array<!jspb$exa$config_pb$MutablePluginUserConfig.ObjectFormat|string>>|undefined)
+ *  pluginsMap: (?Array<!Array<!jspb$exa$config_pb$MutablePluginUserConfig.ObjectFormat|string>>|undefined),
+ *  conversationGroups: (?jspb$exa$config_pb$MutableConversationGroupRegistry.ObjectFormat|undefined),
+ *  skillsMap: (?Array<!Array<!jspb$exa$config_pb$MutableSkillUserConfig.ObjectFormat|string>>|undefined)
  * }}
  */
 jspb$exa$config_pb$MutableUserConfig.ObjectFormat;
@@ -337,7 +484,9 @@ if (goog.DEBUG && !COMPILED) {
  * @typedef {{
  *  sidecarsMap: (!ReadonlyMap<string,!jspb$ro.exa$cortex_pb$ReadonlySidecarUserConfig>|!ReadonlyMap<string,!jspb$exa$cortex_pb$ImmutableSidecarUserConfig>|undefined),
  *  userSettings: (!jspb$ro.jetbox_state_pb$ReadonlyUserSettings|undefined),
- *  pluginsMap: (!ReadonlyMap<string,!jspb$ro.exa$config_pb$ReadonlyPluginUserConfig>|!ReadonlyMap<string,!jspb$exa$config_pb$ImmutablePluginUserConfig>|undefined)
+ *  pluginsMap: (!ReadonlyMap<string,!jspb$ro.exa$config_pb$ReadonlyPluginUserConfig>|!ReadonlyMap<string,!jspb$exa$config_pb$ImmutablePluginUserConfig>|undefined),
+ *  conversationGroups: (!jspb$ro.exa$config_pb$ReadonlyConversationGroupRegistry|undefined),
+ *  skillsMap: (!ReadonlyMap<string,!jspb$ro.exa$config_pb$ReadonlySkillUserConfig>|!ReadonlyMap<string,!jspb$exa$config_pb$ImmutableSkillUserConfig>|undefined)
  * }}
  */
 jspb$exa$config_pb$MutableUserConfig.FieldsInterface;

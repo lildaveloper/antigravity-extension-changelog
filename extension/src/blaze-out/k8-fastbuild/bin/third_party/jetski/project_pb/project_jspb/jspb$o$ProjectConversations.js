@@ -71,7 +71,7 @@ jspb$o$exa$project_pb$ProjectConversations.fromObject = function(obj) {
 };
 }
 
-var jspb$o$exa$project_pb$ProjectSettings;
-Object.defineProperty(this, 'jspb$o$exa$project_pb$ProjectSettings', {
-  get() { return jspb$o$exa$project_pb$ProjectSettings; },
-  set(v) { jspb$o$exa$project_pb$ProjectSettings = v; },
+var jspb$o$exa$project_pb$SecurityPluginSettings$Cli;
+Object.defineProperty(this, 'jspb$o$exa$project_pb$SecurityPluginSettings$Cli', {
+  get() { return jspb$o$exa$project_pb$SecurityPluginSettings$Cli; },
+  set(v) { jspb$o$exa$project_pb$SecurityPluginSettings$Cli = v; },

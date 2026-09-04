@@ -35,7 +35,7 @@ jspb$b$exa$project_pb$ProjectConversations.fields = /** @pureOrBreakMyCode */([
 jspb$exa$project_pb$MutableProjectConversations.prototype.serializeBinary = /** @pureOrBreakMyCode */(jspb_internal_public_for_gencode.makePrototypeSerializeBinaryFunction(jspb$b$exa$project_pb$ProjectConversations.fields));
 
 
-var jspb$b$exa$project_pb$ProjectSettings;
-Object.defineProperty(this, 'jspb$b$exa$project_pb$ProjectSettings', {
-  get() { return jspb$b$exa$project_pb$ProjectSettings; },
-  set(v) { jspb$b$exa$project_pb$ProjectSettings = v; },
+var jspb$b$exa$project_pb$SecurityPluginSettings$Cli;
+Object.defineProperty(this, 'jspb$b$exa$project_pb$SecurityPluginSettings$Cli', {
+  get() { return jspb$b$exa$project_pb$SecurityPluginSettings$Cli; },
+  set(v) { jspb$b$exa$project_pb$SecurityPluginSettings$Cli = v; },

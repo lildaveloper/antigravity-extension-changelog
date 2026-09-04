@@ -471,6 +471,7 @@ jspb$exa$project_pb$MutableProject = class extends jspb_internal_public_for_genc
    * optional google.protobuf.Timestamp updated_at = 11;
    * @override
    * @return {!jspb$google$protobuf$MutableTimestamp|undefined}
+   * @deprecated
    */
   getUpdatedAt() {
     return jspb_internal_adapters.getWrapperFieldOrUndefined(this, jspb$google$protobuf$MutableTimestamp, 11);
@@ -481,6 +482,7 @@ jspb$exa$project_pb$MutableProject = class extends jspb_internal_public_for_genc
    * optional google.protobuf.Timestamp updated_at = 11;
    * @override
    * @return {!jspb$ro.google$protobuf$ReadonlyTimestamp}
+   * @deprecated
    */
   getReadonlyUpdatedAt() {
     return jspb_internal_adapters.getReadonlyWrapperField(this, jspb$google$protobuf$MutableTimestamp, 11);
@@ -495,6 +497,7 @@ jspb$exa$project_pb$MutableProject = class extends jspb_internal_public_for_genc
    * @template R := cond(eq(U, 'undefined'), 'undefined', 'jspb$google$protobuf$MutableTimestamp') =:
    * @tsType (legacyOrUndefined: import('google3/javascript/apps/jspb/internal_public').OrUndefinedToken<undefined>): ಠ_ಠ.clutz.jspb$google$protobuf$MutableTimestamp|undefined
    * @tsType (): ಠ_ಠ.clutz.jspb$google$protobuf$MutableTimestamp
+   * @deprecated
    */
   getMutableUpdatedAt(legacyOrUndefined) {
     return jspb_internal_adapters.getMutableWrapperField(this, jspb$google$protobuf$MutableTimestamp, 11, legacyOrUndefined);
@@ -504,6 +507,7 @@ jspb$exa$project_pb$MutableProject = class extends jspb_internal_public_for_genc
   /**
    * @param {!jspb$ro.google$protobuf$ReadonlyTimestamp|null|undefined} value
    * @return {!jspb$exa$project_pb$MutableProject} returns this
+   * @deprecated
    */
   setUpdatedAt(value) {
     return jspb_internal_adapters.setWrapperField(this, jspb$google$protobuf$MutableTimestamp, 11, value);
@@ -513,6 +517,7 @@ jspb$exa$project_pb$MutableProject = class extends jspb_internal_public_for_genc
   /**
    * Clears the field.
    * @return {!jspb$exa$project_pb$MutableProject} returns this
+   * @deprecated
    */
   clearUpdatedAt() {
     return jspb_internal_adapters.clearField(this, 11);
@@ -523,6 +528,7 @@ jspb$exa$project_pb$MutableProject = class extends jspb_internal_public_for_genc
    * Returns whether this field is set.
    * @override
    * @return {boolean}
+   * @deprecated
    */
   hasUpdatedAt() {
     return jspb_internal_adapters.hasWrapperField(this, jspb$google$protobuf$MutableTimestamp, 11);
@@ -533,6 +539,7 @@ jspb$exa$project_pb$MutableProject = class extends jspb_internal_public_for_genc
    * optional google.protobuf.Timestamp updated_at = 11;
    * @override
    * @return {!jspb$ro.google$protobuf$ReadonlyTimestamp|undefined}
+   * @deprecated
    */
   getUpdatedAtOrUndefined() {
     return jspb_internal_adapters.getReadonlyWrapperFieldOrUndefined(this, jspb$google$protobuf$MutableTimestamp, 11);

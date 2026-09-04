@@ -8,7 +8,9 @@
 
 goog.provide('jspb$b$exa$config_pb$UserConfig');
 
+goog.require('jspb$b$exa$config_pb$ConversationGroupRegistry');
 goog.require('jspb$b$exa$config_pb$PluginUserConfig');
+goog.require('jspb$b$exa$config_pb$SkillUserConfig');
 goog.require('jspb$b$exa$cortex_pb$SidecarUserConfig');
 goog.require('jspb$b$jetbox_state_pb$UserSettings');
 goog.require('jspb$exa$config_pb$MutableUserConfig');
@@ -33,7 +35,12 @@ jspb$b$exa$config_pb$UserConfig.fields = /** @pureOrBreakMyCode */([
   jspb_internal_binary.RWMapEntry,
   jspb_internal_binary.createMessageMapEntryBinaryFields(
       jspb_internal_binary.RStringRequireUtf8WString,
-      jspb$b$exa$config_pb$PluginUserConfig.fields)
+      jspb$b$exa$config_pb$PluginUserConfig.fields),
+  jspb$b$exa$config_pb$ConversationGroupRegistry.fields,
+  jspb_internal_binary.RWMapEntry,
+  jspb_internal_binary.createMessageMapEntryBinaryFields(
+      jspb_internal_binary.RStringRequireUtf8WString,
+      jspb$b$exa$config_pb$SkillUserConfig.fields)
 ]);
 
 /**

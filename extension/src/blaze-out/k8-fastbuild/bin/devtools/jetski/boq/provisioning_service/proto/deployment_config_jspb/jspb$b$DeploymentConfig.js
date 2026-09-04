@@ -63,7 +63,8 @@ jspb$b$devtools_jetski_provisioning$DeploymentConfig.fields = /** @pureOrBreakMy
   jspb_internal_binary.RWBool,
   jspb$b$devtools_jetski_provisioning$MemoryConfig.fields,
   jspb_internal_binary.RWMapEntry,
-  jspb_internal_binary.StringRequireUtf8StringRequireUtf8Map
+  jspb_internal_binary.StringRequireUtf8StringRequireUtf8Map,
+  jspb_internal_binary.RWBool
 ]);
 
 /**

@@ -541,6 +541,9 @@ const Touch = {
     AsNew: 2,
 };
 exports.Touch = Touch;
+Touch[Touch.None] = 'None';
+Touch[Touch.AsOld] = 'AsOld';
+Touch[Touch.AsNew] = 'AsNew';
 /**
  * @template K, V
  * @implements {Map<K, V>}
@@ -588,6 +591,14 @@ class LinkedMap {
      */
     get first() {
         return this._head?.value;
+    }
+    // Diverges from upstream: keyed counterpart of `first`, for LRU eviction.
+    /**
+     * @public
+     * @return {(undefined|K)}
+     */
+    get firstKey() {
+        return this._head?.key;
     }
     /**
      * @public

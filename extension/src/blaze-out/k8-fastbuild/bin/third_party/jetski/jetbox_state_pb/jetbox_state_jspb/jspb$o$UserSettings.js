@@ -70,6 +70,8 @@ jspb$o$jetbox_state_pb$UserSettings.internal_toObject = function(msg) {
     enableSoundsForSpecialEvents: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getBooleanFieldLegacyNullable(msg, 40)),
     permissionPreset: jspb_internal_adapters.getEnumFieldWithDefault(msg, 41),
     enableAdc: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getBooleanFieldLegacyNullable(msg, 43)),
+    permissionGrantsV2Migrated: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getBooleanFieldLegacyNullable(msg, 44)),
+    sandboxEnabledAtV2Migration: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getBooleanFieldLegacyNullable(msg, 45)),
   }));
 
 };
@@ -156,6 +158,8 @@ jspb$o$jetbox_state_pb$UserSettings.fromObject = function(obj) {
   jspb_internal_adapters.setBooleanField(msg, 40, obj.enableSoundsForSpecialEvents);
   jspb_internal_adapters.setProto3EnumField(msg, 41, obj.permissionPreset);
   jspb_internal_adapters.setBooleanField(msg, 43, obj.enableAdc);
+  jspb_internal_adapters.setBooleanField(msg, 44, obj.permissionGrantsV2Migrated);
+  jspb_internal_adapters.setBooleanField(msg, 45, obj.sandboxEnabledAtV2Migration);
   return msg;
 };
 }

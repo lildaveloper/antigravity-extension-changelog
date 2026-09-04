@@ -72,7 +72,7 @@ jspb$o$devtools_jetski_provisioning$Sidecar.fromObject = function(obj) {
 };
 }
 
-var jspb$o$exa$config_pb$PluginUserConfig;
-Object.defineProperty(this, 'jspb$o$exa$config_pb$PluginUserConfig', {
-  get() { return jspb$o$exa$config_pb$PluginUserConfig; },
-  set(v) { jspb$o$exa$config_pb$PluginUserConfig = v; },
+var jspb$o$exa$config_pb$ConversationGroupConfig;
+Object.defineProperty(this, 'jspb$o$exa$config_pb$ConversationGroupConfig', {
+  get() { return jspb$o$exa$config_pb$ConversationGroupConfig; },
+  set(v) { jspb$o$exa$config_pb$ConversationGroupConfig = v; },

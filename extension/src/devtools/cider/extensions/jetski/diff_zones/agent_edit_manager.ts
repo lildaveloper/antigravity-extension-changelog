@@ -19,13 +19,11 @@ const tsickle_diff_zone_renderer_2 = goog.requireType("google3.devtools.cider.ex
 const tsickle_hunk_storage_3 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.hunk_storage");
 const tsickle_utils_4 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.utils");
 const vscode = goog.require('vscode'); // from //devtools/cider/extensions:vscode
-// from //devtools/cider/extensions:vscode
-const diff_zone_renderer_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.diff_zone_renderer');
 const hunk_storage_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.hunk_storage');
 const utils_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.utils');
-const diff_zone_renderer_2 = diff_zone_renderer_1;
-exports.computeNotebookDiffStats = diff_zone_renderer_2.computeNotebookDiffStats;
-exports.parseNotebookCells = diff_zone_renderer_2.parseNotebookCells;
+const diff_zone_renderer_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.diff_zone_renderer');
+exports.computeNotebookDiffStats = diff_zone_renderer_1.computeNotebookDiffStats;
+exports.parseNotebookCells = diff_zone_renderer_1.parseNotebookCells;
 /**
  * Shapes of messages received from the Jetski iframe.
  * @record
@@ -372,11 +370,15 @@ class AgentEditManager {
                 /** @type {!tsickle_diff_zone_renderer_2.RenderTextEditResult} */
                 let result;
                 if ((0, utils_1.isNotebook)(normalizedUri)) {
+                    // If the notebook is already open in an editor, force reload it from
+                    // disk to ensure VS Code's in-memory model reflects the agent's
+                    // on-disk writes before creating the diff zone. If the document was
+                    // dirty from concurrent edits, this reverts to disk so the DiffZone
+                    // accurately presents the agent's proposed turn diff.
+                    await vscode.AntigravityFiles?.forceResolveFromFile?.(uri);
                     /** @type {!tsickle_vscode_1.NotebookDocument} */
                     const doc = await vscode.workspace.openNotebookDocument(uri);
-                    /** @type {!Array<!tsickle_vscode_1.NotebookCellSnapshot>} */
-                    const originalCells = (0, diff_zone_renderer_1.parseNotebookCells)((/** @type {string} */ (message.originalContents)));
-                    result = await this.renderer.renderNotebookEdit(uri, doc, message, originalCells, getStoredResolution, onHunkResolved);
+                    result = await this.renderer.renderNotebookEdit(uri, doc, message, getStoredResolution, onHunkResolved);
                 }
                 else {
                     /** @type {!tsickle_vscode_1.TextDocument} */
@@ -419,9 +421,12 @@ class AgentEditManager {
                     await this.handleFullyResolvedEdit(message);
                     return;
                 }
-                const { shouldOpen, preview } = this.getOpenOptions(message.skipOpen, message.strictNav);
-                if (shouldOpen) {
-                    await this.revealDocument(normalizedUri, preview);
+                /** @type {!tsickle_vscode_1.WorkspaceConfiguration} */
+                const config = vscode.workspace.getConfiguration('jetski-web');
+                /** @type {boolean} */
+                const autoOpenAll = config.get('autoOpenFiles', false);
+                if (autoOpenAll && message.skipOpen !== true) {
+                    await this.revealDocument(normalizedUri, false);
                 }
                 this.activeDiffZoneDetails.set(normalizedUri, {
                     ...message,
@@ -464,13 +469,30 @@ class AgentEditManager {
         /** @type {(undefined|{originalContents: string, modifiedContents: string, hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)})} */
         const details = this.activeDiffZoneDetails.get(fileUri);
         if (details && details.hunkHashes) {
-            /** @type {string} */
-            const hunkHash = event.hunkHash ?? details.hunkHashes[event.hunkIndex];
-            if (hunkHash) {
-                details.hunkHashes.splice(event.hunkIndex, 1);
-                await this.hunkStorage.recordResolution(message, hunkHash, event.accept
-                    ? hunk_storage_1.HunkResolutionAction.ACCEPT
-                    : hunk_storage_1.HunkResolutionAction.REJECT);
+            if (event.final) {
+                // Record all remaining hunks as resolved so state persists across window reloads.
+                for (const hunkHash of details.hunkHashes) {
+                    await this.hunkStorage.recordResolution(message, hunkHash, event.accept
+                        ? hunk_storage_1.HunkResolutionAction.ACCEPT
+                        : hunk_storage_1.HunkResolutionAction.REJECT);
+                }
+                details.hunkHashes = [];
+            }
+            else {
+                /** @type {string} */
+                const hunkHash = event.hunkHash ?? details.hunkHashes[event.hunkIndex];
+                if (hunkHash) {
+                    /** @type {number} */
+                    const indexToRecord = event.hunkHash
+                        ? details.hunkHashes.indexOf(event.hunkHash)
+                        : event.hunkIndex;
+                    if (indexToRecord !== -1) {
+                        details.hunkHashes.splice(indexToRecord, 1);
+                    }
+                    await this.hunkStorage.recordResolution(message, hunkHash, event.accept
+                        ? hunk_storage_1.HunkResolutionAction.ACCEPT
+                        : hunk_storage_1.HunkResolutionAction.REJECT);
+                }
             }
         }
         if (event.final) {

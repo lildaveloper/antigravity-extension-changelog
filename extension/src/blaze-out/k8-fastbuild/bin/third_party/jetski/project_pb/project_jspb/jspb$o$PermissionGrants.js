@@ -27,6 +27,7 @@ jspb$o$exa$project_pb$PermissionGrants.internal_toObject = function(msg) {
   jspb_internal_public_for_gencode.checkCanCallToObject(msg);
   return /** @type {?} */ (/** @type {!jspb$exa$project_pb$MutablePermissionGrants.ObjectFormat} */ ({
     permissionGrants: jspb$o$exa$codeium_common_pb$PermissionGrantsConfig.internal_toObject(msg.getPermissionGrants()),
+    v2Migrated: jspb_internal_adapters.getBooleanFieldWithDefault(msg, 3),
   }));
 
 };
@@ -68,6 +69,7 @@ jspb$o$exa$project_pb$PermissionGrants.fromObject = function(obj) {
   jspb_internal_adapters.setWrapperField(msg,
       jspb$exa$codeium_common_pb$MutablePermissionGrantsConfig,
       2, jspb_internal_public_for_gencode.fromObjectNullable(obj.permissionGrants, jspb$o$exa$codeium_common_pb$PermissionGrantsConfig.fromObject));
+  jspb_internal_adapters.setProto3BooleanField(msg, 3, obj.v2Migrated);
   return msg;
 };
 }

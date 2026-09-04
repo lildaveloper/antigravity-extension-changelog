@@ -216,7 +216,7 @@ class AntigravityApiEmitters {
                 }
             }
         }
-        return (/** @type {?} */ ((/** @type {*} */ (impl))));
+        return (/** @type {?} */ (impl));
     }
 }
 exports.AntigravityApiEmitters = AntigravityApiEmitters;

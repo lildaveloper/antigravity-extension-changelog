@@ -8,6 +8,7 @@
 
 goog.provide('jspb$b$exa$project_pb$ProjectSettings');
 
+goog.require('jspb$b$exa$project_pb$SecurityPluginSettings');
 goog.require('jspb$exa$project_pb$MutableProjectSettings');
 goog.require('jspb_internal_binary');
 goog.require('jspb_internal_public_for_gencode');
@@ -29,7 +30,11 @@ jspb$b$exa$project_pb$ProjectSettings.fields = /** @pureOrBreakMyCode */([
   -1,
   jspb_internal_binary.RBoolIgnoringDefaultWBool,
   jspb_internal_binary.RStringRequireUtf8IgnoringDefaultWString,
-  jspb_internal_binary.REnumIgnoringDefaultWEnum
+  jspb_internal_binary.REnumIgnoringDefaultWEnum,
+  jspb_internal_binary.RWMapEntry,
+  jspb_internal_binary.createMessageMapEntryBinaryFields(
+      jspb_internal_binary.RStringRequireUtf8WString,
+      jspb$b$exa$project_pb$SecurityPluginSettings.fields)
 ]);
 
 /**

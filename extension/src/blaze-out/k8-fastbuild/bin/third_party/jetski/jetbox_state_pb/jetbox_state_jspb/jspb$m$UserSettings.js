@@ -2059,6 +2059,102 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
   }
 
 
+  /**
+   * optional bool permission_grants_v2_migrated = 44;
+   * @override
+   * @return {boolean}
+   */
+  getPermissionGrantsV2Migrated() {
+    return jspb_internal_adapters.getBooleanFieldWithDefault(this, 44);
+  }
+
+
+  /**
+   * @param {boolean|null|undefined} value
+   * @return {!jspb$jetbox_state_pb$MutableUserSettings} returns this
+   */
+  setPermissionGrantsV2Migrated(value) {
+    return jspb_internal_adapters.setBooleanField(this, 44, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$jetbox_state_pb$MutableUserSettings} returns this
+   */
+  clearPermissionGrantsV2Migrated() {
+    return jspb_internal_adapters.clearField(this, 44);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasPermissionGrantsV2Migrated() {
+    return jspb_internal_adapters.hasBooleanField(this, 44);
+  }
+
+
+  /**
+   * optional bool permission_grants_v2_migrated = 44;
+   * @override
+   * @return {boolean|undefined}
+   */
+  getPermissionGrantsV2MigratedOrUndefined() {
+    return jspb_internal_adapters.getBooleanFieldOrUndefined(this, 44);
+  }
+
+
+  /**
+   * optional bool sandbox_enabled_at_v2_migration = 45;
+   * @override
+   * @return {boolean}
+   */
+  getSandboxEnabledAtV2Migration() {
+    return jspb_internal_adapters.getBooleanFieldWithDefault(this, 45);
+  }
+
+
+  /**
+   * @param {boolean|null|undefined} value
+   * @return {!jspb$jetbox_state_pb$MutableUserSettings} returns this
+   */
+  setSandboxEnabledAtV2Migration(value) {
+    return jspb_internal_adapters.setBooleanField(this, 45, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$jetbox_state_pb$MutableUserSettings} returns this
+   */
+  clearSandboxEnabledAtV2Migration() {
+    return jspb_internal_adapters.clearField(this, 45);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasSandboxEnabledAtV2Migration() {
+    return jspb_internal_adapters.hasBooleanField(this, 45);
+  }
+
+
+  /**
+   * optional bool sandbox_enabled_at_v2_migration = 45;
+   * @override
+   * @return {boolean|undefined}
+   */
+  getSandboxEnabledAtV2MigrationOrUndefined() {
+    return jspb_internal_adapters.getBooleanFieldOrUndefined(this, 45);
+  }
+
+
 };
 
 /**
@@ -2124,7 +2220,9 @@ jspb$jetbox_state_pb$MutableUserSettings.hasInstance = /** @pureOrBreakMyCode */
  *  shellSetupScript: (?string|undefined),
  *  enableSoundsForSpecialEvents: (?boolean|undefined),
  *  permissionPreset: (?number|undefined),
- *  enableAdc: (?boolean|undefined)
+ *  enableAdc: (?boolean|undefined),
+ *  permissionGrantsV2Migrated: (?boolean|undefined),
+ *  sandboxEnabledAtV2Migration: (?boolean|undefined)
  * }}
  */
 jspb$jetbox_state_pb$MutableUserSettings.ObjectFormat;
@@ -2222,7 +2320,9 @@ if (goog.DEBUG && !COMPILED) {
  *  shellSetupScript: (string|undefined),
  *  enableSoundsForSpecialEvents: (boolean|undefined),
  *  permissionPreset: (!jspb$e.exa$codeium_common_pb$AgentPermissionPreset|undefined),
- *  enableAdc: (boolean|undefined)
+ *  enableAdc: (boolean|undefined),
+ *  permissionGrantsV2Migrated: (boolean|undefined),
+ *  sandboxEnabledAtV2Migration: (boolean|undefined)
  * }}
  */
 jspb$jetbox_state_pb$MutableUserSettings.FieldsInterface;

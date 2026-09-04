@@ -106,6 +106,34 @@ jspb$exa$project_pb$MutablePermissionGrants = class extends jspb_internal_public
   }
 
 
+  /**
+   * optional bool v2_migrated = 3;
+   * @override
+   * @return {boolean}
+   */
+  getV2Migrated() {
+    return jspb_internal_adapters.getBooleanFieldWithDefault(this, 3);
+  }
+
+
+  /**
+   * @param {boolean|null|undefined} value
+   * @return {!jspb$exa$project_pb$MutablePermissionGrants} returns this
+   */
+  setV2Migrated(value) {
+    return jspb_internal_adapters.setProto3BooleanField(this, 3, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$exa$project_pb$MutablePermissionGrants} returns this
+   */
+  clearV2Migrated() {
+    return jspb_internal_adapters.clearField(this, 3);
+  }
+
+
 };
 
 /**
@@ -132,7 +160,8 @@ jspb$exa$project_pb$MutablePermissionGrants.hasInstance = /** @pureOrBreakMyCode
 /**
  * Object form of PermissionGrants as accepted by the `fromObject` method.
  * @typedef {{
- *  permissionGrants: (?jspb$exa$codeium_common_pb$MutablePermissionGrantsConfig.ObjectFormat|undefined)
+ *  permissionGrants: (?jspb$exa$codeium_common_pb$MutablePermissionGrantsConfig.ObjectFormat|undefined),
+ *  v2Migrated: (?boolean|undefined)
  * }}
  */
 jspb$exa$project_pb$MutablePermissionGrants.ObjectFormat;
@@ -191,7 +220,8 @@ if (goog.DEBUG && !COMPILED) {
 /**
  * Interface form of PermissionGrants as accepted by `fromFields` and produced by `getFields`.
  * @typedef {{
- *  permissionGrants: (!jspb$ro.exa$codeium_common_pb$ReadonlyPermissionGrantsConfig|undefined)
+ *  permissionGrants: (!jspb$ro.exa$codeium_common_pb$ReadonlyPermissionGrantsConfig|undefined),
+ *  v2Migrated: (boolean|undefined)
  * }}
  */
 jspb$exa$project_pb$MutablePermissionGrants.FieldsInterface;

@@ -97,7 +97,14 @@ class AntigravityTelemetryService {
                     if (value !== undefined && value !== null) {
                         /** @type {string} */
                         const stringVal = typeof value === 'string' ? sanitizeString(value) : String(value);
-                        meta.set((/** @type {(!tsickle_constants_5.AntigravityMetadataKey|!tsickle_constants_5.ApigeeMetadataKey|!tsickle_constants_5.ApiMetadataKey|!tsickle_constants_5.AuthMetadataKey|!tsickle_constants_5.CloudRunMetadataKey|!tsickle_constants_5.CommonMetadataKey|!tsickle_constants_5.ComputeMetadataKey|!tsickle_constants_5.ContextSourceMetadataKey|!tsickle_constants_5.CustomSlashCommandMetadataKey|!tsickle_constants_5.CrashFeedbackMetadataKey|!tsickle_constants_5.DataCloudMetadataKey|!tsickle_constants_5.DeploymentManagerMetadataKey|!tsickle_constants_5.DuetMetadataKey|!tsickle_constants_5.DuetMetadataV2Key|!tsickle_constants_5.ErrorStackMetadataKey|!tsickle_constants_5.ExperimentMetadataKey|!tsickle_constants_5.FunctionsMetadataKey|!tsickle_constants_5.HatsFeedbackMetadataKey|!tsickle_constants_5.KubernetesMetadataKey|!tsickle_constants_5.LogsViewerMetadataKey|!tsickle_constants_5.LookerVSCodeMetadataKey|!tsickle_constants_5.ManagedDependenciesMetadataKey|!tsickle_constants_5.MinikubeMetadataKey|!tsickle_constants_5.ProjectManagerMetadataKey|!tsickle_constants_5.SecretMetadataKey|!tsickle_constants_5.SkaffoldMetadataKey|!tsickle_constants_5.TreeExplorerMetadataKey|!tsickle_constants_5.UpdateManagerMetadataKey|!tsickle_constants_5.UpgradeMetadataKey|!tsickle_constants_5.WebviewMetadataKey|!tsickle_constants_5.OnboardingMetadataKey|!tsickle_constants_5.StructuredCodeEditsMetadataKey|!tsickle_constants_5.ExclusionFilesMetadataKey|!tsickle_constants_5.InlineDiffSettingMetadataKey|!tsickle_constants_5.CampaignNotificationMetadataKey)} */ (key)), stringVal);
+                        if (key === 'duration_ms' ||
+                            key === 'durationMs' ||
+                            key === 'duration') {
+                            meta.set(constants_1.CommonMetadataKey.DURATION_MS, stringVal);
+                        }
+                        else {
+                            meta.set((/** @type {(!tsickle_constants_5.AntigravityMetadataKey|!tsickle_constants_5.ApigeeMetadataKey|!tsickle_constants_5.ApiMetadataKey|!tsickle_constants_5.AuthMetadataKey|!tsickle_constants_5.CloudRunMetadataKey|!tsickle_constants_5.CommonMetadataKey|!tsickle_constants_5.ComputeMetadataKey|!tsickle_constants_5.ContextSourceMetadataKey|!tsickle_constants_5.CustomSlashCommandMetadataKey|!tsickle_constants_5.CrashFeedbackMetadataKey|!tsickle_constants_5.DataCloudMetadataKey|!tsickle_constants_5.DeploymentManagerMetadataKey|!tsickle_constants_5.DuetMetadataKey|!tsickle_constants_5.DuetMetadataV2Key|!tsickle_constants_5.ErrorStackMetadataKey|!tsickle_constants_5.ExperimentMetadataKey|!tsickle_constants_5.FunctionsMetadataKey|!tsickle_constants_5.HatsFeedbackMetadataKey|!tsickle_constants_5.KubernetesMetadataKey|!tsickle_constants_5.LogsViewerMetadataKey|!tsickle_constants_5.LookerVSCodeMetadataKey|!tsickle_constants_5.ManagedDependenciesMetadataKey|!tsickle_constants_5.MinikubeMetadataKey|!tsickle_constants_5.ProjectManagerMetadataKey|!tsickle_constants_5.SecretMetadataKey|!tsickle_constants_5.SkaffoldMetadataKey|!tsickle_constants_5.TreeExplorerMetadataKey|!tsickle_constants_5.UpdateManagerMetadataKey|!tsickle_constants_5.UpgradeMetadataKey|!tsickle_constants_5.WebviewMetadataKey|!tsickle_constants_5.OnboardingMetadataKey|!tsickle_constants_5.StructuredCodeEditsMetadataKey|!tsickle_constants_5.ExclusionFilesMetadataKey|!tsickle_constants_5.InlineDiffSettingMetadataKey|!tsickle_constants_5.CampaignNotificationMetadataKey)} */ (key)), stringVal);
+                        }
                     }
                 }
             }
@@ -134,6 +141,11 @@ class AntigravityTelemetryService {
                         }
                         else if (key === 'failureReason' || key === 'reason') {
                             meta.set(constants_1.CommonMetadataKey.FAILURE_REASON, stringVal);
+                        }
+                        else if (key === 'duration_ms' ||
+                            key === 'durationMs' ||
+                            key === 'duration') {
+                            meta.set(constants_1.CommonMetadataKey.DURATION_MS, stringVal);
                         }
                         else if (key === 'stack' || key === 'stackName') {
                             /** @type {string} */

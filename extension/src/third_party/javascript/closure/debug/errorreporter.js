@@ -312,13 +312,9 @@ goog.debug.ErrorReporter.prototype.setXhrSender = function(xhrSender) {
  * @param {Object} e The exception.
  * @param {!Object<string, string>=} opt_context Context values to optionally
  *     include in the error report.
- * @param {*=} opt_originalError The original error object before normalization,
- *     if available. Useful for preserving custom properties on non-Error
- *     objects.
  * @suppress {strictMissingProperties} error is not defined on Object
  */
-goog.debug.ErrorReporter.prototype.handleException = function(
-    e, opt_context, opt_originalError) {
+goog.debug.ErrorReporter.prototype.handleException = function(e, opt_context) {
   'use strict';
   // goog.debug.catchErrors passes the actual error object (in some browsers) in
   // the error property. If we have that, use that instead of the incomplete set
@@ -337,7 +333,7 @@ goog.debug.ErrorReporter.prototype.handleException = function(
 
   if (this.contextProvider_) {
     try {
-      this.contextProvider_(error, context, opt_originalError);
+      this.contextProvider_(error, context, /* opt_originalError= */ e);
     } catch (err) {
       goog.log.error(
           goog.debug.ErrorReporter.logger_,

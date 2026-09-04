@@ -37,9 +37,10 @@ class DesktopWebviewDelegate {
     /**
      * @public
      * @param {!tsickle_vscode_4.Webview} webview
+     * @param {string=} location
      * @return {void}
      */
-    renderLoading(webview) {
+    renderLoading(webview, location = 'sideBar') {
         patchWebviewPostMessage(webview);
         /** @type {!tsickle_vscode_4.Uri} */
         const loadingBridgeJsUrl = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'loading_bridge.js'));
@@ -52,6 +53,10 @@ class DesktopWebviewDelegate {
         <meta charset="utf-8">
         <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; connect-src 'self' ${webview.cspSource} https: http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*;">
         <style>
+          html, body {
+            --vscode-agy-background: var(--vscode-${location}-background, var(--vscode-editor-background, #1e1e1e));
+            --vscode-agy-foreground: var(--vscode-${location}-foreground, var(--vscode-editor-foreground, #cccccc));
+          }
           body {
             display: flex;
             justify-content: center;
@@ -59,8 +64,8 @@ class DesktopWebviewDelegate {
             height: 100vh;
             margin: 0;
             font-family: var(--vscode-font-family, sans-serif);
-            color: var(--vscode-foreground, #ccc);
-            background-color: var(--vscode-editor-background, #1e1e1e);
+            color: var(--vscode-agy-foreground, #ccc);
+            background-color: var(--vscode-agy-background, #1e1e1e);
           }
           .spinner {
             border: 4px solid rgba(255, 255, 255, 0.1);
@@ -77,6 +82,22 @@ class DesktopWebviewDelegate {
           .container {
             text-align: center;
           }
+          .retry-btn {
+            padding: 8px 24px;
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            background-color: var(--vscode-button-background, #0e639c);
+            color: var(--vscode-button-foreground, #ffffff);
+            border: none;
+            border-radius: 4px;
+            outline: none;
+            transition: background-color 0.15s ease;
+          }
+          .retry-btn:hover {
+            background-color: var(--vscode-button-hoverBackground, #1177bb);
+          }
         </style>
       </head>
       <body>
@@ -84,9 +105,11 @@ class DesktopWebviewDelegate {
           <div class="spinner" style="margin: 0 auto;"></div>
           <div id="loading-details" style="margin-top: 16px; font-size: 13px;">Initializing Antigravity...</div>
         </div>
-        <div id="loading-error" style="display: none; visibility: hidden; flex-direction: column; align-items: center; gap: 12px;">
-          <span id="error-message-text"></span>
-          <button id="retry-button" style="padding: 6px 14px; cursor: pointer;">Retry</button>
+        <div id="loading-error" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; visibility: hidden; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 24px; box-sizing: border-box;">
+          <div style="font-size: 15px; font-weight: 600; color: var(--vscode-foreground, #ccc);">Unable to start Antigravity</div>
+          <div style="font-size: 13px; color: var(--vscode-descriptionForeground, #999); line-height: 1.4; max-width: 340px;">Could not connect to the update server. Please check your network connection and try again.</div>
+          <span id="error-message-text" style="font-size: 11px; font-family: var(--vscode-editor-font-family, monospace); opacity: 0.75; word-break: break-word; line-height: 1.4; max-width: 90%; max-height: 120px; overflow-y: auto; background: var(--vscode-textCodeBlock-background, rgba(255,255,255,0.04)); padding: 8px 12px; border-radius: 4px; border: 1px solid var(--vscode-widget-border, rgba(255,255,255,0.08)); text-align: left;"></span>
+          <button id="retry-button" class="retry-btn">Retry</button>
         </div>
         <div id="host-input-container" style="display: none;">
           <span id="host-input-message"></span>
@@ -199,13 +222,15 @@ class DesktopWebviewDelegate {
         <meta http-equiv="Content-Security-Policy" content="default-src 'none'; frame-src ${serverUrl} https: http:; script-src ${webview.cspSource} 'unsafe-inline'; style-src ${webview.cspSource} 'unsafe-inline'; connect-src 'self' ${webview.cspSource} https: http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*;">
         <style>
           html, body {
+            --vscode-agy-background: var(--vscode-${options.location}-background, var(--vscode-editor-background, #1e1e1e));
+            --vscode-agy-foreground: var(--vscode-${options.location}-foreground, var(--vscode-editor-foreground, #cccccc));
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: var(--vscode-editor-background, #1e1e1e);
-            color: var(--vscode-editor-foreground, #cccccc);
+            background-color: var(--vscode-agy-background, #1e1e1e);
+            color: var(--vscode-agy-foreground, #cccccc);
           }
           iframe {
             width: 100%;

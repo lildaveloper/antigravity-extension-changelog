@@ -176,12 +176,11 @@ if (false) {
      * @param {!tsickle_vscode_3.Uri} uri Target notebook file URI.
      * @param {!tsickle_vscode_3.NotebookDocument} document The opened NotebookDocument.
      * @param {!tsickle_agent_edit_manager_4.AddAgentEditMessage} message Edit message options.
-     * @param {!Array<!tsickle_vscode_3.NotebookCellSnapshot>} originalCells Parsed snapshots of original notebook cells.
      * @param {function(string): (undefined|!tsickle_hunk_storage_5.HunkResolutionAction)} getStoredResolution Callback to query previously stored hunk resolutions.
      * @param {function(!HunkResolutionEvent): !Promise<void>} onHunkResolved Callback triggered when a hunk is resolved interactively in the UI.
      * @return {!Promise<!RenderNotebookEditResult>}
      */
-    DiffZoneRenderer.prototype.renderNotebookEdit = function (uri, document, message, originalCells, getStoredResolution, onHunkResolved) { };
+    DiffZoneRenderer.prototype.renderNotebookEdit = function (uri, document, message, getStoredResolution, onHunkResolved) { };
     /**
      * Focuses a specific hunk or moves focus ('next'/'previous') in the active editor for the given file.
      * @public
@@ -284,9 +283,9 @@ function computeNotebookDiffStats(hunks) {
 }
 exports.computeNotebookDiffStats = computeNotebookDiffStats;
 /**
- * Parses raw Colab notebook JSON content string into NotebookCellSnapshots.
+ * Parses raw Colab notebook JSON content string into NotebookCellSnapshots. Returns undefined if parsing fails.
  * @param {string} originalContents
- * @return {!Array<!tsickle_vscode_3.NotebookCellSnapshot>}
+ * @return {(undefined|!Array<!tsickle_vscode_3.NotebookCellSnapshot>)}
  */
 function parseNotebookCells(originalContents) {
     if (!originalContents)
@@ -325,7 +324,7 @@ function parseNotebookCells(originalContents) {
     }
     catch (e) {
         console.error('[Jetski] Failed to parse notebook contents', e);
-        return [];
+        return undefined;
     }
 }
 exports.parseNotebookCells = parseNotebookCells;
@@ -341,28 +340,6 @@ function snapshotToCellData(snapshot) {
     return cellData;
 }
 exports.snapshotToCellData = snapshotToCellData;
-/**
- * Checks whether a notebook document matches a given list of modified cell snapshots.
- * @param {!tsickle_vscode_3.NotebookDocument} doc
- * @param {!Array<!tsickle_vscode_3.NotebookCellSnapshot>} modifiedCells
- * @return {boolean}
- */
-function areNotebooksEqual(doc, modifiedCells) {
-    if (doc.cellCount !== modifiedCells.length)
-        return false;
-    for (let i = 0; i < doc.cellCount; i++) {
-        /** @type {!tsickle_vscode_3.NotebookCell} */
-        const docCell = doc.cellAt(i);
-        /** @type {!tsickle_vscode_3.NotebookCellSnapshot} */
-        const modCell = modifiedCells[i];
-        if (docCell.kind !== modCell.cellKind)
-            return false;
-        if (docCell.document.getText() !== modCell.value)
-            return false;
-    }
-    return true;
-}
-exports.areNotebooksEqual = areNotebooksEqual;
 /**
  * Finds the active or visible notebook editor for the given file URI.
  * @param {string} fileUri

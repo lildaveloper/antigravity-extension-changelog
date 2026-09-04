@@ -96,12 +96,11 @@ class SideBySideDiffZoneRenderer {
      * @param {!tsickle_vscode_1.Uri} _uri
      * @param {!tsickle_vscode_1.NotebookDocument} _document
      * @param {!tsickle_agent_edit_manager_2.AddAgentEditMessage} _message
-     * @param {!Array<!tsickle_vscode_1.NotebookCellSnapshot>} _originalCells
      * @param {function(string): (undefined|!tsickle_hunk_storage_5.HunkResolutionAction)} _getStoredResolution
      * @param {function(!tsickle_diff_zone_renderer_3.HunkResolutionEvent): !Promise<void>} _onHunkResolved
      * @return {!Promise<!tsickle_diff_zone_renderer_3.RenderNotebookEditResult>}
      */
-    async renderNotebookEdit(_uri, _document, _message, _originalCells, _getStoredResolution, _onHunkResolved) {
+    async renderNotebookEdit(_uri, _document, _message, _getStoredResolution, _onHunkResolved) {
         console.warn('[Jetski] SideBySide diff view for notebooks is not supported.');
         return { added: false, fullyResolved: false, hunks: [] };
     }

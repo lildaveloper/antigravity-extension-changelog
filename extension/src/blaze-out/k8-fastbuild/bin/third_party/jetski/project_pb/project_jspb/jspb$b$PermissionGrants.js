@@ -10,6 +10,7 @@ goog.provide('jspb$b$exa$project_pb$PermissionGrants');
 
 goog.require('jspb$b$exa$codeium_common_pb$PermissionGrantsConfig');
 goog.require('jspb$exa$project_pb$MutablePermissionGrants');
+goog.require('jspb_internal_binary');
 goog.require('jspb_internal_public_for_gencode');
 
 /**
@@ -23,7 +24,8 @@ goog.require('jspb_internal_public_for_gencode');
 jspb$b$exa$project_pb$PermissionGrants.fields = /** @pureOrBreakMyCode */([
   0,
   1,
-  jspb$b$exa$codeium_common_pb$PermissionGrantsConfig.fields
+  jspb$b$exa$codeium_common_pb$PermissionGrantsConfig.fields,
+  jspb_internal_binary.RBoolIgnoringDefaultWBool
 ]);
 
 /**

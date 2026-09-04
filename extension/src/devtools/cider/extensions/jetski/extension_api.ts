@@ -15,22 +15,25 @@ goog.module('google3.devtools.cider.extensions.jetski.extension_api');
 var module = module || { id: 'devtools/cider/extensions/jetski/extension_api.closure.js' };
 goog.require('google3.third_party.javascript.tslib.tslib');
 const tsickle_protobuf_1 = goog.requireType("google3.third_party.javascript.bufbuild_protobuf.src.index");
-const tsickle_codeium_common_pb_2 = goog.requireType("google3.third_party.jetski.codeium_common_pb.codeium_common_pb");
-const tsickle_iframe_messages_pb_3 = goog.requireType("google3.third_party.gemini_coder.proto.iframe_messages_pb");
-const tsickle_agent_edit_manager_4 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.agent_edit_manager");
-const tsickle_check_5 = goog.requireType("google3.javascript.typescript.contrib.check");
-const tsickle_extensionApi_6 = goog.requireType("google3.third_party.gemini_coder.agent_ui_toolkit.src.features.iframe.extensionApi");
-const tsickle_vscode_7 = goog.requireType("vscode");
-const tsickle_artifact_editor_provider_8 = goog.requireType("google3.devtools.cider.extensions.jetski.artifact_editor_provider");
-const tsickle_delegate_interfaces_9 = goog.requireType("google3.devtools.cider.extensions.jetski.delegate_interfaces");
-const tsickle_editor_state_watcher_10 = goog.requireType("google3.devtools.cider.extensions.jetski.editor_state_watcher");
-const tsickle_jetski_instance_11 = goog.requireType("google3.devtools.cider.extensions.jetski.jetski_instance");
-const tsickle_notebook_utils_interface_12 = goog.requireType("google3.devtools.cider.extensions.jetski.notebook_utils_interface");
-const tsickle_settings_editor_provider_13 = goog.requireType("google3.devtools.cider.extensions.jetski.settings_editor_provider");
-const tsickle_util_14 = goog.requireType("google3.devtools.cider.extensions.jetski.setup.util");
-const tsickle_terminal_panel_provider_15 = goog.requireType("google3.devtools.cider.extensions.jetski.terminal_panel_provider");
+const tsickle_connect_2 = goog.requireType("google3.third_party.javascript.connectrpc_connect.src.index");
+const tsickle_codeium_common_pb_3 = goog.requireType("google3.third_party.jetski.codeium_common_pb.codeium_common_pb");
+const tsickle_iframe_messages_pb_4 = goog.requireType("google3.third_party.gemini_coder.proto.iframe_messages_pb");
+const tsickle_agent_edit_manager_5 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.agent_edit_manager");
+const tsickle_check_6 = goog.requireType("google3.javascript.typescript.contrib.check");
+const tsickle_extensionApi_7 = goog.requireType("google3.third_party.gemini_coder.agent_ui_toolkit.src.features.iframe.extensionApi");
+const tsickle_vscode_8 = goog.requireType("vscode");
+const tsickle_artifact_editor_provider_9 = goog.requireType("google3.devtools.cider.extensions.jetski.artifact_editor_provider");
+const tsickle_delegate_interfaces_10 = goog.requireType("google3.devtools.cider.extensions.jetski.delegate_interfaces");
+const tsickle_editor_state_watcher_11 = goog.requireType("google3.devtools.cider.extensions.jetski.editor_state_watcher");
+const tsickle_jetski_instance_12 = goog.requireType("google3.devtools.cider.extensions.jetski.jetski_instance");
+const tsickle_notebook_utils_interface_13 = goog.requireType("google3.devtools.cider.extensions.jetski.notebook_utils_interface");
+const tsickle_settings_editor_provider_14 = goog.requireType("google3.devtools.cider.extensions.jetski.settings_editor_provider");
+const tsickle_util_15 = goog.requireType("google3.devtools.cider.extensions.jetski.setup.util");
+const tsickle_terminal_panel_provider_16 = goog.requireType("google3.devtools.cider.extensions.jetski.terminal_panel_provider");
 const protobuf_1 = goog.require('google3.third_party.javascript.bufbuild_protobuf.src.index'); // from //third_party/javascript/bufbuild_protobuf
 // from //third_party/javascript/bufbuild_protobuf
+const connect_1 = goog.require('google3.third_party.javascript.connectrpc_connect.src.index'); // from //third_party/javascript/connectrpc_connect
+// from //third_party/javascript/connectrpc_connect
 const codeium_common_pb_1 = goog.require('google3.third_party.jetski.codeium_common_pb.codeium_common_pb'); // from //third_party/jetski/codeium_common_pb:codeium_common_ts_proto
 // from //third_party/jetski/codeium_common_pb:codeium_common_ts_proto
 const iframe_messages_pb_1 = goog.require('google3.third_party.gemini_coder.proto.iframe_messages_pb');
@@ -42,9 +45,9 @@ const editor_state_watcher_1 = goog.require('google3.devtools.cider.extensions.j
 const jetski_instance_1 = goog.require('google3.devtools.cider.extensions.jetski.jetski_instance');
 const settings_editor_provider_1 = goog.require('google3.devtools.cider.extensions.jetski.settings_editor_provider');
 const util_1 = goog.require('google3.devtools.cider.extensions.jetski.setup.util');
-/** @typedef {!tsickle_delegate_interfaces_9.DynamicContextCategoryItem} */
+/** @typedef {!tsickle_delegate_interfaces_10.DynamicContextCategoryItem} */
 exports.DynamicContextCategoryItem; // type-only export
-/** @typedef {!tsickle_delegate_interfaces_9.DynamicContextProvider} */
+/** @typedef {!tsickle_delegate_interfaces_10.DynamicContextProvider} */
 exports.DynamicContextProvider; // type-only export
 /**
  * Typing for arguments passed to antigravity.addContext.
@@ -65,47 +68,47 @@ exports.ExtensionApiConfig = ExtensionApiConfig;
 /* istanbul ignore if */
 if (false) {
     /**
-     * @type {!tsickle_agent_edit_manager_4.AgentEditManager}
+     * @type {!tsickle_agent_edit_manager_5.AgentEditManager}
      * @public
      */
     ExtensionApiConfig.prototype.agentEditManager;
     /**
-     * @type {(undefined|!tsickle_delegate_interfaces_9.BrowserNotificationDelegate)}
+     * @type {(undefined|!tsickle_delegate_interfaces_10.BrowserNotificationDelegate)}
      * @public
      */
     ExtensionApiConfig.prototype.browserNotificationDelegate;
     /**
-     * @type {(undefined|!tsickle_delegate_interfaces_9.ConnectionResolver)}
+     * @type {(undefined|!tsickle_delegate_interfaces_10.ConnectionResolver)}
      * @public
      */
     ExtensionApiConfig.prototype.connectionResolver;
     /**
-     * @type {!tsickle_vscode_7.ExtensionContext}
+     * @type {!tsickle_vscode_8.ExtensionContext}
      * @public
      */
     ExtensionApiConfig.prototype.context;
     /**
-     * @type {!tsickle_delegate_interfaces_9.HostAppConfig}
+     * @type {!tsickle_delegate_interfaces_10.HostAppConfig}
      * @public
      */
     ExtensionApiConfig.prototype.naming;
     /**
-     * @type {(undefined|!tsickle_delegate_interfaces_9.NotebookExecutor)}
+     * @type {(undefined|!tsickle_delegate_interfaces_10.NotebookExecutor)}
      * @public
      */
     ExtensionApiConfig.prototype.notebookExecutor;
     /**
-     * @type {(undefined|!tsickle_notebook_utils_interface_12.NotebookUtils)}
+     * @type {(undefined|!tsickle_notebook_utils_interface_13.NotebookUtils)}
      * @public
      */
     ExtensionApiConfig.prototype.notebookUtils;
     /**
-     * @type {(undefined|!tsickle_delegate_interfaces_9.Telemetry)}
+     * @type {(undefined|!tsickle_delegate_interfaces_10.Telemetry)}
      * @public
      */
     ExtensionApiConfig.prototype.telemetry;
     /**
-     * @type {(undefined|!tsickle_delegate_interfaces_9.WorkspaceManager)}
+     * @type {(undefined|!tsickle_delegate_interfaces_10.WorkspaceManager)}
      * @public
      */
     ExtensionApiConfig.prototype.workspaceManager;
@@ -115,20 +118,20 @@ if (false) {
  *
  * Handles all RPC calls from the Jetski iframe, manages the lifecycle of
  * JetskiInstance views, and coordinates editor state forwarding.
- * @implements {tsickle_vscode_7.TextDocumentContentProvider}
+ * @implements {tsickle_vscode_8.TextDocumentContentProvider}
  * tsickle: dropped implements: dropped implements of a type literal: ServiceImplWithoutEvents<typeof ExtensionApi, AntigravityApiEmitters>
  */
 class ExtensionApiImpl {
     /**
      * @public
-     * @return {!tsickle_vscode_7.Event<!tsickle_jetski_instance_11.JetskiInstance>}
+     * @return {!tsickle_vscode_8.Event<!tsickle_jetski_instance_12.JetskiInstance>}
      */
     get onDidRegisterView() {
         return this.onDidRegisterViewEmitter.event;
     }
     /**
      * @public
-     * @param {!tsickle_terminal_panel_provider_15.TerminalPanelProvider} provider
+     * @param {!tsickle_terminal_panel_provider_16.TerminalPanelProvider} provider
      * @return {void}
      */
     setTerminalPanelProvider(provider) {
@@ -136,11 +139,11 @@ class ExtensionApiImpl {
     }
     /**
      * @public
-     * @return {!Array<!tsickle_jetski_instance_11.JetskiInstance>}
+     * @return {!Array<!tsickle_jetski_instance_12.JetskiInstance>}
      */
     get mainViews() {
         return this.views.filter((/**
-         * @param {!tsickle_jetski_instance_11.JetskiInstance} view
+         * @param {!tsickle_jetski_instance_12.JetskiInstance} view
          * @return {boolean}
          */
         (view) => view.type === 'main'));
@@ -148,7 +151,7 @@ class ExtensionApiImpl {
     /**
      * Returns the first active main Jetski instance, or undefined if none exists.
      * @public
-     * @return {(undefined|!tsickle_jetski_instance_11.JetskiInstance)}
+     * @return {(undefined|!tsickle_jetski_instance_12.JetskiInstance)}
      */
     getMainInstance() {
         return this.mainViews[0];
@@ -157,21 +160,21 @@ class ExtensionApiImpl {
      * Returns the first active main Jetski instance. If none exists, focuses the
      * panel to create it and waits for it to be registered.
      * @public
-     * @return {!Promise<!tsickle_jetski_instance_11.JetskiInstance>}
+     * @return {!Promise<!tsickle_jetski_instance_12.JetskiInstance>}
      */
     async ensureMainInstance() {
-        /** @type {(undefined|!tsickle_jetski_instance_11.JetskiInstance)} */
+        /** @type {(undefined|!tsickle_jetski_instance_12.JetskiInstance)} */
         const existing = this.getMainInstance();
         if (existing) {
             await existing.ready;
             return existing;
         }
         const { promise, resolve } = Promise.withResolvers();
-        /** @type {(undefined|!tsickle_vscode_7.Disposable)} */
+        /** @type {(undefined|!tsickle_vscode_8.Disposable)} */
         let listener;
         try {
             listener = this.onDidRegisterView((/**
-             * @param {!tsickle_jetski_instance_11.JetskiInstance} view
+             * @param {!tsickle_jetski_instance_12.JetskiInstance} view
              * @return {void}
              */
             (view) => {
@@ -180,7 +183,7 @@ class ExtensionApiImpl {
                 }
             }));
             await vscode.commands.executeCommand(`${this.naming.viewId}.focus`);
-            /** @type {!tsickle_jetski_instance_11.JetskiInstance} */
+            /** @type {!tsickle_jetski_instance_12.JetskiInstance} */
             const view = await promise;
             await view.ready;
             return view;
@@ -195,7 +198,7 @@ class ExtensionApiImpl {
      * @return {!Promise<void>}
      */
     async handleToggleChatFocus(action) {
-        /** @type {!tsickle_jetski_instance_11.JetskiInstance} */
+        /** @type {!tsickle_jetski_instance_12.JetskiInstance} */
         const view = await this.ensureMainInstance();
         if (action === 'close') {
             await this.closeChatView(view);
@@ -221,7 +224,7 @@ class ExtensionApiImpl {
     }
     /**
      * @private
-     * @param {!tsickle_jetski_instance_11.JetskiInstance} view
+     * @param {!tsickle_jetski_instance_12.JetskiInstance} view
      * @return {!Promise<void>}
      */
     async closeChatView(view) {
@@ -259,7 +262,7 @@ class ExtensionApiImpl {
      * When opening from a hidden state, focusInput is retried after a short delay
      * to ensure the input box is focused once the container finishes revealing.
      * @private
-     * @param {!tsickle_jetski_instance_11.JetskiInstance} view
+     * @param {!tsickle_jetski_instance_12.JetskiInstance} view
      * @return {!Promise<void>}
      */
     async focusChatView(view) {
@@ -305,7 +308,7 @@ class ExtensionApiImpl {
          */
         async () => {
             try {
-                /** @type {!tsickle_jetski_instance_11.JetskiInstance} */
+                /** @type {!tsickle_jetski_instance_12.JetskiInstance} */
                 const mainView = await this.ensureMainInstance();
                 await mainView.ready;
                 await mainView.api.sendCommand({ commandId: webviewCommandId });
@@ -318,7 +321,7 @@ class ExtensionApiImpl {
     }
     /**
      * @private
-     * @param {!tsickle_jetski_instance_11.JetskiInstance} view
+     * @param {!tsickle_jetski_instance_12.JetskiInstance} view
      * @return {!Promise<void>}
      */
     async registerDynamicCommands(view) {
@@ -392,7 +395,7 @@ class ExtensionApiImpl {
             await this.openVirtualDiff(fileUri, originalContents, modifiedContents, `Diff: ${fileUri.substring(fileUri.lastIndexOf('/') + 1)} (Resolved)`);
         }));
         this.context.subscriptions.push(this.agentEditManager.onDidChangeDiffZones((/**
-         * @param {!Array<!tsickle_agent_edit_manager_4.FileAgentEditState>} states
+         * @param {!Array<!tsickle_agent_edit_manager_5.FileAgentEditState>} states
          * @return {void}
          */
         (states) => {
@@ -402,14 +405,16 @@ class ExtensionApiImpl {
                  * @return {void}
                  */
                 (e) => {
-                    console.error('[ExtensionAPI] Failed to send file diffs to view', e);
+                    if (connect_1.ConnectError.from(e).code !== connect_1.Code.NotFound) {
+                        console.error('[ExtensionAPI] Failed to send file diffs to view', e);
+                    }
                 }));
             }
         })));
         this.context.subscriptions.push(this.onDidRegisterViewEmitter);
         // Clear chatFocused context key when focus moves back into an active text editor or terminal.
         this.context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((/**
-         * @param {(undefined|!tsickle_vscode_7.TextEditor)} editor
+         * @param {(undefined|!tsickle_vscode_8.TextEditor)} editor
          * @return {void}
          */
         (editor) => {
@@ -422,7 +427,7 @@ class ExtensionApiImpl {
         () => {
             this.setChatFocused(false);
         })), vscode.window.onDidChangeActiveTerminal((/**
-         * @param {(undefined|!tsickle_vscode_7.Terminal)} terminal
+         * @param {(undefined|!tsickle_vscode_8.Terminal)} terminal
          * @return {void}
          */
         (terminal) => {
@@ -435,9 +440,9 @@ class ExtensionApiImpl {
          * @return {!Promise<void>}
          */
         async () => {
-            /** @type {(undefined|!tsickle_vscode_7.TextEditor)} */
+            /** @type {(undefined|!tsickle_vscode_8.TextEditor)} */
             const editor = vscode.window.activeTextEditor;
-            /** @type {(undefined|!tsickle_vscode_7.Selection)} */
+            /** @type {(undefined|!tsickle_vscode_8.Selection)} */
             const selection = editor?.selection;
             if (!selection)
                 return;
@@ -450,7 +455,7 @@ class ExtensionApiImpl {
                 },
             });
             try {
-                /** @type {!tsickle_jetski_instance_11.JetskiInstance} */
+                /** @type {!tsickle_jetski_instance_12.JetskiInstance} */
                 const view = await this.ensureMainInstance();
                 await this.focusChatView(view);
             }
@@ -459,7 +464,7 @@ class ExtensionApiImpl {
             }
         })));
         this.context.subscriptions.push(this.onDidRegisterView((/**
-         * @param {!tsickle_jetski_instance_11.JetskiInstance} view
+         * @param {!tsickle_jetski_instance_12.JetskiInstance} view
          * @return {!Promise<void>}
          */
         async (view) => {
@@ -479,7 +484,7 @@ class ExtensionApiImpl {
          * @return {!Promise<void>}
          */
         async () => {
-            /** @type {(undefined|!tsickle_vscode_7.Terminal)} */
+            /** @type {(undefined|!tsickle_vscode_8.Terminal)} */
             const terminal = vscode.window.activeTerminal;
             if (!terminal)
                 return;
@@ -497,7 +502,7 @@ class ExtensionApiImpl {
                 },
             }, ' ');
             try {
-                /** @type {!tsickle_jetski_instance_11.JetskiInstance} */
+                /** @type {!tsickle_jetski_instance_12.JetskiInstance} */
                 const view = await this.ensureMainInstance();
                 await this.focusChatView(view);
             }
@@ -514,10 +519,7 @@ class ExtensionApiImpl {
          * @return {!Promise<void>}
          */
         async () => {
-            /** @type {!tsickle_jetski_instance_11.JetskiInstance} */
-            const view = await this.ensureMainInstance();
-            view.focus();
-            await view.api.newConversation({});
+            await this.newConversation();
         })));
         this.context.subscriptions.push(vscode.commands.registerCommand('antigravity.addContext', (/**
          * @param {...?} args
@@ -555,7 +557,7 @@ class ExtensionApiImpl {
                                 /** @type {boolean} */
                                 let isDirectory = false;
                                 try {
-                                    /** @type {!tsickle_vscode_7.FileStat} */
+                                    /** @type {!tsickle_vscode_8.FileStat} */
                                     const stat = await vscode.workspace.fs.stat(vscode.Uri.parse((/** @type {{type: string, uri: string, label: (undefined|string), range: (undefined|{startLineNumber: number, endLineNumber: number, startColumn: number, endColumn: number})}} */ (item)).uri));
                                     isDirectory =
                                         (stat.type & vscode.FileType.Directory) !== 0;
@@ -618,13 +620,13 @@ class ExtensionApiImpl {
             });
         })));
         this.context.subscriptions.push(vscode.AntigravityFiles?.onDidDragToCascade((/**
-         * @param {!Array<!tsickle_vscode_7.AntigravityFiles.FileDragItem>} items
+         * @param {!Array<!tsickle_vscode_8.AntigravityFiles.FileDragItem>} items
          * @return {!Promise<void>}
          */
         async (items) => {
             /** @type {!Array<(undefined|string|{value: ?, case: string}|{case: undefined, value: undefined}|{case: string, value: ?})>} */
             const chunks = await Promise.all(items.map((/**
-             * @param {!tsickle_vscode_7.AntigravityFiles.FileDragItem} item
+             * @param {!tsickle_vscode_8.AntigravityFiles.FileDragItem} item
              * @return {!Promise<(undefined|string|{value: ?, case: string}|{case: undefined, value: undefined}|{case: string, value: ?})>}
              */
             async (item) => {
@@ -641,7 +643,7 @@ class ExtensionApiImpl {
                 /** @type {boolean} */
                 let isDirectory = false;
                 try {
-                    /** @type {!tsickle_vscode_7.FileStat} */
+                    /** @type {!tsickle_vscode_8.FileStat} */
                     const stat = await vscode.workspace.fs.stat(item.uri);
                     isDirectory = (stat.type & vscode.FileType.Directory) !== 0;
                 }
@@ -672,7 +674,7 @@ class ExtensionApiImpl {
          * @return {!Promise<void>}
          */
         async () => {
-            /** @type {!tsickle_jetski_instance_11.JetskiInstance} */
+            /** @type {!tsickle_jetski_instance_12.JetskiInstance} */
             const view = await this.ensureMainInstance();
             view.focus();
             await view.api.triggerSend({});
@@ -680,7 +682,7 @@ class ExtensionApiImpl {
         this.registerCascadeListeners();
         this.editorStateWatcher = new editor_state_watcher_1.EditorStateWatcher({
             views: (/**
-             * @return {!Array<!tsickle_jetski_instance_11.JetskiInstance>}
+             * @return {!Array<!tsickle_jetski_instance_12.JetskiInstance>}
              */
             () => this.mainViews),
             notebookUtils: config.notebookUtils,
@@ -688,7 +690,7 @@ class ExtensionApiImpl {
         this.context.subscriptions.push(this.editorStateWatcher.watch());
         this.registerStaticCommandsFromPackageJson();
         // Trigger startup request to sync initial context.
-        /** @type {(undefined|!tsickle_vscode_7.TextEditor)} */
+        /** @type {(undefined|!tsickle_vscode_8.TextEditor)} */
         const activeEditor = vscode.window.activeTextEditor;
         /** @type {(undefined|?)} */
         const activeDoc = this.editorStateWatcher.buildTextDocument(activeEditor, activeEditor?.document) ??
@@ -701,7 +703,7 @@ class ExtensionApiImpl {
      * @return {!Promise<void>}
      */
     async addContext(...chunks) {
-        /** @type {!tsickle_jetski_instance_11.JetskiInstance} */
+        /** @type {!tsickle_jetski_instance_12.JetskiInstance} */
         const view = await this.ensureMainInstance();
         view.focus();
         /** @type {!Array<(undefined|string|{value: ?, case: string}|{case: undefined, value: undefined}|{case: string, value: ?})>} */
@@ -765,14 +767,23 @@ class ExtensionApiImpl {
     }
     /**
      * @public
+     * @return {!Promise<void>}
+     */
+    async newConversation() {
+        /** @type {!tsickle_jetski_instance_12.JetskiInstance} */
+        const view = await this.ensureMainInstance();
+        view.focus();
+        await view.api.newConversation({});
+    }
+    /**
+     * @public
      * @param {!Array<*>} markers
      * @return {!Promise<void>}
      */
     async sendAllMarkers(markers) {
-        /** @type {!tsickle_jetski_instance_11.JetskiInstance} */
+        /** @type {!tsickle_jetski_instance_12.JetskiInstance} */
         const view = await this.ensureMainInstance();
-        view.focus();
-        await view.api.newConversation({});
+        await this.newConversation();
         /** @type {string} */
         const primer = `The IDE found these problems in the workspace. Any line numbers in the following JSON are 1-based.`;
         /** @type {string} */
@@ -798,10 +809,9 @@ class ExtensionApiImpl {
      * @return {!Promise<void>}
      */
     async sendFileMarkers(fileName, filePath, markers) {
-        /** @type {!tsickle_jetski_instance_11.JetskiInstance} */
+        /** @type {!tsickle_jetski_instance_12.JetskiInstance} */
         const view = await this.ensureMainInstance();
-        view.focus();
-        await view.api.newConversation({});
+        await this.newConversation();
         /** @type {string} */
         const primer = `The IDE found these problems in ${fileName}. Any line numbers in the following JSON are 1-based.`;
         /** @type {string} */
@@ -821,7 +831,7 @@ class ExtensionApiImpl {
     }
     /**
      * @public
-     * @param {!tsickle_vscode_7.Uri} uri
+     * @param {!tsickle_vscode_8.Uri} uri
      * @return {string}
      */
     provideTextDocumentContent(uri) {
@@ -843,28 +853,28 @@ class ExtensionApiImpl {
         if (typeof vscode.Cascade === 'undefined')
             return;
         this.context.subscriptions.push(vscode.Cascade.onDidRequestAcceptAllInFile((/**
-         * @param {{uri: !tsickle_vscode_7.Uri}} __0
+         * @param {{uri: !tsickle_vscode_8.Uri}} __0
          * @return {!Promise<void>}
          */
         async ({ uri }) => {
             await this.agentEditManager.handleResolveAllAgentEditsInFile(uri.toString(), true);
         })));
         this.context.subscriptions.push(vscode.Cascade.onDidRequestRejectAllInFile((/**
-         * @param {{uri: !tsickle_vscode_7.Uri}} __0
+         * @param {{uri: !tsickle_vscode_8.Uri}} __0
          * @return {!Promise<void>}
          */
         async ({ uri }) => {
             await this.agentEditManager.handleResolveAllAgentEditsInFile(uri.toString(), false);
         })));
         this.context.subscriptions.push(vscode.Cascade.onDidRequestNextHunk((/**
-         * @param {!tsickle_vscode_7.Uri} uri
+         * @param {!tsickle_vscode_8.Uri} uri
          * @return {void}
          */
         (uri) => {
             this.agentEditManager.focusHunk(uri.toString(), 'next');
         })));
         this.context.subscriptions.push(vscode.Cascade.onDidRequestPreviousHunk((/**
-         * @param {!tsickle_vscode_7.Uri} uri
+         * @param {!tsickle_vscode_8.Uri} uri
          * @return {void}
          */
         (uri) => {
@@ -873,24 +883,24 @@ class ExtensionApiImpl {
     }
     /**
      * @public
-     * @param {(!tsickle_vscode_7.WebviewView|!tsickle_vscode_7.WebviewPanel)} webviewView
+     * @param {(!tsickle_vscode_8.WebviewView|!tsickle_vscode_8.WebviewPanel)} webviewView
      * @param {string} type
      * @return {!Promise<void>}
      */
     async registerWebview(webviewView, type) {
         /** @type {number} */
         const existingIndex = this.views.findIndex((/**
-         * @param {!tsickle_jetski_instance_11.JetskiInstance} v
+         * @param {!tsickle_jetski_instance_12.JetskiInstance} v
          * @return {boolean}
          */
         (v) => v.webview === webviewView.webview ||
             (type === 'main' && v.type === 'main')));
         if (existingIndex > -1) {
-            /** @type {!tsickle_jetski_instance_11.JetskiInstance} */
+            /** @type {!tsickle_jetski_instance_12.JetskiInstance} */
             const existingView = this.views.splice(existingIndex, 1)[0];
             existingView.dispose();
         }
-        /** @type {!tsickle_jetski_instance_11.JetskiInstance} */
+        /** @type {!tsickle_jetski_instance_12.JetskiInstance} */
         const view = new jetski_instance_1.JetskiInstance({
             extensionApi: this,
             type,
@@ -911,7 +921,7 @@ class ExtensionApiImpl {
             }));
         }
         void this.forwardContextCategories(view);
-        /** @type {!Array<!tsickle_agent_edit_manager_4.FileAgentEditState>} */
+        /** @type {!Array<!tsickle_agent_edit_manager_5.FileAgentEditState>} */
         const currentDiffStates = this.agentEditManager.getCurrentStates();
         if (currentDiffStates.length > 0) {
             void view.api.setFileDiffs({ fileDiffs: currentDiffStates }).catch((/**
@@ -919,10 +929,12 @@ class ExtensionApiImpl {
              * @return {void}
              */
             (e) => {
-                console.error('[ExtensionAPI] Failed to send initial file diffs to new view', e);
+                if (connect_1.ConnectError.from(e).code !== connect_1.Code.NotFound) {
+                    console.error('[ExtensionAPI] Failed to send initial file diffs to new view', e);
+                }
             }));
         }
-        /** @type {!Array<!tsickle_vscode_7.Disposable>} */
+        /** @type {!Array<!tsickle_vscode_8.Disposable>} */
         const viewDisposables = [];
         viewDisposables.push(view.api.onDidChangeUrl((/**
          * @param {?} msg
@@ -935,7 +947,7 @@ class ExtensionApiImpl {
             void this.telemetry?.logEvent('jetski_web.chat_message_sent', {
                 'userAction': true,
             });
-            /** @type {(undefined|!tsickle_vscode_7.TextEditor)} */
+            /** @type {(undefined|!tsickle_vscode_8.TextEditor)} */
             const activeEditor = vscode.window.activeTextEditor;
             /** @type {(undefined|string)} */
             const activeFileUri = activeEditor?.document.uri.toString();
@@ -958,18 +970,18 @@ class ExtensionApiImpl {
             }
         })));
         if ('onDidChangeVisibility' in webviewView &&
-            typeof (/** @type {!tsickle_vscode_7.WebviewView} */ (webviewView)).onDidChangeVisibility === 'function') {
-            viewDisposables.push((/** @type {!tsickle_vscode_7.WebviewView} */ (webviewView)).onDidChangeVisibility((/**
+            typeof (/** @type {!tsickle_vscode_8.WebviewView} */ (webviewView)).onDidChangeVisibility === 'function') {
+            viewDisposables.push((/** @type {!tsickle_vscode_8.WebviewView} */ (webviewView)).onDidChangeVisibility((/**
              * @return {void}
              */
             () => {
-                this.setChatFocused((/** @type {!tsickle_vscode_7.WebviewView} */ (webviewView)).visible);
+                this.setChatFocused((/** @type {!tsickle_vscode_8.WebviewView} */ (webviewView)).visible);
             })));
         }
         else if ('onDidChangeViewState' in webviewView &&
-            typeof (/** @type {!tsickle_vscode_7.WebviewPanel} */ (webviewView)).onDidChangeViewState === 'function') {
-            viewDisposables.push((/** @type {!tsickle_vscode_7.WebviewPanel} */ (webviewView)).onDidChangeViewState((/**
-             * @param {!tsickle_vscode_7.WebviewPanelOnDidChangeViewStateEvent} e
+            typeof (/** @type {!tsickle_vscode_8.WebviewPanel} */ (webviewView)).onDidChangeViewState === 'function') {
+            viewDisposables.push((/** @type {!tsickle_vscode_8.WebviewPanel} */ (webviewView)).onDidChangeViewState((/**
+             * @param {!tsickle_vscode_8.WebviewPanelOnDidChangeViewStateEvent} e
              * @return {void}
              */
             (e) => {
@@ -993,7 +1005,7 @@ class ExtensionApiImpl {
     }
     /**
      * @private
-     * @param {!tsickle_jetski_instance_11.JetskiInstance} view
+     * @param {!tsickle_jetski_instance_12.JetskiInstance} view
      * @param {?} request
      * @return {!Promise<void>}
      */
@@ -1002,22 +1014,17 @@ class ExtensionApiImpl {
             return;
         }
         if (request.path) {
-            if (!request.path.includes('extensionView=true')) {
-                void this.telemetry?.logEvent('jetski_web.url_changed_missing_param', {
-                    path: request.path,
-                });
-            }
             /** @type {(null|!RegExpMatchArray)} */
             const match = request.path.match(/^\/c\/([^/]+)$/);
             if (match) {
                 /** @type {string} */
                 const conversationId = match[1];
                 void this.context.workspaceState.update('lastConversationId', conversationId);
-                await this.agentEditManager.disposeAllDiffZones();
+                await this.agentEditManager.handleResolveAllAgentEdits(true);
             }
             else if (request.path === '/') {
                 void this.context.workspaceState.update('lastConversationId', undefined);
-                await this.agentEditManager.disposeAllDiffZones();
+                await this.agentEditManager.handleResolveAllAgentEdits(true);
             }
         }
     }
@@ -1049,7 +1056,7 @@ class ExtensionApiImpl {
     async openUrl(request) {
         if (request.url) {
             try {
-                /** @type {!tsickle_vscode_7.Uri} */
+                /** @type {!tsickle_vscode_8.Uri} */
                 const uri = vscode.Uri.parse(request.url);
                 await vscode.env.openExternal(uri);
             }
@@ -1078,7 +1085,7 @@ class ExtensionApiImpl {
             if (request.targetWorkspaceUri) {
                 queryParams.set('targetWorkspaceUri', request.targetWorkspaceUri);
             }
-            /** @type {!tsickle_vscode_7.Uri} */
+            /** @type {!tsickle_vscode_8.Uri} */
             const uri = vscode.Uri.parse(`${settings_editor_provider_1.SettingsEditorProvider.fileScheme}://global?${queryParams.toString()}`);
             await vscode.commands.executeCommand('vscode.openWith', uri, settings_editor_provider_1.SettingsEditorProvider.viewType, { preview: false });
         }
@@ -1128,7 +1135,7 @@ class ExtensionApiImpl {
                 await this.workspaceManager.changeWorkspace(request.workspaceUri, conversationId);
             }
             else {
-                /** @type {!tsickle_vscode_7.Uri} */
+                /** @type {!tsickle_vscode_8.Uri} */
                 const uri = vscode.Uri.parse(request.workspaceUri);
                 await vscode.commands.executeCommand('vscode.openFolder', uri);
             }
@@ -1154,7 +1161,7 @@ class ExtensionApiImpl {
             throw new Error('Notebook execution is not supported in this environment.');
         }
         try {
-            /** @type {!Array<!tsickle_delegate_interfaces_9.CellExecutionOutput>} */
+            /** @type {!Array<!tsickle_delegate_interfaces_10.CellExecutionOutput>} */
             const outputs = await this.notebookExecutor.executeNotebookCells(request.notebookUri, request.cellIds ?? []);
             return (0, protobuf_1.create)(iframe_messages_pb_1.ExecuteNotebookCellsResponseSchema, {
                 result: {
@@ -1186,7 +1193,7 @@ class ExtensionApiImpl {
     async openFile(request) {
         if (request.fileUri) {
             try {
-                /** @type {!tsickle_vscode_7.Uri} */
+                /** @type {!tsickle_vscode_8.Uri} */
                 const uri = vscode.Uri.parse(request.fileUri);
                 if (this.isWorkspaceRoot(uri)) {
                     await this.changeWorkspace((0, protobuf_1.create)(iframe_messages_pb_1.ChangeWorkspaceRequestSchema, {
@@ -1195,7 +1202,7 @@ class ExtensionApiImpl {
                     return {};
                 }
                 try {
-                    /** @type {!tsickle_vscode_7.FileStat} */
+                    /** @type {!tsickle_vscode_8.FileStat} */
                     const stat = await vscode.workspace.fs.stat(uri);
                     if (stat.type === vscode.FileType.Directory) {
                         // This fixes issue when explorer is not visible.
@@ -1216,12 +1223,12 @@ class ExtensionApiImpl {
                     await this.openVirtualDiff(request.fileUri, diffDetails.originalContents, diffDetails.modifiedContents, `Diff: ${request.fileUri.substring(request.fileUri.lastIndexOf('/') + 1)} (Resolved)`);
                     return {};
                 }
-                /** @type {!tsickle_vscode_7.TextDocument} */
+                /** @type {!tsickle_vscode_8.TextDocument} */
                 const doc = await vscode.workspace.openTextDocument(uri);
-                /** @type {!tsickle_vscode_7.TextDocumentShowOptions} */
+                /** @type {!tsickle_vscode_8.TextDocumentShowOptions} */
                 const options = { preview: true };
                 if (request.line > 0) {
-                    /** @type {!tsickle_vscode_7.Position} */
+                    /** @type {!tsickle_vscode_8.Position} */
                     const pos = new vscode.Position(request.line - 1, 0);
                     options.selection = new vscode.Range(pos, pos);
                 }
@@ -1236,7 +1243,7 @@ class ExtensionApiImpl {
     }
     /**
      * @private
-     * @param {!tsickle_vscode_7.Uri} uri
+     * @param {!tsickle_vscode_8.Uri} uri
      * @return {boolean}
      */
     isWorkspaceRoot(uri) {
@@ -1258,11 +1265,11 @@ class ExtensionApiImpl {
     async openArtifact(request) {
         if (request.fileUri) {
             try {
-                /** @type {!tsickle_vscode_7.Uri} */
+                /** @type {!tsickle_vscode_8.Uri} */
                 const baseUri = vscode.Uri.parse(request.fileUri);
                 /** @type {string} */
                 const cascadeId = request.cascadeId ?? '';
-                /** @type {!tsickle_vscode_7.Uri} */
+                /** @type {!tsickle_vscode_8.Uri} */
                 const uri = baseUri.with({
                     scheme: artifact_editor_provider_1.ArtifactEditorProvider.fileScheme,
                     query: `cascadeId=${encodeURIComponent(cascadeId)}`,
@@ -1287,9 +1294,9 @@ class ExtensionApiImpl {
     async openVirtualDiff(fileUri, originalContents, modifiedContents, title) {
         this.originalContentsMap.set(fileUri, originalContents);
         this.modifiedContentsMap.set(fileUri, modifiedContents);
-        /** @type {!tsickle_vscode_7.Uri} */
+        /** @type {!tsickle_vscode_8.Uri} */
         const originalUri = vscode.Uri.parse(`jetski-diff://original/${encodeURIComponent(fileUri)}`);
-        /** @type {!tsickle_vscode_7.Uri} */
+        /** @type {!tsickle_vscode_8.Uri} */
         const modifiedUri = vscode.Uri.parse(`jetski-diff://modified/${encodeURIComponent(fileUri)}`);
         /** @type {string} */
         const fileName = fileUri.substring(fileUri.lastIndexOf('/') + 1);
@@ -1305,9 +1312,9 @@ class ExtensionApiImpl {
     async openDiff(request) {
         if (request.originalUri && request.modifiedUri) {
             try {
-                /** @type {!tsickle_vscode_7.Uri} */
+                /** @type {!tsickle_vscode_8.Uri} */
                 const original = vscode.Uri.parse(request.originalUri);
-                /** @type {!tsickle_vscode_7.Uri} */
+                /** @type {!tsickle_vscode_8.Uri} */
                 const modified = vscode.Uri.parse(request.modifiedUri);
                 /** @type {string} */
                 const title = request.title ?? 'Diff';
@@ -1362,11 +1369,11 @@ class ExtensionApiImpl {
      * @return {!Promise<{states: !Array<{uri: string, numLinesInserted: number, numLinesDeleted: number, createdByCascade: boolean}>}>}
      */
     async requestAgentEditsState() {
-        /** @type {!Array<!tsickle_agent_edit_manager_4.FileAgentEditState>} */
+        /** @type {!Array<!tsickle_agent_edit_manager_5.FileAgentEditState>} */
         const states = this.agentEditManager.getCurrentStates();
         /** @type {!Array<{uri: string, numLinesInserted: number, numLinesDeleted: number, createdByCascade: boolean}>} */
         const protoStates = states.map((/**
-         * @param {!tsickle_agent_edit_manager_4.FileAgentEditState} s
+         * @param {!tsickle_agent_edit_manager_5.FileAgentEditState} s
          * @return {{uri: string, numLinesInserted: number, numLinesDeleted: number, createdByCascade: boolean}}
          */
         (s) => ({
@@ -1382,11 +1389,11 @@ class ExtensionApiImpl {
      * @return {!Promise<{states: !Array<{uri: string, numLinesInserted: number, numLinesDeleted: number, createdByCascade: boolean}>}>}
      */
     async requestDiffZonesState() {
-        /** @type {!Array<!tsickle_agent_edit_manager_4.FileAgentEditState>} */
+        /** @type {!Array<!tsickle_agent_edit_manager_5.FileAgentEditState>} */
         const states = this.agentEditManager.getCurrentStates();
         /** @type {!Array<{uri: string, numLinesInserted: number, numLinesDeleted: number, createdByCascade: boolean}>} */
         const protoStates = states.map((/**
-         * @param {!tsickle_agent_edit_manager_4.FileAgentEditState} s
+         * @param {!tsickle_agent_edit_manager_5.FileAgentEditState} s
          * @return {{uri: string, numLinesInserted: number, numLinesDeleted: number, createdByCascade: boolean}}
          */
         (s) => ({
@@ -1407,7 +1414,10 @@ class ExtensionApiImpl {
         const state = this.context.globalState.get(this.naming.storageKey) || {};
         /** @type {?} */
         let result = {};
-        if (request.keys) {
+        // Note: in TypeScript protobuf / ConnectRPC, omitted repeated fields default
+        // to an empty array [] which is truthy in JavaScript. Check length > 0 so that
+        // an empty or omitted keys list returns all items (desktop polyfill style).
+        if (request.keys && request.keys.length > 0) {
             // Cider style: filter by requested keys
             for (const key of request.keys) {
                 /** @type {string} */
@@ -1602,7 +1612,7 @@ class ExtensionApiImpl {
      * @return {(!Promise<{success: boolean, errorMessage: (undefined|string)}>|{success: boolean, errorMessage: undefined}|{success: boolean, errorMessage: string})}
      */
     resolveConnection(request) {
-        /** @type {!tsickle_util_14.OutputChannelWithNetwork} */
+        /** @type {!tsickle_util_15.OutputChannelWithNetwork} */
         const log = (0, util_1.getOutputChannel)();
         log.appendLine(`[ExtensionApi] resolveConnection called with type: ${request.type}`);
         if (request.type === iframe_messages_pb_1.ConnectionResolutionType.RECONNECT) {
@@ -1634,12 +1644,12 @@ class ExtensionApiImpl {
     }
     /**
      * @public
-     * @param {(undefined|!tsickle_jetski_instance_11.JetskiInstance)=} targetView
+     * @param {(undefined|!tsickle_jetski_instance_12.JetskiInstance)=} targetView
      * @return {!Promise<void>}
      */
     async forwardContextCategories(targetView) {
         const { categories } = await this.getContextCategories();
-        /** @type {!Array<!tsickle_jetski_instance_11.JetskiInstance>} */
+        /** @type {!Array<!tsickle_jetski_instance_12.JetskiInstance>} */
         const viewsToNotify = targetView ? [targetView] : this.views;
         for (const view of viewsToNotify) {
             void view.api.setContextCategories({ categories });
@@ -1647,8 +1657,8 @@ class ExtensionApiImpl {
     }
     /**
      * @public
-     * @param {!tsickle_delegate_interfaces_9.DynamicContextProvider} provider
-     * @return {!tsickle_vscode_7.Disposable}
+     * @param {!tsickle_delegate_interfaces_10.DynamicContextProvider} provider
+     * @return {!tsickle_vscode_8.Disposable}
      */
     registerContextCategoryProvider(provider) {
         this.contextCategoryProviders.set(provider.trigger, provider);
@@ -1673,7 +1683,7 @@ class ExtensionApiImpl {
         for (const p of this.contextCategoryProviders.values()) {
             /** @type {(undefined|string)} */
             const iconUriStr = p.iconUri && typeof p.iconUri !== 'string'
-                ? (/** @type {!tsickle_vscode_7.Uri} */ (p.iconUri)).toString()
+                ? (/** @type {!tsickle_vscode_8.Uri} */ (p.iconUri)).toString()
                 : ((/** @type {(undefined|string)} */ (p.iconUri)));
             categories.push({
                 trigger: p.trigger,
@@ -1689,18 +1699,18 @@ class ExtensionApiImpl {
      * @return {!Promise<({items: undefined}|{items: !Array<{value: string, label: string, iconUri: string, uri: string}>})>}
      */
     async queryContextCategory(request) {
-        /** @type {(undefined|!tsickle_delegate_interfaces_9.DynamicContextProvider)} */
+        /** @type {(undefined|!tsickle_delegate_interfaces_10.DynamicContextProvider)} */
         const provider = this.contextCategoryProviders.get(request.trigger);
         if (!provider) {
             return {};
         }
         try {
-            /** @type {!Array<!tsickle_delegate_interfaces_9.DynamicContextCategoryItem>} */
+            /** @type {!Array<!tsickle_delegate_interfaces_10.DynamicContextCategoryItem>} */
             const items = await provider.provideItems(request.query);
             if (items && items.length > 0) {
                 return {
                     items: items.map((/**
-                     * @param {!tsickle_delegate_interfaces_9.DynamicContextCategoryItem} item
+                     * @param {!tsickle_delegate_interfaces_10.DynamicContextCategoryItem} item
                      * @return {{value: string, label: string, iconUri: string, uri: string}}
                      */
                     (item) => ({
@@ -1743,17 +1753,17 @@ exports.ExtensionApiImpl = ExtensionApiImpl;
 /* istanbul ignore if */
 if (false) {
     /**
-     * @const {!Array<!tsickle_jetski_instance_11.JetskiInstance>}
+     * @const {!Array<!tsickle_jetski_instance_12.JetskiInstance>}
      * @public
      */
     ExtensionApiImpl.prototype.views;
     /**
-     * @const {!tsickle_agent_edit_manager_4.AgentEditManager}
+     * @const {!tsickle_agent_edit_manager_5.AgentEditManager}
      * @private
      */
     ExtensionApiImpl.prototype.agentEditManager;
     /**
-     * @const {(undefined|!tsickle_delegate_interfaces_9.BrowserNotificationDelegate)}
+     * @const {(undefined|!tsickle_delegate_interfaces_10.BrowserNotificationDelegate)}
      * @private
      */
     ExtensionApiImpl.prototype.browserNotificationDelegate;
@@ -1763,22 +1773,22 @@ if (false) {
      */
     ExtensionApiImpl.prototype.commentsStateJson;
     /**
-     * @const {(undefined|!tsickle_delegate_interfaces_9.ConnectionResolver)}
+     * @const {(undefined|!tsickle_delegate_interfaces_10.ConnectionResolver)}
      * @private
      */
     ExtensionApiImpl.prototype.connectionResolver;
     /**
-     * @const {!Map<string, !tsickle_delegate_interfaces_9.DynamicContextProvider>}
+     * @const {!Map<string, !tsickle_delegate_interfaces_10.DynamicContextProvider>}
      * @private
      */
     ExtensionApiImpl.prototype.contextCategoryProviders;
     /**
-     * @const {!tsickle_vscode_7.ExtensionContext}
+     * @const {!tsickle_vscode_8.ExtensionContext}
      * @private
      */
     ExtensionApiImpl.prototype.context;
     /**
-     * @const {!tsickle_editor_state_watcher_10.EditorStateWatcher}
+     * @const {!tsickle_editor_state_watcher_11.EditorStateWatcher}
      * @private
      */
     ExtensionApiImpl.prototype.editorStateWatcher;
@@ -1793,7 +1803,7 @@ if (false) {
      */
     ExtensionApiImpl.prototype.modifiedContentsMap;
     /**
-     * @const {!tsickle_delegate_interfaces_9.HostAppConfig}
+     * @const {!tsickle_delegate_interfaces_10.HostAppConfig}
      * @private
      */
     ExtensionApiImpl.prototype.naming;
@@ -1803,12 +1813,12 @@ if (false) {
      */
     ExtensionApiImpl.prototype.viewLocation;
     /**
-     * @const {(undefined|!tsickle_delegate_interfaces_9.NotebookExecutor)}
+     * @const {(undefined|!tsickle_delegate_interfaces_10.NotebookExecutor)}
      * @private
      */
     ExtensionApiImpl.prototype.notebookExecutor;
     /**
-     * @const {!tsickle_vscode_7.EventEmitter<!tsickle_jetski_instance_11.JetskiInstance>}
+     * @const {!tsickle_vscode_8.EventEmitter<!tsickle_jetski_instance_12.JetskiInstance>}
      * @private
      */
     ExtensionApiImpl.prototype.onDidRegisterViewEmitter;
@@ -1823,17 +1833,17 @@ if (false) {
      */
     ExtensionApiImpl.prototype.registeredCommands;
     /**
-     * @const {(undefined|!tsickle_delegate_interfaces_9.Telemetry)}
+     * @const {(undefined|!tsickle_delegate_interfaces_10.Telemetry)}
      * @private
      */
     ExtensionApiImpl.prototype.telemetry;
     /**
-     * @const {(undefined|!tsickle_delegate_interfaces_9.WorkspaceManager)}
+     * @const {(undefined|!tsickle_delegate_interfaces_10.WorkspaceManager)}
      * @private
      */
     ExtensionApiImpl.prototype.workspaceManager;
     /**
-     * @type {(undefined|!tsickle_terminal_panel_provider_15.TerminalPanelProvider)}
+     * @type {(undefined|!tsickle_terminal_panel_provider_16.TerminalPanelProvider)}
      * @private
      */
     ExtensionApiImpl.prototype.terminalPanelProvider;

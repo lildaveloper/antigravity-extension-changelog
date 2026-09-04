@@ -359,6 +359,7 @@ jspb$jetski_memory$MutableMemoryMountConfig = class extends jspb_internal_public
    * optional bool eager_cache_warming = 4;
    * @override
    * @return {boolean}
+   * @deprecated
    */
   getEagerCacheWarming() {
     return jspb_internal_adapters.getBooleanFieldWithDefault(this, 4, true);
@@ -368,6 +369,7 @@ jspb$jetski_memory$MutableMemoryMountConfig = class extends jspb_internal_public
   /**
    * @param {boolean|null|undefined} value
    * @return {!jspb$jetski_memory$MutableMemoryMountConfig} returns this
+   * @deprecated
    */
   setEagerCacheWarming(value) {
     return jspb_internal_adapters.setBooleanField(this, 4, value);
@@ -377,6 +379,7 @@ jspb$jetski_memory$MutableMemoryMountConfig = class extends jspb_internal_public
   /**
    * Clears the field.
    * @return {!jspb$jetski_memory$MutableMemoryMountConfig} returns this
+   * @deprecated
    */
   clearEagerCacheWarming() {
     return jspb_internal_adapters.clearField(this, 4);
@@ -387,6 +390,7 @@ jspb$jetski_memory$MutableMemoryMountConfig = class extends jspb_internal_public
    * Returns whether this field is set.
    * @override
    * @return {boolean}
+   * @deprecated
    */
   hasEagerCacheWarming() {
     return jspb_internal_adapters.hasBooleanField(this, 4);
@@ -397,6 +401,7 @@ jspb$jetski_memory$MutableMemoryMountConfig = class extends jspb_internal_public
    * optional bool eager_cache_warming = 4;
    * @override
    * @return {boolean|undefined}
+   * @deprecated
    */
   getEagerCacheWarmingOrUndefined() {
     return jspb_internal_adapters.getBooleanFieldOrUndefined(this, 4);

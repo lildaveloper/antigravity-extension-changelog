@@ -9,6 +9,7 @@
 goog.provide('jspb$exa$config_pb$MutablePluginUserConfig');
 goog.provide('jspb$ro.exa$config_pb$ReadonlyPluginUserConfig');
 
+goog.require('jspb$exa$config_pb$MutableMarketplaceInstall');
 goog.require('jspb_internal_adapters');
 goog.require('jspb_internal_public_for_gencode');
 /** @suppress {extraRequire} */
@@ -16,6 +17,7 @@ goog.requireType('google3.javascript.apps.jspb.internal_records');
 goog.requireType('google3.javascript.common.asserts.asserts');
 goog.requireType('jspb$exa$config_pb$ImmutablePluginUserConfig');
 goog.requireType('jspb$r$exa$config_pb$PluginUserConfig$internalDoNotUseReader');
+goog.requireType('jspb$ro.exa$config_pb$ReadonlyMarketplaceInstall');
 
 /**
  * @final
@@ -80,6 +82,78 @@ jspb$exa$config_pb$MutablePluginUserConfig = class extends jspb_internal_public_
   }
 
 
+  /**
+   * optional MarketplaceInstall installed_from = 2;
+   * @override
+   * @return {!jspb$exa$config_pb$MutableMarketplaceInstall|undefined}
+   */
+  getInstalledFrom() {
+    return jspb_internal_adapters.getWrapperFieldOrUndefined(this, jspb$exa$config_pb$MutableMarketplaceInstall, 2);
+  }
+
+
+  /**
+   * optional MarketplaceInstall installed_from = 2;
+   * @override
+   * @return {!jspb$ro.exa$config_pb$ReadonlyMarketplaceInstall}
+   */
+  getReadonlyInstalledFrom() {
+    return jspb_internal_adapters.getReadonlyWrapperField(this, jspb$exa$config_pb$MutableMarketplaceInstall, 2);
+  }
+
+
+  /**
+   * optional MarketplaceInstall installed_from = 2;
+   * @param {!jspb_internal_public_for_gencode.OrUndefinedToken<U>=} legacyOrUndefined
+   * @return {!jspb$exa$config_pb$MutableMarketplaceInstall|R}
+   * @template U
+   * @template R := cond(eq(U, 'undefined'), 'undefined', 'jspb$exa$config_pb$MutableMarketplaceInstall') =:
+   * @tsType (legacyOrUndefined: import('google3/javascript/apps/jspb/internal_public').OrUndefinedToken<undefined>): ಠ_ಠ.clutz.jspb$exa$config_pb$MutableMarketplaceInstall|undefined
+   * @tsType (): ಠ_ಠ.clutz.jspb$exa$config_pb$MutableMarketplaceInstall
+   */
+  getMutableInstalledFrom(legacyOrUndefined) {
+    return jspb_internal_adapters.getMutableWrapperField(this, jspb$exa$config_pb$MutableMarketplaceInstall, 2, legacyOrUndefined);
+  }
+
+
+  /**
+   * @param {!jspb$ro.exa$config_pb$ReadonlyMarketplaceInstall|null|undefined} value
+   * @return {!jspb$exa$config_pb$MutablePluginUserConfig} returns this
+   */
+  setInstalledFrom(value) {
+    return jspb_internal_adapters.setWrapperField(this, jspb$exa$config_pb$MutableMarketplaceInstall, 2, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$exa$config_pb$MutablePluginUserConfig} returns this
+   */
+  clearInstalledFrom() {
+    return jspb_internal_adapters.clearField(this, 2);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasInstalledFrom() {
+    return jspb_internal_adapters.hasWrapperField(this, jspb$exa$config_pb$MutableMarketplaceInstall, 2);
+  }
+
+
+  /**
+   * optional MarketplaceInstall installed_from = 2;
+   * @override
+   * @return {!jspb$ro.exa$config_pb$ReadonlyMarketplaceInstall|undefined}
+   */
+  getInstalledFromOrUndefined() {
+    return jspb_internal_adapters.getReadonlyWrapperFieldOrUndefined(this, jspb$exa$config_pb$MutableMarketplaceInstall, 2);
+  }
+
+
 };
 
 /**
@@ -106,7 +180,8 @@ jspb$exa$config_pb$MutablePluginUserConfig.hasInstance = /** @pureOrBreakMyCode 
 /**
  * Object form of PluginUserConfig as accepted by the `fromObject` method.
  * @typedef {{
- *  enabled: (?boolean|undefined)
+ *  enabled: (?boolean|undefined),
+ *  installedFrom: (?jspb$exa$config_pb$MutableMarketplaceInstall.ObjectFormat|undefined)
  * }}
  */
 jspb$exa$config_pb$MutablePluginUserConfig.ObjectFormat;
@@ -165,7 +240,8 @@ if (goog.DEBUG && !COMPILED) {
 /**
  * Interface form of PluginUserConfig as accepted by `fromFields` and produced by `getFields`.
  * @typedef {{
- *  enabled: (boolean|undefined)
+ *  enabled: (boolean|undefined),
+ *  installedFrom: (!jspb$ro.exa$config_pb$ReadonlyMarketplaceInstall|undefined)
  * }}
  */
 jspb$exa$config_pb$MutablePluginUserConfig.FieldsInterface;
@@ -203,7 +279,7 @@ jspb$exa$config_pb$MutablePluginUserConfig.fromFields = /** @pureOrBreakMyCode *
  */
 jspb$exa$config_pb$MutablePluginUserConfig.getFields = /** @pureOrBreakMyCode */ (jspb_internal_public_for_gencode.makeGetFieldsForTesting());
 
-var jspb$exa$cortex_pb$MutableSidecarAgentPermissions;
-Object.defineProperty(this, 'jspb$exa$cortex_pb$MutableSidecarAgentPermissions', {
-  get() { return jspb$exa$cortex_pb$MutableSidecarAgentPermissions; },
-  set(v) { jspb$exa$cortex_pb$MutableSidecarAgentPermissions = v; },
+var jspb$exa$config_pb$MutableSkillUserConfig;
+Object.defineProperty(this, 'jspb$exa$config_pb$MutableSkillUserConfig', {
+  get() { return jspb$exa$config_pb$MutableSkillUserConfig; },
+  set(v) { jspb$exa$config_pb$MutableSkillUserConfig = v; },

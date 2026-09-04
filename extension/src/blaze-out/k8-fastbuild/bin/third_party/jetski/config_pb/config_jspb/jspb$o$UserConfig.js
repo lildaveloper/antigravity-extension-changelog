@@ -8,9 +8,12 @@
 
 goog.provide('jspb$o$exa$config_pb$UserConfig');
 
+goog.require('jspb$exa$config_pb$MutableConversationGroupRegistry');
 goog.require('jspb$exa$config_pb$MutableUserConfig');
 goog.require('jspb$jetbox_state_pb$MutableUserSettings');
+goog.require('jspb$o$exa$config_pb$ConversationGroupRegistry');
 goog.require('jspb$o$exa$config_pb$PluginUserConfig');
+goog.require('jspb$o$exa$config_pb$SkillUserConfig');
 goog.require('jspb$o$exa$cortex_pb$SidecarUserConfig');
 goog.require('jspb$o$jetbox_state_pb$UserSettings');
 goog.require('jspb_internal_adapters');
@@ -33,6 +36,9 @@ jspb$o$exa$config_pb$UserConfig.internal_toObject = function(msg) {
     userSettings: jspb$o$jetbox_state_pb$UserSettings.internal_toObject(msg.getUserSettings()),
     pluginsMap: jspb_internal_public_for_gencode.mapToObject(msg.getPluginsMap(),
       jspb$o$exa$config_pb$PluginUserConfig.internal_toObject),
+    conversationGroups: jspb$o$exa$config_pb$ConversationGroupRegistry.internal_toObject(msg.getConversationGroups()),
+    skillsMap: jspb_internal_public_for_gencode.mapToObject(msg.getSkillsMap(),
+      jspb$o$exa$config_pb$SkillUserConfig.internal_toObject),
   }));
 
 };
@@ -76,6 +82,10 @@ jspb$o$exa$config_pb$UserConfig.fromObject = function(obj) {
       jspb$jetbox_state_pb$MutableUserSettings,
       2, jspb_internal_public_for_gencode.fromObjectNullable(obj.userSettings, jspb$o$jetbox_state_pb$UserSettings.fromObject));
   obj.pluginsMap && jspb_internal_public_for_gencode.mapFromObject(msg.getPluginsMap(), obj.pluginsMap, jspb$o$exa$config_pb$PluginUserConfig.fromObject);
+  jspb_internal_adapters.setWrapperField(msg,
+      jspb$exa$config_pb$MutableConversationGroupRegistry,
+      4, jspb_internal_public_for_gencode.fromObjectNullable(obj.conversationGroups, jspb$o$exa$config_pb$ConversationGroupRegistry.fromObject));
+  obj.skillsMap && jspb_internal_public_for_gencode.mapFromObject(msg.getSkillsMap(), obj.skillsMap, jspb$o$exa$config_pb$SkillUserConfig.fromObject);
   return msg;
 };
 }

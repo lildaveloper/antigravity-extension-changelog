@@ -1481,6 +1481,54 @@ jspb$devtools_jetski_provisioning$MutableDeploymentConfig = class extends jspb_i
   }
 
 
+  /**
+   * optional bool enable_control_plane_monitoring = 31;
+   * @override
+   * @return {boolean}
+   */
+  getEnableControlPlaneMonitoring() {
+    return jspb_internal_adapters.getBooleanFieldWithDefault(this, 31);
+  }
+
+
+  /**
+   * @param {boolean|null|undefined} value
+   * @return {!jspb$devtools_jetski_provisioning$MutableDeploymentConfig} returns this
+   */
+  setEnableControlPlaneMonitoring(value) {
+    return jspb_internal_adapters.setBooleanField(this, 31, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$devtools_jetski_provisioning$MutableDeploymentConfig} returns this
+   */
+  clearEnableControlPlaneMonitoring() {
+    return jspb_internal_adapters.clearField(this, 31);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasEnableControlPlaneMonitoring() {
+    return jspb_internal_adapters.hasBooleanField(this, 31);
+  }
+
+
+  /**
+   * optional bool enable_control_plane_monitoring = 31;
+   * @override
+   * @return {boolean|undefined}
+   */
+  getEnableControlPlaneMonitoringOrUndefined() {
+    return jspb_internal_adapters.getBooleanFieldOrUndefined(this, 31);
+  }
+
+
 };
 
 /**
@@ -1529,7 +1577,8 @@ jspb$devtools_jetski_provisioning$MutableDeploymentConfig.hasInstance = /** @pur
  *  envVarsMap: (?Array<!Array<string>>|undefined),
  *  generativeServiceAddr: (?string|undefined),
  *  additionalLsArgsList: (?Array<string>|undefined),
- *  extraFilesMap: (?Array<!Array<string>>|undefined)
+ *  extraFilesMap: (?Array<!Array<string>>|undefined),
+ *  enableControlPlaneMonitoring: (?boolean|undefined)
  * }}
  */
 jspb$devtools_jetski_provisioning$MutableDeploymentConfig.ObjectFormat;
@@ -1610,7 +1659,8 @@ if (goog.DEBUG && !COMPILED) {
  *  envVarsMap: (!ReadonlyMap<string,string>|undefined),
  *  generativeServiceAddr: (string|undefined),
  *  additionalLsArgsList: (!ReadonlyArray<string>|undefined),
- *  extraFilesMap: (!ReadonlyMap<string,string>|undefined)
+ *  extraFilesMap: (!ReadonlyMap<string,string>|undefined),
+ *  enableControlPlaneMonitoring: (boolean|undefined)
  * }}
  */
 jspb$devtools_jetski_provisioning$MutableDeploymentConfig.FieldsInterface;
@@ -1648,7 +1698,7 @@ jspb$devtools_jetski_provisioning$MutableDeploymentConfig.fromFields = /** @pure
  */
 jspb$devtools_jetski_provisioning$MutableDeploymentConfig.getFields = /** @pureOrBreakMyCode */ (jspb_internal_public_for_gencode.makeGetFieldsForTesting());
 
-var jspb$b$exa$config_pb$PluginUserConfig;
-Object.defineProperty(this, 'jspb$b$exa$config_pb$PluginUserConfig', {
-  get() { return jspb$b$exa$config_pb$PluginUserConfig; },
-  set(v) { jspb$b$exa$config_pb$PluginUserConfig = v; },
+var jspb$b$exa$config_pb$ConversationGroupConfig;
+Object.defineProperty(this, 'jspb$b$exa$config_pb$ConversationGroupConfig', {
+  get() { return jspb$b$exa$config_pb$ConversationGroupConfig; },
+  set(v) { jspb$b$exa$config_pb$ConversationGroupConfig = v; },

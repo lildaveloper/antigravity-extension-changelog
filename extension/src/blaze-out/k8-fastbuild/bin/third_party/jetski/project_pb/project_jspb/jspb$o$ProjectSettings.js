@@ -9,6 +9,7 @@
 goog.provide('jspb$o$exa$project_pb$ProjectSettings');
 
 goog.require('jspb$exa$project_pb$MutableProjectSettings');
+goog.require('jspb$o$exa$project_pb$SecurityPluginSettings');
 goog.require('jspb_internal_adapters');
 goog.require('jspb_internal_public_for_gencode');
 
@@ -32,6 +33,8 @@ jspb$o$exa$project_pb$ProjectSettings.internal_toObject = function(msg) {
     enablePermissionedGithub: jspb_internal_adapters.getBooleanFieldWithDefault(msg, 6),
     shellSetupScript: jspb_internal_adapters.getStringFieldWithDefault(msg, 7),
     permissionPreset: jspb_internal_adapters.getEnumFieldWithDefault(msg, 8),
+    securityPluginsMap: jspb_internal_public_for_gencode.mapToObject(msg.getSecurityPluginsMap(),
+      jspb$o$exa$project_pb$SecurityPluginSettings.internal_toObject),
   }));
 
 };
@@ -78,6 +81,7 @@ jspb$o$exa$project_pb$ProjectSettings.fromObject = function(obj) {
   jspb_internal_adapters.setProto3BooleanField(msg, 6, obj.enablePermissionedGithub);
   jspb_internal_adapters.setProto3StringField(msg, 7, obj.shellSetupScript);
   jspb_internal_adapters.setProto3EnumField(msg, 8, obj.permissionPreset);
+  obj.securityPluginsMap && jspb_internal_public_for_gencode.mapFromObject(msg.getSecurityPluginsMap(), obj.securityPluginsMap, jspb$o$exa$project_pb$SecurityPluginSettings.fromObject);
   return msg;
 };
 }

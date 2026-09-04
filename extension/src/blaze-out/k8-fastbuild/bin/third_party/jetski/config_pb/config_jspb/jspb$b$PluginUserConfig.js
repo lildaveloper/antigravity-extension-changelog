@@ -8,6 +8,7 @@
 
 goog.provide('jspb$b$exa$config_pb$PluginUserConfig');
 
+goog.require('jspb$b$exa$config_pb$MarketplaceInstall');
 goog.require('jspb$exa$config_pb$MutablePluginUserConfig');
 goog.require('jspb_internal_binary');
 goog.require('jspb_internal_public_for_gencode');
@@ -22,7 +23,8 @@ goog.require('jspb_internal_public_for_gencode');
  */
 jspb$b$exa$config_pb$PluginUserConfig.fields = /** @pureOrBreakMyCode */([
   0,
-  jspb_internal_binary.RWBool
+  jspb_internal_binary.RWBool,
+  jspb$b$exa$config_pb$MarketplaceInstall.fields
 ]);
 
 /**
@@ -33,7 +35,7 @@ jspb$b$exa$config_pb$PluginUserConfig.fields = /** @pureOrBreakMyCode */([
 jspb$exa$config_pb$MutablePluginUserConfig.prototype.serializeBinary = /** @pureOrBreakMyCode */(jspb_internal_public_for_gencode.makePrototypeSerializeBinaryFunction(jspb$b$exa$config_pb$PluginUserConfig.fields));
 
 
-var jspb$b$exa$cortex_pb$SidecarAgentPermissions;
-Object.defineProperty(this, 'jspb$b$exa$cortex_pb$SidecarAgentPermissions', {
-  get() { return jspb$b$exa$cortex_pb$SidecarAgentPermissions; },
-  set(v) { jspb$b$exa$cortex_pb$SidecarAgentPermissions = v; },
+var jspb$b$exa$config_pb$SkillUserConfig;
+Object.defineProperty(this, 'jspb$b$exa$config_pb$SkillUserConfig', {
+  get() { return jspb$b$exa$config_pb$SkillUserConfig; },
+  set(v) { jspb$b$exa$config_pb$SkillUserConfig = v; },
