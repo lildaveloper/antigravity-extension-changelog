@@ -226,7 +226,7 @@ jspb$exa$config_pb$MutableConversationGroupRegistry.fromFields = /** @pureOrBrea
  */
 jspb$exa$config_pb$MutableConversationGroupRegistry.getFields = /** @pureOrBreakMyCode */ (jspb_internal_public_for_gencode.makeGetFieldsForTesting());
 
-var jspb$exa$config_pb$MutableMarketplaceInstall;
-Object.defineProperty(this, 'jspb$exa$config_pb$MutableMarketplaceInstall', {
-  get() { return jspb$exa$config_pb$MutableMarketplaceInstall; },
-  set(v) { jspb$exa$config_pb$MutableMarketplaceInstall = v; },
+var jspb$exa$cortex_pb$MutableMarketplaceInstall;
+Object.defineProperty(this, 'jspb$exa$cortex_pb$MutableMarketplaceInstall', {
+  get() { return jspb$exa$cortex_pb$MutableMarketplaceInstall; },
+  set(v) { jspb$exa$cortex_pb$MutableMarketplaceInstall = v; },

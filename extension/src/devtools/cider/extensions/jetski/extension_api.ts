@@ -113,6 +113,93 @@ if (false) {
      */
     ExtensionApiConfig.prototype.workspaceManager;
 }
+/** @type {number} */
+const MAX_SENT_NOTIFICATION_IDS = 50;
+/**
+ * Custom editor tab input containing URI and viewType.
+ * @record
+ */
+function CustomTabInput() { }
+/* istanbul ignore if */
+if (false) {
+    /**
+     * @const {!tsickle_vscode_8.Uri}
+     * @public
+     */
+    CustomTabInput.prototype.uri;
+    /**
+     * @const {string}
+     * @public
+     */
+    CustomTabInput.prototype.viewType;
+}
+/**
+ * Represents an existing open custom editor tab and its containing tab group.
+ * @record
+ */
+function OpenTabMatch() { }
+/* istanbul ignore if */
+if (false) {
+    /**
+     * @const {!tsickle_vscode_8.TabGroup}
+     * @public
+     */
+    OpenTabMatch.prototype.group;
+    /**
+     * @const {!tsickle_vscode_8.Uri}
+     * @public
+     */
+    OpenTabMatch.prototype.uri;
+}
+/**
+ * Safely checks if a tab input is a custom editor input.
+ * Checks for `uri` (vscode.Uri) and `viewType` (string) properties, which uniquely
+ * identify custom editor tab inputs without using reflection on the vscode module object.
+ * @param {*} input
+ * @return {boolean}
+ */
+function isTabInputCustom(input) {
+    if (input == null || typeof input !== 'object') {
+        return false;
+    }
+    return ('uri' in input &&
+        input.uri instanceof vscode.Uri &&
+        'viewType' in input &&
+        typeof input.viewType === 'string');
+}
+/**
+ * Searches all open tab groups for a custom editor tab matching the specified predicate.
+ *
+ * @param {function(!CustomTabInput): boolean} predicate Callback returning true if the tab input matches the target editor.
+ * @return {(undefined|!OpenTabMatch)} An object containing the matching group and tab URI, or undefined if not found.
+ */
+function findOpenCustomTab(predicate) {
+    for (const group of vscode.window.tabGroups?.all ?? []) {
+        for (const tab of group.tabs) {
+            /** @type {*} */
+            const input = tab.input;
+            if (isTabInputCustom(input) && predicate(input)) {
+                return { group, uri: (/** @type {!CustomTabInput} */ (input)).uri };
+            }
+        }
+    }
+    return undefined;
+}
+/**
+ * Reveals and focuses an already open custom editor tab in its existing viewColumn,
+ * preventing duplicate editor tabs from being opened across split editor groups.
+ *
+ * @param {!OpenTabMatch} match The open tab match returned from `findOpenCustomTab`.
+ * @param {string} viewType The viewType of the custom editor to reveal.
+ * @return {!Promise<void>}
+ */
+async function revealOpenCustomTab(match, viewType) {
+    await vscode.commands.executeCommand('vscode.openWith', match.uri, viewType, {
+        viewColumn: match.group.viewColumn,
+        preview: false,
+        preserveFocus: false,
+    });
+}
 /**
  * Central implementation of the ExtensionApi service.
  *
@@ -130,12 +217,31 @@ class ExtensionApiImpl {
         return this.onDidRegisterViewEmitter.event;
     }
     /**
+     * Registers the TerminalPanelProvider with this extension API instance.
      * @public
      * @param {!tsickle_terminal_panel_provider_16.TerminalPanelProvider} provider
      * @return {void}
      */
     setTerminalPanelProvider(provider) {
         this.terminalPanelProvider = provider;
+    }
+    /**
+     * Registers the SettingsEditorProvider with this extension API instance.
+     * @public
+     * @param {!tsickle_settings_editor_provider_14.SettingsEditorProvider} provider
+     * @return {void}
+     */
+    setSettingsEditorProvider(provider) {
+        this.settingsEditorProvider = provider;
+    }
+    /**
+     * Registers the ArtifactEditorProvider with this extension API instance.
+     * @public
+     * @param {!tsickle_artifact_editor_provider_9.ArtifactEditorProvider} provider
+     * @return {void}
+     */
+    setArtifactEditorProvider(provider) {
+        this.artifactEditorProvider = provider;
     }
     /**
      * @public
@@ -376,6 +482,12 @@ class ExtensionApiImpl {
         this.onDidRegisterViewEmitter = new vscode.EventEmitter();
         this.originalContentsMap = new Map();
         this.registeredCommands = new Set();
+        this.sentNotificationIds = new Set();
+        /**
+         * Concurrency guard for openArtifact: tracks in-flight open operations by file path to prevent
+         * race conditions from rapid concurrent clicks opening duplicate tabs for the same file.
+         */
+        this.pendingOpenArtifacts = new Map();
         this.browserNotificationDelegate = config.browserNotificationDelegate;
         this.connectionResolver = config.connectionResolver;
         this.context = config.context;
@@ -960,13 +1072,19 @@ class ExtensionApiImpl {
                 'userAction': true,
             });
         })), view.api.onWebviewFocused((/**
-         * @return {void}
+         * @return {!Promise<void>}
          */
-        () => {
+        async () => {
             this.editorStateWatcher.webviewFocused();
             this.setChatFocused(true);
-            if (view.type === 'main') {
-                void view.api.sendCommand({ commandId: 'focusInput' });
+            if (view.type !== 'main') {
+                return;
+            }
+            try {
+                await view.api.sendCommand({ commandId: 'focusInput' });
+            }
+            catch (e) {
+                console.warn('[ExtensionAPI] Failed to focus input in webview:', e);
             }
         })));
         if ('onDidChangeVisibility' in webviewView &&
@@ -1019,12 +1137,26 @@ class ExtensionApiImpl {
             if (match) {
                 /** @type {string} */
                 const conversationId = match[1];
+                /** @type {(undefined|string)} */
+                const lastConversationId = this.context.workspaceState.get('lastConversationId');
+                // When starting a new chat from the '/' screen, lastConversationId is unset.
+                // As the chat starts, the webview assigns an ID and updates the URL to '/c/<id>'.
+                // Do not auto-accept here, as the user is still reviewing the newly proposed edits.
+                // Only auto-accept pending edits when switching away from an existing chat to a different chat.
+                if (lastConversationId && lastConversationId !== conversationId) {
+                    await this.agentEditManager.handleResolveAllAgentEdits(true);
+                }
                 void this.context.workspaceState.update('lastConversationId', conversationId);
-                await this.agentEditManager.handleResolveAllAgentEdits(true);
             }
             else if (request.path === '/') {
+                /** @type {(undefined|string)} */
+                const lastConversationId = this.context.workspaceState.get('lastConversationId');
+                // Auto-accept remaining edits from the previous chat when explicitly clicking
+                // "+ New Chat" (navigating back to root '/').
+                if (lastConversationId) {
+                    await this.agentEditManager.handleResolveAllAgentEdits(true);
+                }
                 void this.context.workspaceState.update('lastConversationId', undefined);
-                await this.agentEditManager.handleResolveAllAgentEdits(true);
             }
         }
     }
@@ -1068,35 +1200,97 @@ class ExtensionApiImpl {
         return {};
     }
     /**
+     * Opens the Settings custom editor in an editor tab.
+     *
+     * Fixes duplicate tab bug across both Cider and VS Code Desktop:
+     * - VS Code and Cider match custom editor tabs using `CustomEditorInput.matches()`, which delegates
+     *   to strict URI string equality (`ExtUri.isEqual()`). Varying query strings across callers
+     *   (e.g. `?targetScreen=General` vs `?targetScreen=Customizations` vs no query) cause the editor host
+     *   to treat each as an independent document and spawn duplicate editor tabs.
+     * - Furthermore, `vscode.openWith` without an explicit `viewColumn` defaults to the active editor group.
+     *   If Settings is already open in Group 1 but the user is currently editing code in Group 2 (split view),
+     *   calling `vscode.openWith` would spawn a second Settings tab in Group 2.
+     * - Fix:
+     *   1. Checks all tab groups via `findOpenCustomTab` to detect if a Settings tab is already open.
+     *   2. If open: reveals that existing tab in its current `viewColumn` via `revealOpenCustomTab`,
+     *      and calls `SettingsEditorProvider.updateActiveSettings()` to navigate to the target screen in-place.
+     *   3. If not open: records pending target options in-memory via `SettingsEditorProvider.setPendingOptions()`
+     *      and opens the canonical document URI (`jetski-settings://global`) with no query parameters.
      * @public
      * @param {?} request
-     * @return {!Promise<*>}
+     * @return {!Promise<?>}
      */
     async openSettings(request) {
-        try {
-            /** @type {!URLSearchParams} */
-            const queryParams = new URLSearchParams();
-            if (request.targetScreen) {
-                queryParams.set('targetScreen', request.targetScreen);
+        // Concurrency guard: await any in-flight openSettings operation to prevent race conditions
+        // from rapid concurrent calls (e.g. double-click) opening duplicate tabs.
+        if (this.pendingOpenSettingsPromise != null) {
+            try {
+                await this.pendingOpenSettingsPromise;
             }
-            if (request.targetProjectId) {
-                queryParams.set('targetProjectId', request.targetProjectId);
+            catch {
+                // Ignore error from prior invocation and proceed with current request.
             }
-            if (request.targetWorkspaceUri) {
-                queryParams.set('targetWorkspaceUri', request.targetWorkspaceUri);
-            }
-            /** @type {!tsickle_vscode_8.Uri} */
-            const uri = vscode.Uri.parse(`${settings_editor_provider_1.SettingsEditorProvider.fileScheme}://global?${queryParams.toString()}`);
-            await vscode.commands.executeCommand('vscode.openWith', uri, settings_editor_provider_1.SettingsEditorProvider.viewType, { preview: false });
         }
-        catch (e) {
-            console.error('[Jetski] Failed to open settings panel', e);
-            void this.telemetry?.logError?.('jetski_web.open_settings_error', {
-                'errorName': e instanceof Error ? (/** @type {!Error} */ (e)).name : 'unknown',
-                'errorMessage': String(e),
-                'targetScreen': request.targetScreen,
-            });
-            throw e;
+        /** @type {!Promise<void>} */
+        const openPromise = ((/**
+         * @return {!Promise<void>}
+         */
+        async () => {
+            try {
+                /** @type {!tsickle_vscode_8.Uri} */
+                const canonicalUri = vscode.Uri.parse(`${settings_editor_provider_1.SettingsEditorProvider.fileScheme}://global`);
+                // Check if a settings tab is already open across all tab groups to prevent opening duplicate
+                // tabs when triggered from different editor groups or at different times.
+                /** @type {(undefined|!OpenTabMatch)} */
+                const existingTab = findOpenCustomTab((/**
+                 * @param {!CustomTabInput} input
+                 * @return {boolean}
+                 */
+                (input) => input.viewType === settings_editor_provider_1.SettingsEditorProvider.viewType ||
+                    input.uri.scheme === settings_editor_provider_1.SettingsEditorProvider.fileScheme));
+                if (existingTab) {
+                    // Tab is already open! Reveal and focus the existing tab in its current view column.
+                    await revealOpenCustomTab(existingTab, settings_editor_provider_1.SettingsEditorProvider.viewType);
+                    // If a specific target screen, project, or workspace was requested, update the active
+                    // settings webview panel in-place rather than opening a new tab.
+                    if (request.targetScreen ||
+                        request.targetProjectId ||
+                        request.targetWorkspaceUri) {
+                        await this.settingsEditorProvider?.updateActiveSettings({
+                            targetScreen: request.targetScreen,
+                            targetProjectId: request.targetProjectId,
+                            targetWorkspaceUri: request.targetWorkspaceUri,
+                        });
+                    }
+                    return;
+                }
+                // No tab open yet: record pending navigation options before opening so resolveCustomEditor
+                // can pick them up during initialization without polluting the document URI.
+                this.settingsEditorProvider?.setPendingOptions({
+                    targetScreen: request.targetScreen,
+                    targetProjectId: request.targetProjectId,
+                    targetWorkspaceUri: request.targetWorkspaceUri,
+                });
+                await vscode.commands.executeCommand('vscode.openWith', canonicalUri, settings_editor_provider_1.SettingsEditorProvider.viewType, { preview: false });
+            }
+            catch (error) {
+                console.error('[Jetski] Failed to open settings panel', error);
+                void this.telemetry?.logError?.('jetski_web.open_settings_error', {
+                    'errorName': error instanceof Error ? (/** @type {!Error} */ (error)).name : 'unknown',
+                    'errorMessage': String(error),
+                    'targetScreen': request.targetScreen,
+                });
+                throw error;
+            }
+        }))();
+        this.pendingOpenSettingsPromise = openPromise;
+        try {
+            await openPromise;
+        }
+        finally {
+            if (this.pendingOpenSettingsPromise === openPromise) {
+                this.pendingOpenSettingsPromise = undefined;
+            }
         }
         return {};
     }
@@ -1258,27 +1452,103 @@ class ExtensionApiImpl {
         return citcRegex.test(path) || cogRegex.test(path);
     }
     /**
+     * Opens an Artifact custom editor tab for a given file URI.
+     *
+     * Fixes duplicate tab bug across both Cider and VS Code Desktop:
+     * 1. Normalizes the URI by stripping fragment anchors (`#heading`, `#L1-10`) so that link clicks
+     *    pointing to headings match the exact document URI of tabs opened from the explorer or chip.
+     * 2. Inspects all tab groups (`vscode.window.tabGroups.all`) to find any open custom editor tab
+     *    matching the file's canonical path (`targetPath`), across `file:`, `jetski-artifact:`, and
+     *    the configured `artifactEditorId` viewType.
+     * 3. If an existing tab is found: reveals that tab in its existing `group.viewColumn` with `preview: false`.
+     *    This prevents opening duplicate tabs across split editor groups or when opened via different schemes.
+     * 4. If not found: records `cascadeId` in `ArtifactEditorProvider` and opens with canonical URI.
      * @public
      * @param {?} request
-     * @return {!Promise<*>}
+     * @return {!Promise<?>}
      */
     async openArtifact(request) {
-        if (request.fileUri) {
+        if (!request.fileUri) {
+            return {};
+        }
+        /** @type {!tsickle_vscode_8.Uri} */
+        const baseUri = vscode.Uri.parse(request.fileUri);
+        /** @type {string} */
+        const cascadeId = request.cascadeId ?? '';
+        /** @type {string} */
+        const targetViewType = this.naming.artifactEditorId ?? artifact_editor_provider_1.ArtifactEditorProvider.viewType;
+        // Strip fragments (e.g. #L1-L10 or #heading) to ensure the document URI
+        // matches across all callers and does not cause VS Code to open duplicate tabs.
+        /** @type {!tsickle_vscode_8.Uri} */
+        const cleanBaseUri = baseUri.with({ fragment: '' });
+        /** @type {string} */
+        const targetPath = cleanBaseUri.path;
+        // Concurrency guard: await any in-flight open operation for this exact file path
+        // to prevent rapid concurrent clicks from opening duplicate tabs.
+        /** @type {(undefined|!Promise<void>)} */
+        const pending = this.pendingOpenArtifacts.get(targetPath);
+        if (pending != null) {
             try {
-                /** @type {!tsickle_vscode_8.Uri} */
-                const baseUri = vscode.Uri.parse(request.fileUri);
-                /** @type {string} */
-                const cascadeId = request.cascadeId ?? '';
-                /** @type {!tsickle_vscode_8.Uri} */
-                const uri = baseUri.with({
-                    scheme: artifact_editor_provider_1.ArtifactEditorProvider.fileScheme,
-                    query: `cascadeId=${encodeURIComponent(cascadeId)}`,
-                });
-                await vscode.commands.executeCommand('vscode.openWith', uri, this.naming.artifactEditorId ?? artifact_editor_provider_1.ArtifactEditorProvider.viewType, { preview: true });
+                await pending;
             }
-            catch (e) {
-                console.error(`[Jetski] Failed to open artifact: ${request.fileUri}`, e);
-                throw e;
+            catch {
+                // Ignore error from prior invocation and proceed with current request.
+            }
+        }
+        /** @type {!Promise<void>} */
+        const openPromise = ((/**
+         * @return {!Promise<void>}
+         */
+        async () => {
+            try {
+                // Check if an artifact tab for this exact file is already open across all tab groups.
+                // This handles cases where:
+                // 1. The artifact was opened from the file explorer or Quick Open (scheme: 'file', no query).
+                // 2. The artifact was opened earlier in a different editor group (split window).
+                // 3. The artifact was opened from another conversation/subagent with a different cascadeId query.
+                /** @type {(undefined|!OpenTabMatch)} */
+                const existingTab = findOpenCustomTab((/**
+                 * @param {!CustomTabInput} input
+                 * @return {boolean}
+                 */
+                (input) => (input.viewType === targetViewType ||
+                    input.viewType === artifact_editor_provider_1.ArtifactEditorProvider.viewType ||
+                    input.uri.scheme === artifact_editor_provider_1.ArtifactEditorProvider.fileScheme) &&
+                    input.uri.path === targetPath));
+                if (existingTab) {
+                    // Tab is already open! Reveal and focus the existing tab in its current view column.
+                    await revealOpenCustomTab(existingTab, targetViewType);
+                    return;
+                }
+                // Store cascadeId for the path in the provider if available.
+                if (cascadeId) {
+                    this.artifactEditorProvider?.setCascadeIdForPath(targetPath, cascadeId);
+                }
+                // Canonical artifact URI using jetski-artifact scheme.
+                /** @type {!URLSearchParams} */
+                const queryParams = new URLSearchParams();
+                if (cascadeId) {
+                    queryParams.set('cascadeId', cascadeId);
+                }
+                /** @type {!tsickle_vscode_8.Uri} */
+                const uri = cleanBaseUri.with({
+                    scheme: artifact_editor_provider_1.ArtifactEditorProvider.fileScheme,
+                    query: queryParams.toString(),
+                });
+                await vscode.commands.executeCommand('vscode.openWith', uri, targetViewType, { preview: true });
+            }
+            catch (error) {
+                console.error(`[Jetski] Failed to open artifact: ${request.fileUri}`, error);
+                throw error;
+            }
+        }))();
+        this.pendingOpenArtifacts.set(targetPath, openPromise);
+        try {
+            await openPromise;
+        }
+        finally {
+            if (this.pendingOpenArtifacts.get(targetPath) === openPromise) {
+                this.pendingOpenArtifacts.delete(targetPath);
             }
         }
         return {};
@@ -1497,6 +1767,31 @@ class ExtensionApiImpl {
      * @return {!Promise<*>}
      */
     async showBrowserNotification(request) {
+        /** @type {(undefined|string)} */
+        const notificationId = request.payload?.id;
+        if (notificationId) {
+            if (this.sentNotificationIds.has(notificationId)) {
+                return {};
+            }
+            this.sentNotificationIds.add(notificationId);
+            if (this.sentNotificationIds.size > MAX_SENT_NOTIFICATION_IDS) {
+                /** @type {?} */
+                const first = this.sentNotificationIds.values().next().value;
+                if (first !== undefined) {
+                    this.sentNotificationIds.delete(first);
+                }
+            }
+        }
+        /** @type {(undefined|string)} */
+        const cascadeId = request.payload?.cascadeId;
+        /** @type {(undefined|string)} */
+        const activeConversationId = this.context.workspaceState.get('lastConversationId');
+        // Only suppress if Cider is currently focused AND the notification is for the active conversation
+        if (vscode.window.state.focused &&
+            cascadeId &&
+            cascadeId === activeConversationId) {
+            return {};
+        }
         await this.browserNotificationDelegate?.showBrowserNotification(request);
         return {};
     }
@@ -1833,6 +2128,11 @@ if (false) {
      */
     ExtensionApiImpl.prototype.registeredCommands;
     /**
+     * @const {!Set<string>}
+     * @private
+     */
+    ExtensionApiImpl.prototype.sentNotificationIds;
+    /**
      * @const {(undefined|!tsickle_delegate_interfaces_10.Telemetry)}
      * @private
      */
@@ -1847,4 +2147,37 @@ if (false) {
      * @private
      */
     ExtensionApiImpl.prototype.terminalPanelProvider;
+    /**
+     * Reference to the SettingsEditorProvider instance.
+     * Enables ExtensionApiImpl to:
+     * 1. Pass in-memory pending navigation options (targetScreen, targetProjectId, etc.)
+     *    prior to opening the settings tab, preserving a canonical URI without query params.
+     * 2. Dynamically update an already-open Settings panel in-place when navigation requests
+     *    arrive, avoiding duplicate editor tabs in VS Code.
+     * @type {(undefined|!tsickle_settings_editor_provider_14.SettingsEditorProvider)}
+     * @private
+     */
+    ExtensionApiImpl.prototype.settingsEditorProvider;
+    /**
+     * Reference to the ArtifactEditorProvider instance.
+     * Enables ExtensionApiImpl to cache conversation IDs (`cascadeId`) by file path
+     * so that artifacts can be resolved without encoding transient queries in the URI.
+     * @type {(undefined|!tsickle_artifact_editor_provider_9.ArtifactEditorProvider)}
+     * @private
+     */
+    ExtensionApiImpl.prototype.artifactEditorProvider;
+    /**
+     * Concurrency guard for openSettings: tracks an in-flight open operation to prevent
+     * race conditions from rapid concurrent calls (e.g. double-click) opening duplicate tabs.
+     * @type {(undefined|!Promise<void>)}
+     * @private
+     */
+    ExtensionApiImpl.prototype.pendingOpenSettingsPromise;
+    /**
+     * Concurrency guard for openArtifact: tracks in-flight open operations by file path to prevent
+     * race conditions from rapid concurrent clicks opening duplicate tabs for the same file.
+     * @const {!Map<string, !Promise<void>>}
+     * @private
+     */
+    ExtensionApiImpl.prototype.pendingOpenArtifacts;
 }

@@ -125,16 +125,24 @@ function activateWithDependencies(context, deps, naming) {
     /** @type {!tsickle_terminal_panel_provider_11.TerminalPanelProvider} */
     const terminalPanelProvider = new terminal_panel_provider_1.TerminalPanelProvider(context, renderer, 'jetski.terminalView');
     apiImpl.setTerminalPanelProvider(terminalPanelProvider);
-    // Webview creation (sidebar and artifact editor)
+    // Instantiate artifact and settings custom editor providers, and register their references
+    // with apiImpl so they can coordinate tab deduplication, in-place navigation, and in-memory caching.
+    /** @type {!tsickle_artifact_editor_provider_2.ArtifactEditorProvider} */
+    const artifactEditorProvider = new artifact_editor_provider_1.ArtifactEditorProvider(context, renderer);
+    apiImpl.setArtifactEditorProvider(artifactEditorProvider);
+    /** @type {!tsickle_settings_editor_provider_8.SettingsEditorProvider} */
+    const settingsEditorProvider = new settings_editor_provider_1.SettingsEditorProvider(context, renderer, naming);
+    apiImpl.setSettingsEditorProvider(settingsEditorProvider);
+    // Webview creation (sidebar, artifact editor, settings editor, and terminal)
     context.subscriptions.push(vscode.window.registerWebviewViewProvider(naming.viewId, provider, {
         webviewOptions: {
             retainContextWhenHidden: true,
         },
-    }), vscode.window.registerCustomEditorProvider(naming.artifactEditorId, new artifact_editor_provider_1.ArtifactEditorProvider(context, renderer), {
+    }), vscode.window.registerCustomEditorProvider(naming.artifactEditorId, artifactEditorProvider, {
         webviewOptions: {
             retainContextWhenHidden: true,
         },
-    }), vscode.window.registerCustomEditorProvider(settings_editor_provider_1.SettingsEditorProvider.viewType, new settings_editor_provider_1.SettingsEditorProvider(context, renderer, naming), {
+    }), vscode.window.registerCustomEditorProvider(settings_editor_provider_1.SettingsEditorProvider.viewType, settingsEditorProvider, {
         webviewOptions: {
             retainContextWhenHidden: true,
         },

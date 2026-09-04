@@ -27,6 +27,7 @@ jspb$o$devtools_jetski_provisioning$ListDeploymentsRequest.internal_toObject = f
     view: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getEnumFieldLegacyNullable(msg, 1)),
     tagsList: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getRepeatedStringField(msg, 2, jspb_internal_adapters.RepeatedArrayReturnType.EITHER_FROZEN_OR_UNFROZEN)),
     forceRefreshCache: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getBooleanFieldLegacyNullable(msg, 3)),
+    filter: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getStringFieldLegacyNullable(msg, 4)),
   }));
 
 };
@@ -68,6 +69,7 @@ jspb$o$devtools_jetski_provisioning$ListDeploymentsRequest.fromObject = function
   jspb_internal_adapters.setEnumField(msg, 1, obj.view);
   jspb_internal_adapters.setRepeatedStringField(msg, 2, obj.tagsList);
   jspb_internal_adapters.setBooleanField(msg, 3, obj.forceRefreshCache);
+  jspb_internal_adapters.setStringField(msg, 4, obj.filter);
   return msg;
 };
 }

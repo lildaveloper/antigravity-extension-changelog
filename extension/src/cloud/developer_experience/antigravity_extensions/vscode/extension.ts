@@ -25,7 +25,8 @@ const tsickle_loading_message_impl_8 = goog.requireType("google3.devtools.cider.
 const tsickle_export_symbol_9 = goog.requireType("google3.javascript.tools.nodejs.export_symbol");
 const tsickle_desktop_webview_delegate_10 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.desktop_webview_delegate");
 const tsickle_server_manager_11 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.server_manager");
-const tsickle_telemetry_service_12 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.telemetry_service");
+const tsickle_status_bar_12 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.status_bar");
+const tsickle_telemetry_service_13 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.telemetry_service");
 const vscode = goog.require('vscode'); // from //third_party/javascript/typings/vscode
 // from //third_party/javascript/typings/vscode
 const core_activation_1 = goog.require('google3.devtools.cider.extensions.jetski.core_activation');
@@ -36,6 +37,7 @@ const side_by_side_diff_zone_renderer_1 = goog.require('google3.devtools.cider.e
 const export_symbol_1 = goog.require('google3.javascript.tools.nodejs.export_symbol');
 const desktop_webview_delegate_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.desktop_webview_delegate');
 const server_manager_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.server_manager');
+const status_bar_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.status_bar');
 const telemetry_service_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.telemetry_service');
 class DesktopWorkspaceManager {
     /**
@@ -138,6 +140,7 @@ async function desktopSetup(context, messageNotifier, telemetry) {
  * @return {void}
  */
 function activate(context) {
+    (0, status_bar_1.registerAntigravityStatusBar)(context);
     // Command to clear persistent conversation and diff state from workspaceState:
     // - 'lastConversationId': The conversation route to restore on reload. If pointing to a deleted
     //   trajectory on disk, resetting this allows the extension to boot into a fresh chat.
@@ -256,11 +259,18 @@ function activate(context) {
     context.subscriptions.push(agentEditManager);
     context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((/**
      * @param {!tsickle_vscode_1.ConfigurationChangeEvent} e
-     * @return {void}
+     * @return {!Promise<void>}
      */
-    (e) => {
+    async (e) => {
         if (e.affectsConfiguration('antigravity.enableInlineDiff')) {
             agentEditManager.updateDiffZoneRenderer();
+        }
+        if (e.affectsConfiguration('antigravity.serverPort')) {
+            /** @type {(undefined|string)} */
+            const action = await vscode.window.showInformationMessage('Changing the Antigravity server port requires reloading the window to take effect.', 'Reload Window');
+            if (action === 'Reload Window') {
+                void vscode.commands.executeCommand('workbench.action.reloadWindow');
+            }
         }
     })));
     (0, core_activation_1.activateWithDependencies)(context, {

@@ -37,7 +37,7 @@ jspb$b$exa$config_pb$ConversationGroupRegistry.fields = /** @pureOrBreakMyCode *
 jspb$exa$config_pb$MutableConversationGroupRegistry.prototype.serializeBinary = /** @pureOrBreakMyCode */(jspb_internal_public_for_gencode.makePrototypeSerializeBinaryFunction(jspb$b$exa$config_pb$ConversationGroupRegistry.fields));
 
 
-var jspb$b$exa$config_pb$MarketplaceInstall;
-Object.defineProperty(this, 'jspb$b$exa$config_pb$MarketplaceInstall', {
-  get() { return jspb$b$exa$config_pb$MarketplaceInstall; },
-  set(v) { jspb$b$exa$config_pb$MarketplaceInstall = v; },
+var jspb$b$exa$cortex_pb$MarketplaceInstall;
+Object.defineProperty(this, 'jspb$b$exa$cortex_pb$MarketplaceInstall', {
+  get() { return jspb$b$exa$cortex_pb$MarketplaceInstall; },
+  set(v) { jspb$b$exa$cortex_pb$MarketplaceInstall = v; },

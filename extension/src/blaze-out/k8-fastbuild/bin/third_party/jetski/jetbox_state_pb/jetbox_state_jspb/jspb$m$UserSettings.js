@@ -1843,6 +1843,7 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
    * optional bool enable_personal_customizations = 38;
    * @override
    * @return {boolean}
+   * @deprecated
    */
   getEnablePersonalCustomizations() {
     return jspb_internal_adapters.getBooleanFieldWithDefault(this, 38);
@@ -1852,6 +1853,7 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
   /**
    * @param {boolean|null|undefined} value
    * @return {!jspb$jetbox_state_pb$MutableUserSettings} returns this
+   * @deprecated
    */
   setEnablePersonalCustomizations(value) {
     return jspb_internal_adapters.setBooleanField(this, 38, value);
@@ -1861,6 +1863,7 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
   /**
    * Clears the field.
    * @return {!jspb$jetbox_state_pb$MutableUserSettings} returns this
+   * @deprecated
    */
   clearEnablePersonalCustomizations() {
     return jspb_internal_adapters.clearField(this, 38);
@@ -1871,6 +1874,7 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
    * Returns whether this field is set.
    * @override
    * @return {boolean}
+   * @deprecated
    */
   hasEnablePersonalCustomizations() {
     return jspb_internal_adapters.hasBooleanField(this, 38);
@@ -1881,6 +1885,7 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
    * optional bool enable_personal_customizations = 38;
    * @override
    * @return {boolean|undefined}
+   * @deprecated
    */
   getEnablePersonalCustomizationsOrUndefined() {
     return jspb_internal_adapters.getBooleanFieldOrUndefined(this, 38);

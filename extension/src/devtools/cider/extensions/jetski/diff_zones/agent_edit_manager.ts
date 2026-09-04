@@ -344,7 +344,7 @@ class AgentEditManager {
                 /** @type {string} */
                 const normalizedModifiedContents = (0, utils_1.normalizeLineEndings)(message.modifiedContents);
                 /** @type {boolean} */
-                const hasExistingZoneWithSameContent = await this.handleExistingDiffZone(normalizedUri, normalizedModifiedContents, message.skipOpen, message.strictNav);
+                const hasExistingZoneWithSameContent = await this.handleExistingDiffZone(normalizedUri, normalizedModifiedContents, message.skipOpen, message.strictNav, message);
                 if (hasExistingZoneWithSameContent) {
                     return;
                 }
@@ -403,6 +403,24 @@ class AgentEditManager {
                             await this.hunkStorage.clearSnapshot(message);
                         }
                     }
+                    // When using inline diff zones, check if on-disk content diverged due to
+                    // formatters or commands running during the turn. If the document on disk
+                    // differs from both original and modified, but has been changed from original,
+                    // adopt the on-disk content as the modified content so the inline diff displays
+                    // the true state of the workspace rather than falsely reporting divergence.
+                    if (this.renderer.type === 'inline' &&
+                        this.hasContentDiverged(doc, message)) {
+                        /** @type {string} */
+                        const currentContent = (0, utils_1.normalizeLineEndings)(doc.getText());
+                        /** @type {string} */
+                        const normalizedOriginal = (0, utils_1.normalizeLineEndings)(message.originalContents ?? '');
+                        if (currentContent !== normalizedOriginal) {
+                            message = {
+                                ...message,
+                                modifiedContents: doc.getText(),
+                            };
+                        }
+                    }
                     if (this.hasContentDiverged(doc, message)) {
                         console.info(`[Jetski] File content has diverged for ${message.fileUri}, showing read-only diff.`);
                         await this.handleFullyResolvedEdit(message);
@@ -421,17 +439,15 @@ class AgentEditManager {
                     await this.handleFullyResolvedEdit(message);
                     return;
                 }
-                /** @type {!tsickle_vscode_1.WorkspaceConfiguration} */
-                const config = vscode.workspace.getConfiguration('jetski-web');
                 /** @type {boolean} */
-                const autoOpenAll = config.get('autoOpenFiles', false);
+                const autoOpenAll = this.isAutoOpenEnabled();
                 if (autoOpenAll && message.skipOpen !== true) {
                     await this.revealDocument(normalizedUri, false);
                 }
                 this.activeDiffZoneDetails.set(normalizedUri, {
                     ...message,
-                    originalContents: message.originalContents,
-                    modifiedContents: message.modifiedContents,
+                    originalContents: (/** @type {string} */ (message.originalContents)),
+                    modifiedContents: (/** @type {string} */ (message.modifiedContents)),
                     hunkHashes: result.hunkHashes ?? [],
                 });
                 /** @type {number} */
@@ -507,12 +523,22 @@ class AgentEditManager {
      * @param {string} normalizedModifiedContents
      * @param {(undefined|boolean)=} skipOpen
      * @param {boolean=} strictNav
+     * @param {(undefined|!AddAgentEditMessage)=} message
      * @return {!Promise<boolean>}
      */
-    async handleExistingDiffZone(normalizedUri, normalizedModifiedContents, skipOpen, strictNav = false) {
+    async handleExistingDiffZone(normalizedUri, normalizedModifiedContents, skipOpen, strictNav = false, message) {
         /** @type {(undefined|{originalContents: string, modifiedContents: string, hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)})} */
         const existingDetails = this.activeDiffZoneDetails.get(normalizedUri);
-        if (!existingDetails ||
+        if (!existingDetails) {
+            return false;
+        }
+        /** @type {boolean} */
+        const isSameTurn = this.renderer?.type === 'inline' &&
+            message?.conversationId !== undefined &&
+            message?.turnIndex !== undefined &&
+            existingDetails.conversationId === message.conversationId &&
+            existingDetails.turnIndex === message.turnIndex;
+        if (!isSameTurn &&
             (0, utils_1.normalizeLineEndings)(existingDetails.modifiedContents ?? '') !==
                 normalizedModifiedContents) {
             return false;
@@ -811,6 +837,26 @@ class AgentEditManager {
     }
     /**
      * @private
+     * @return {boolean}
+     */
+    isAutoOpenEnabled() {
+        /** @type {!tsickle_vscode_1.WorkspaceConfiguration} */
+        const antigravityConfig = vscode.workspace.getConfiguration('antigravity');
+        /** @type {(undefined|{key: string, defaultValue: (undefined|boolean), globalValue: (undefined|boolean), workspaceValue: (undefined|boolean), workspaceFolderValue: (undefined|boolean), defaultLanguageValue: (undefined|boolean), globalLanguageValue: (undefined|boolean), workspaceLanguageValue: (undefined|boolean), workspaceFolderLanguageValue: (undefined|boolean), languageIds: (undefined|!Array<string>)})} */
+        const inspected = antigravityConfig?.inspect?.('autoOpenFiles');
+        /** @type {(undefined|boolean)} */
+        const antigravityExplicit = inspected?.workspaceFolderValue ??
+            inspected?.workspaceValue ??
+            inspected?.globalValue;
+        if (antigravityExplicit !== undefined) {
+            return antigravityExplicit;
+        }
+        /** @type {!tsickle_vscode_1.WorkspaceConfiguration} */
+        const jetskiConfig = vscode.workspace.getConfiguration('jetski-web');
+        return jetskiConfig?.get?.('autoOpenFiles', false) ?? false;
+    }
+    /**
+     * @private
      * @param {(undefined|boolean)=} skipOpen
      * @param {boolean=} strictNav
      * @return {!FileOpenOptions}
@@ -819,10 +865,8 @@ class AgentEditManager {
         if (skipOpen === true) {
             return { shouldOpen: false, preview: true };
         }
-        /** @type {!tsickle_vscode_1.WorkspaceConfiguration} */
-        const config = vscode.workspace.getConfiguration('jetski-web');
         /** @type {boolean} */
-        const autoOpenAll = config.get('autoOpenFiles', false);
+        const autoOpenAll = this.isAutoOpenEnabled();
         if (strictNav) {
             return { shouldOpen: true, preview: true };
         }

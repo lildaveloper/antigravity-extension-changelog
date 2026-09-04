@@ -43,6 +43,13 @@ class ArtifactEditorProvider {
      */
     constructor(context, renderer) {
         this.renderer = renderer;
+        /**
+         * In-memory cache mapping normalized file paths to cascadeIds.
+         * This allows cascadeId resolution even if the document URI query is kept empty
+         * or stripped for canonical tab deduplication, and when the file path does not
+         * match CASCADE_BRAIN_PATH_REGEX.
+         */
+        this.cascadeIdByPath = new Map();
         context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(ArtifactEditorProvider.fileScheme, {
             /**
              * @public
@@ -59,13 +66,24 @@ class ArtifactEditorProvider {
         }));
     }
     /**
+     * Sets the cascadeId associated with an artifact file path.
+     *
+     * @public
+     * @param {string} path The file path of the artifact.
+     * @param {string} cascadeId The cascade/conversation UUID.
+     * @return {void}
+     */
+    setCascadeIdForPath(path, cascadeId) {
+        this.cascadeIdByPath.set(path, cascadeId);
+    }
+    /**
      * @public
      * @param {!tsickle_vscode_1.Uri} uri
      * @param {!tsickle_vscode_1.CustomDocumentOpenContext} openContext
      * @param {!tsickle_vscode_1.CancellationToken} token
-     * @return {!Promise<!tsickle_vscode_1.CustomDocument>}
+     * @return {!tsickle_vscode_1.CustomDocument}
      */
-    async openCustomDocument(uri, openContext, token) {
+    openCustomDocument(uri, openContext, token) {
         return {
             uri,
             dispose: (/**
@@ -95,6 +113,9 @@ class ArtifactEditorProvider {
             if (match) {
                 cascadeId = match[1];
             }
+        }
+        if (!cascadeId) {
+            cascadeId = this.cascadeIdByPath.get(document.uri.path) ?? '';
         }
         /** @type {string} */
         const cleanUri = document.uri.with({ query: '', scheme: 'file' }).toString();
@@ -128,6 +149,15 @@ if (false) {
      * @public
      */
     ArtifactEditorProvider.fileScheme;
+    /**
+     * In-memory cache mapping normalized file paths to cascadeIds.
+     * This allows cascadeId resolution even if the document URI query is kept empty
+     * or stripped for canonical tab deduplication, and when the file path does not
+     * match CASCADE_BRAIN_PATH_REGEX.
+     * @const {!Map<string, string>}
+     * @private
+     */
+    ArtifactEditorProvider.prototype.cascadeIdByPath;
     /**
      * @const {!tsickle_webview_renderer_3.WebviewRenderer}
      * @private

@@ -8,9 +8,9 @@
 
 goog.provide('jspb$o$exa$config_pb$SkillUserConfig');
 
-goog.require('jspb$exa$config_pb$MutableMarketplaceInstall');
 goog.require('jspb$exa$config_pb$MutableSkillUserConfig');
-goog.require('jspb$o$exa$config_pb$MarketplaceInstall');
+goog.require('jspb$exa$cortex_pb$MutableMarketplaceInstall');
+goog.require('jspb$o$exa$cortex_pb$MarketplaceInstall');
 goog.require('jspb_internal_adapters');
 goog.require('jspb_internal_public_for_gencode');
 
@@ -26,7 +26,7 @@ jspb$o$exa$config_pb$SkillUserConfig.internal_toObject = function(msg) {
   if (msg == null) return undefined;
   jspb_internal_public_for_gencode.checkCanCallToObject(msg);
   return /** @type {?} */ (/** @type {!jspb$exa$config_pb$MutableSkillUserConfig.ObjectFormat} */ ({
-    installedFrom: jspb$o$exa$config_pb$MarketplaceInstall.internal_toObject(msg.getInstalledFrom()),
+    installedFrom: jspb$o$exa$cortex_pb$MarketplaceInstall.internal_toObject(msg.getInstalledFrom()),
   }));
 
 };
@@ -66,8 +66,8 @@ if (jspb_internal_public_for_gencode.GENERATE_FROM_OBJECT) {
 jspb$o$exa$config_pb$SkillUserConfig.fromObject = function(obj) {
   const msg = new jspb$exa$config_pb$MutableSkillUserConfig();
   jspb_internal_adapters.setWrapperField(msg,
-      jspb$exa$config_pb$MutableMarketplaceInstall,
-      1, jspb_internal_public_for_gencode.fromObjectNullable(obj.installedFrom, jspb$o$exa$config_pb$MarketplaceInstall.fromObject));
+      jspb$exa$cortex_pb$MutableMarketplaceInstall,
+      1, jspb_internal_public_for_gencode.fromObjectNullable(obj.installedFrom, jspb$o$exa$cortex_pb$MarketplaceInstall.fromObject));
   return msg;
 };
 }

@@ -155,7 +155,7 @@ if (goog.DEBUG && !COMPILED) {
   jspb$devtools_jetski_provisioning$ImmutableListDeploymentsResponse.prototype.internalDoNotUse_annotations;
 }
 
-var jspb$o$devtools_jetski_provisioning$BlueprintBinding;
-Object.defineProperty(this, 'jspb$o$devtools_jetski_provisioning$BlueprintBinding', {
-  get() { return jspb$o$devtools_jetski_provisioning$BlueprintBinding; },
-  set(v) { jspb$o$devtools_jetski_provisioning$BlueprintBinding = v; },
+var jspb$o$google$protobuf$Any;
+Object.defineProperty(this, 'jspb$o$google$protobuf$Any', {
+  get() { return jspb$o$google$protobuf$Any; },
+  set(v) { jspb$o$google$protobuf$Any = v; },

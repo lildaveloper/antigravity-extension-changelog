@@ -35,6 +35,7 @@ jspb$o$jetski_memory$MemoryConfig.internal_toObject = function(msg) {
     fuse: jspb$o$jetski_memory$FuseConfig.internal_toObject(msg.getFuse()),
     disableSkills: jspb_internal_adapters.getBooleanFieldWithDefault(msg, 5),
     profile: jspb_internal_adapters.getStringFieldWithDefault(msg, 6),
+    releaseTrack: jspb_internal_adapters.getEnumFieldWithDefault(msg, 7),
   }));
 
 };
@@ -84,6 +85,7 @@ jspb$o$jetski_memory$MemoryConfig.fromObject = function(obj) {
       3, jspb_internal_public_for_gencode.fromObjectNullable(obj.fuse, jspb$o$jetski_memory$FuseConfig.fromObject));
   jspb_internal_adapters.setProto3BooleanField(msg, 5, obj.disableSkills);
   jspb_internal_adapters.setProto3StringField(msg, 6, obj.profile);
+  jspb_internal_adapters.setProto3EnumField(msg, 7, obj.releaseTrack);
   return msg;
 };
 }

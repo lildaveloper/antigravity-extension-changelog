@@ -26,15 +26,17 @@ exports.METRICS_OPT_IN_CONFIG_ID = 'antigravity.enableTelemetry';
 exports.EXTENSION_PREFIX = 'google.antigravity.vscode.extension';
 /**
  * Known telemetry event names for Antigravity.
- * @type {{EXTENSION_ACTIVATE: string, CONVERSATION_STARTED: string, CHAT_MESSAGE_SENT: string, SERVER_START: string, SERVER_START_SUCCESS: string, SERVER_START_FAILURE: string, WEBVIEW_CONNECT_URL: string, WEBVIEW_SETUP_ERROR: string}}
+ * @enum {string}
  */
-exports.AntigravityEvent = (/** @type {{EXTENSION_ACTIVATE: string, CONVERSATION_STARTED: string, CHAT_MESSAGE_SENT: string, SERVER_START: string, SERVER_START_SUCCESS: string, SERVER_START_FAILURE: string, WEBVIEW_CONNECT_URL: string, WEBVIEW_SETUP_ERROR: string}} */ ({
-    EXTENSION_ACTIVATE: `${exports.EXTENSION_PREFIX}.activate`,
-    CONVERSATION_STARTED: `${exports.EXTENSION_PREFIX}.web.conversation_started`,
-    CHAT_MESSAGE_SENT: `${exports.EXTENSION_PREFIX}.web.chat_message_sent`,
-    SERVER_START: `${exports.EXTENSION_PREFIX}.server.start`,
-    SERVER_START_SUCCESS: `${exports.EXTENSION_PREFIX}.server.start_success`,
-    SERVER_START_FAILURE: `${exports.EXTENSION_PREFIX}.server.start_failure`,
-    WEBVIEW_CONNECT_URL: `${exports.EXTENSION_PREFIX}.web.connect_url`,
-    WEBVIEW_SETUP_ERROR: `${exports.EXTENSION_PREFIX}.web.setup_error`,
-}));
+const AntigravityEvent = {
+    EXTENSION_ACTIVATE: "google.antigravity.vscode.extension.activate",
+    CONVERSATION_STARTED: "google.antigravity.vscode.extension.web.conversation_started",
+    CHAT_MESSAGE_SENT: "google.antigravity.vscode.extension.web.chat_message_sent",
+    SERVER_START: "google.antigravity.vscode.extension.server.start",
+    SERVER_START_SUCCESS: "google.antigravity.vscode.extension.server.start_success",
+    SERVER_START_FAILURE: "google.antigravity.vscode.extension.server.start_failure",
+    SERVER_CRASH: "google.antigravity.vscode.extension.server.crash",
+    WEBVIEW_CONNECT_URL: "google.antigravity.vscode.extension.web.connect_url",
+    WEBVIEW_SETUP_ERROR: "google.antigravity.vscode.extension.web.setup_error",
+};
+exports.AntigravityEvent = AntigravityEvent;

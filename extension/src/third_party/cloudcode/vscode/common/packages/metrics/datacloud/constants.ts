@@ -117,6 +117,7 @@ const DataCloudMetadataKey = {
     ZOOM_ACTION: "zoom_action",
     // The resulting zoom level percentage after the zoom action (e.g. '150').
     ZOOMED_TO: "zoomed_to",
+    AUTH_METHOD: "authMethod",
 };
 exports.DataCloudMetadataKey = DataCloudMetadataKey;
 /**

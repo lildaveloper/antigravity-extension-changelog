@@ -345,11 +345,8 @@ class InlineDiffManager {
         await this.applyContentReplacement(document, activeDiff.combinedText);
         activeDiff.changes.setup(hunks, document);
         this.refreshVisibleEditorDecorations(key, activeDiff.changes);
-        /** @type {(undefined|!tsickle_vscode_1.TextEditor)} */
-        const activeEditor = vscode.window.activeTextEditor;
-        if (activeEditor && activeEditor.document.uri.toString() === key) {
-            await vscode.commands.executeCommand('setContext', 'antigravity.hasActiveDiff', true);
-        }
+        await vscode.commands.executeCommand('setContext', 'antigravity.hasActiveDiff', true);
+        await this.refreshGitAndGitLens(uri);
         this.onDidChangeActiveDiffsEmitter.fire();
         return true;
     }
@@ -438,6 +435,7 @@ class InlineDiffManager {
             this.codeLensProvider.refresh();
             this.refreshVisibleEditorDecorations(uriStr, activeDiff.changes);
             this.focusNextHunk(uriStr, index);
+            await this.refreshGitAndGitLens(activeDiff.uri);
         }
     }
     /**
@@ -525,6 +523,7 @@ class InlineDiffManager {
             this.codeLensProvider.refresh();
             this.refreshVisibleEditorDecorations(uriStr, activeDiff.changes);
             this.focusNextHunk(uriStr, index);
+            await this.refreshGitAndGitLens(activeDiff.uri);
         }
     }
     /**
@@ -628,12 +627,18 @@ class InlineDiffManager {
         }
         this.activeDiffs.clear();
         this.onDidChangeActiveDiffsEmitter.fire();
+        this.debouncedRefreshCodeLenses();
+        await vscode.commands.executeCommand('setContext', 'antigravity.hasActiveDiff', false);
     }
     /**
      * @public
      * @return {void}
      */
     dispose() {
+        if (this.refreshTimeout) {
+            clearTimeout(this.refreshTimeout);
+            this.refreshTimeout = undefined;
+        }
         this.cleanUpAll()
             .then((/**
          * @return {void}
@@ -655,9 +660,138 @@ class InlineDiffManager {
             console.error('[Antigravity] Error during dispose cleanup:', e);
         }));
     }
+    // Debounce CodeLens refresh calls by 250ms to eliminate UI thrashing during rapid edits.
+    /**
+     * @private
+     * @return {void}
+     */
+    debouncedRefreshCodeLenses() {
+        if (this.refreshTimeout) {
+            clearTimeout(this.refreshTimeout);
+        }
+        this.refreshTimeout = setTimeout((/**
+         * @return {void}
+         */
+        () => {
+            this.refreshTimeout = undefined;
+            this.codeLensProvider.refresh();
+        }), 250);
+    }
     // ---------------------------------------------------------------------------
     // Private Helpers
     // ---------------------------------------------------------------------------
+    // Flushes GitLens line annotations and triggers VS Code Git status refresh so new/accepted code
+    // displays uncommitted changes rather than stale commit blame.
+    //
+    // NOTE: 'git.refresh' must only be executed if the workspace has active Git repositories.
+    // When executed in non-Git workspaces (e.g. Google3/CitC workspaces, standalone files, or uninitialized
+    // scratch projects), VS Code's Git extension CommandCenter throws "There are no available repositories".
+    // Because VS Code handles this internally by showing a modal error dialog (with "Open Git Log") and
+    // resolving the command promise, an outer try/catch cannot suppress the error dialog.
+    /**
+     * @private
+     * @param {(undefined|!tsickle_vscode_1.Uri)=} targetUri
+     * @return {!Promise<void>}
+     */
+    async refreshGitAndGitLens(targetUri) {
+        /** @type {(undefined|!tsickle_vscode_1.Uri)} */
+        const docUri = targetUri ?? vscode.window?.activeTextEditor?.document?.uri;
+        /** @type {function(): !Promise<void>} */
+        const refresh = (/**
+         * @return {!Promise<void>}
+         */
+        async () => {
+            try {
+                await vscode.commands.executeCommand('gitlens.clearFileAnnotations');
+            }
+            catch { }
+            if (hasOpenGitRepositories()) {
+                try {
+                    await vscode.commands.executeCommand('git.refresh');
+                }
+                catch {
+                    // git.refresh may fail if the repository is busy or locked; safe to ignore.
+                }
+            }
+            if (docUri) {
+                await this.touchGitIndexForUri(docUri);
+            }
+        });
+        await refresh();
+        setTimeout((/**
+         * @return {void}
+         */
+        () => {
+            void refresh();
+        }), 150);
+    }
+    // Updates the modification time of .git/index if the document is inside a Git repository.
+    // This notifies GitLens's repository index watcher to invalidate in-memory blame snapshots,
+    // preventing GitLens from attributing newly inserted lines to historical commits.
+    /**
+     * @private
+     * @param {(undefined|!tsickle_vscode_1.Uri)=} targetUri
+     * @return {!Promise<void>}
+     */
+    async touchGitIndexForUri(targetUri) {
+        if (!targetUri || targetUri.scheme !== 'file' || !vscode.workspace?.fs) {
+            return;
+        }
+        try {
+            /** @type {!tsickle_vscode_1.Uri} */
+            let cur = targetUri;
+            // Walk up directory tree to locate .git
+            while (cur.path !== '/' && cur.path !== '.') {
+                /** @type {!tsickle_vscode_1.Uri} */
+                const parent = vscode.Uri.joinPath(cur, '..');
+                if (parent.path === cur.path) {
+                    break;
+                }
+                cur = parent;
+                /** @type {!tsickle_vscode_1.Uri} */
+                const gitUri = vscode.Uri.joinPath(cur, '.git');
+                try {
+                    /** @type {!tsickle_vscode_1.FileStat} */
+                    const stat = await vscode.workspace.fs.stat(gitUri);
+                    if (stat.type & vscode.FileType.Directory) {
+                        /** @type {!tsickle_vscode_1.Uri} */
+                        const indexUri = vscode.Uri.joinPath(gitUri, 'index');
+                        /** @type {!Uint8Array} */
+                        const data = await vscode.workspace.fs.readFile(indexUri);
+                        await vscode.workspace.fs.writeFile(indexUri, data);
+                        return;
+                    }
+                    else if (stat.type & vscode.FileType.File) {
+                        // Git worktree or submodule: .git file contains "gitdir: <path>"
+                        /** @type {string} */
+                        const content = new TextDecoder().decode(await vscode.workspace.fs.readFile(gitUri));
+                        /** @type {(null|!RegExpExecArray)} */
+                        const match = /^gitdir:\s*(.+)$/m.exec(content);
+                        if (match) {
+                            /** @type {string} */
+                            const gitdirStr = match[1].trim();
+                            /** @type {!tsickle_vscode_1.Uri} */
+                            const resolvedGitDir = gitdirStr.startsWith('/')
+                                ? vscode.Uri.file(gitdirStr)
+                                : vscode.Uri.joinPath(cur, gitdirStr);
+                            /** @type {!tsickle_vscode_1.Uri} */
+                            const indexUri = vscode.Uri.joinPath(resolvedGitDir, 'index');
+                            /** @type {!Uint8Array} */
+                            const data = await vscode.workspace.fs.readFile(indexUri);
+                            await vscode.workspace.fs.writeFile(indexUri, data);
+                            return;
+                        }
+                    }
+                }
+                catch {
+                    // .git does not exist at this level, continue walking up.
+                }
+            }
+        }
+        catch {
+            // Best-effort; ignore any filesystem errors.
+        }
+    }
     /**
      * @private
      * @param {!tsickle_vscode_1.TextEditor} editor
@@ -795,8 +929,9 @@ class InlineDiffManager {
         activeDiff.changes.ranges = (0, inline_diff_range_tracker_1.recalculateInlineDiffRanges)(activeDiff.changes.ranges, event.contentChanges);
         activeDiff.combinedText = event.document.getText();
         this.refreshVisibleEditorDecorations(key, activeDiff.changes);
-        this.codeLensProvider.refresh();
+        this.debouncedRefreshCodeLenses();
     }
+    // Update antigravity.hasActiveDiff context key when active editor focus changes.
     /**
      * @private
      * @param {!tsickle_vscode_1.TextEditor} editor
@@ -816,6 +951,7 @@ class InlineDiffManager {
             await vscode.commands.executeCommand('setContext', 'antigravity.hasActiveDiff', false);
         }
     }
+    // Clean up active diff state on tab close without reverting the file on disk.
     /**
      * @private
      * @param {!tsickle_vscode_1.TextDocument} document
@@ -828,37 +964,11 @@ class InlineDiffManager {
         const activeDiff = this.activeDiffs.get(key);
         if (!activeDiff)
             return;
-        await this.rejectRemaining(key);
-    }
-    /**
-     * @private
-     * @param {string} uriStr
-     * @return {!Promise<void>}
-     */
-    async rejectRemaining(uriStr) {
-        /** @type {(undefined|!ActiveDiff)} */
-        const activeDiff = this.activeDiffs.get(uriStr);
-        if (!activeDiff)
-            return;
-        /** @type {!tsickle_vscode_1.TextDocument} */
-        const document = await vscode.workspace.openTextDocument(activeDiff.uri);
-        /** @type {!tsickle_vscode_1.WorkspaceEdit} */
-        const edit = new vscode.WorkspaceEdit();
-        // Revert unresolved changes by deleting addition ranges
-        for (const range of activeDiff.changes.ranges) {
-            if (range.additionRange) {
-                /** @type {!tsickle_vscode_1.Range} */
-                const rangeToDelete = new vscode.Range(range.additionRange.start, document.lineAt(range.additionRange.end.line).rangeIncludingLineBreak.end);
-                edit.delete(activeDiff.uri, rangeToDelete);
-            }
-        }
-        this.isResolvingHunk = true;
-        await vscode.workspace.applyEdit(edit);
-        this.isResolvingHunk = false;
-        if (document.isDirty) {
-            await document.save();
-        }
-        await this.finalizeFile(uriStr, false);
+        // Clean up active diff state without mutating or reverting the file on disk.
+        this.activeDiffs.delete(key);
+        this.onDidChangeActiveDiffsEmitter.fire();
+        this.debouncedRefreshCodeLenses();
+        await vscode.commands.executeCommand('setContext', 'antigravity.hasActiveDiff', this.hasActiveDiffs());
     }
     /**
      * @private
@@ -890,13 +1000,15 @@ class InlineDiffManager {
         }
         this.activeDiffs.delete(uriStr);
         this.onDidChangeActiveDiffsEmitter.fire();
-        this.codeLensProvider.refresh();
-        await vscode.commands.executeCommand('setContext', 'antigravity.hasActiveDiff', false);
-        for (const editor of vscode.window.visibleTextEditors) {
-            if (editor.document.uri.toString() === uriStr) {
+        this.debouncedRefreshCodeLenses();
+        // Update antigravity.hasActiveDiff context key based on remaining pending diffs across all files.
+        await vscode.commands.executeCommand('setContext', 'antigravity.hasActiveDiff', this.hasActiveDiffs());
+        for (const editor of vscode.window?.visibleTextEditors ?? []) {
+            if (editor.document?.uri?.toString?.() === uriStr) {
                 this.clearDecorations(editor);
             }
         }
+        await this.refreshGitAndGitLens(activeDiff.uri);
         this.onDidFinalizeFileEmitter.fire({
             uri: activeDiff.uri,
             accepted,
@@ -988,6 +1100,11 @@ if (false) {
      * @public
      */
     InlineDiffManager.prototype.onDidChangeActiveDiffs;
+    /**
+     * @type {(undefined|number)}
+     * @private
+     */
+    InlineDiffManager.prototype.refreshTimeout;
     /**
      * @const {!DiffStyles}
      * @private
@@ -1103,4 +1220,28 @@ if (false) {
      * @private
      */
     InlineDiffCodeLensProvider.prototype.manager;
+}
+/**
+ * Checks whether VS Code's built-in Git extension is active and managing at least one repository.
+ *
+ * In VS Code, 'git.refresh' is decorated with { repository: true }. If no repository argument
+ * is provided, VS Code falls back to Model.pickRepository(). If openRepositories.length === 0,
+ * it throws an error and displays a modal warning dialog ("Git: There are no available repositories").
+ * Checking repositories.length > 0 here ensures we only trigger git.refresh in valid Git contexts.
+ * @return {boolean}
+ */
+function hasOpenGitRepositories() {
+    try {
+        /** @type {(undefined|!tsickle_vscode_1.Extension<{getAPI: (undefined|function(number): {repositories: (undefined|!ReadonlyArray<*>)})}>)} */
+        const gitExtension = vscode.extensions?.getExtension('vscode.git');
+        if (!gitExtension || !gitExtension.isActive) {
+            return false;
+        }
+        /** @type {(undefined|{repositories: (undefined|!ReadonlyArray<*>)})} */
+        const gitApi = gitExtension.exports?.getAPI?.(1);
+        return Boolean(gitApi?.repositories && gitApi.repositories.length > 0);
+    }
+    catch {
+        return false;
+    }
 }

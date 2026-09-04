@@ -1,4 +1,4 @@
-// source: third_party/jetski/config_pb/config.proto
+// source: third_party/jetski/cortex_pb/cortex.proto
 /**
  * @fileoverview
  * @suppress {useOfGoogProvide}
@@ -6,9 +6,9 @@
 // NO CHECKED-IN PROTOBUF GENCODE
 // GENERATED CODE -- DO NOT EDIT!
 
-goog.provide('jspb$b$exa$config_pb$MarketplaceInstall');
+goog.provide('jspb$b$exa$cortex_pb$MarketplaceInstall');
 
-goog.require('jspb$exa$config_pb$MutableMarketplaceInstall');
+goog.require('jspb$exa$cortex_pb$MutableMarketplaceInstall');
 goog.require('jspb_internal_binary');
 goog.require('jspb_internal_public_for_gencode');
 
@@ -20,7 +20,7 @@ goog.require('jspb_internal_public_for_gencode');
  * @type {!Array<?>}
  * @suppress {visibility} access to oneof groups.
  */
-jspb$b$exa$config_pb$MarketplaceInstall.fields = /** @pureOrBreakMyCode */([
+jspb$b$exa$cortex_pb$MarketplaceInstall.fields = /** @pureOrBreakMyCode */([
   0,
   jspb_internal_binary.RStringRequireUtf8IgnoringDefaultWString,
   -1
@@ -31,7 +31,7 @@ jspb$b$exa$config_pb$MarketplaceInstall.fields = /** @pureOrBreakMyCode */([
  * @nodts
  * @return {!Uint8Array}
  */
-jspb$exa$config_pb$MutableMarketplaceInstall.prototype.serializeBinary = /** @pureOrBreakMyCode */(jspb_internal_public_for_gencode.makePrototypeSerializeBinaryFunction(jspb$b$exa$config_pb$MarketplaceInstall.fields));
+jspb$exa$cortex_pb$MutableMarketplaceInstall.prototype.serializeBinary = /** @pureOrBreakMyCode */(jspb_internal_public_for_gencode.makePrototypeSerializeBinaryFunction(jspb$b$exa$cortex_pb$MarketplaceInstall.fields));
 
 
 var jspb$b$exa$config_pb$PluginUserConfig;

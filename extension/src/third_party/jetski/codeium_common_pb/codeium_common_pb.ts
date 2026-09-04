@@ -6353,6 +6353,8 @@ var Model = {
      */
     PLACEHOLDER_M259: 1259,
     /**
+     * Gemini Next
+     *
      * \@generated from enum value: MODEL_PLACEHOLDER_M260 = 1260;
      */
     PLACEHOLDER_M260: 1260,
@@ -6669,18 +6671,26 @@ var Model = {
      */
     PLACEHOLDER_M312: 1312,
     /**
+     * gemini-harness-le
+     *
      * \@generated from enum value: MODEL_PLACEHOLDER_M313 = 1313;
      */
     PLACEHOLDER_M313: 1313,
     /**
+     * gdm-safety-tf-2-non-logging
+     *
      * \@generated from enum value: MODEL_PLACEHOLDER_M314 = 1314;
      */
     PLACEHOLDER_M314: 1314,
     /**
+     * gemini-3p7-raw-thoughts
+     *
      * \@generated from enum value: MODEL_PLACEHOLDER_M315 = 1315;
      */
     PLACEHOLDER_M315: 1315,
     /**
+     * gdm-safety-tf-yolo
+     *
      * \@generated from enum value: MODEL_PLACEHOLDER_M316 = 1316;
      */
     PLACEHOLDER_M316: 1316,

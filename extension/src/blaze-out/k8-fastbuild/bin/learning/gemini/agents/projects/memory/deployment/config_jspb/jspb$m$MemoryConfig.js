@@ -17,6 +17,7 @@ goog.require('jspb_internal_public_for_gencode');
 /** @suppress {extraRequire} */
 goog.requireType('google3.javascript.apps.jspb.internal_records');
 goog.requireType('google3.javascript.common.asserts.asserts');
+goog.requireType('jspb$e.jetski_memory$ReleaseTrack');
 goog.requireType('jspb$jetski_memory$ImmutableMemoryConfig');
 goog.requireType('jspb$r$jetski_memory$MemoryConfig$internalDoNotUseReader');
 goog.requireType('jspb$ro.jetski_memory$ReadonlyAmbientInjectionConfig');
@@ -310,6 +311,34 @@ jspb$jetski_memory$MutableMemoryConfig = class extends jspb_internal_public_for_
   }
 
 
+  /**
+   * optional ReleaseTrack release_track = 7;
+   * @override
+   * @return {!jspb$e.jetski_memory$ReleaseTrack}
+   */
+  getReleaseTrack() {
+    return /** @type {!jspb$e.jetski_memory$ReleaseTrack} */ (jspb_internal_adapters.getEnumFieldWithDefault(this, 7));
+  }
+
+
+  /**
+   * @param {!jspb$e.jetski_memory$ReleaseTrack|null|undefined} value
+   * @return {!jspb$jetski_memory$MutableMemoryConfig} returns this
+   */
+  setReleaseTrack(value) {
+    return jspb_internal_adapters.setProto3EnumField(this, 7, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$jetski_memory$MutableMemoryConfig} returns this
+   */
+  clearReleaseTrack() {
+    return jspb_internal_adapters.clearField(this, 7);
+  }
+
+
 };
 
 /**
@@ -340,7 +369,8 @@ jspb$jetski_memory$MutableMemoryConfig.hasInstance = /** @pureOrBreakMyCode */ (
  *  dreaming: (?jspb$jetski_memory$MutableDreamingConfig.ObjectFormat|undefined),
  *  fuse: (?jspb$jetski_memory$MutableFuseConfig.ObjectFormat|undefined),
  *  disableSkills: (?boolean|undefined),
- *  profile: (?string|undefined)
+ *  profile: (?string|undefined),
+ *  releaseTrack: (?number|undefined)
  * }}
  */
 jspb$jetski_memory$MutableMemoryConfig.ObjectFormat;
@@ -403,7 +433,8 @@ if (goog.DEBUG && !COMPILED) {
  *  dreaming: (!jspb$ro.jetski_memory$ReadonlyDreamingConfig|undefined),
  *  fuse: (!jspb$ro.jetski_memory$ReadonlyFuseConfig|undefined),
  *  disableSkills: (boolean|undefined),
- *  profile: (string|undefined)
+ *  profile: (string|undefined),
+ *  releaseTrack: (!jspb$e.jetski_memory$ReleaseTrack|undefined)
  * }}
  */
 jspb$jetski_memory$MutableMemoryConfig.FieldsInterface;

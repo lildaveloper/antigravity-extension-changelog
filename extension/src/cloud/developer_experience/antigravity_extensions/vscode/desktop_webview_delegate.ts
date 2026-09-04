@@ -80,6 +80,10 @@ class DesktopWebviewDelegate {
             100% { transform: rotate(360deg); }
           }
           .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             text-align: center;
           }
           .retry-btn {
@@ -145,6 +149,13 @@ class DesktopWebviewDelegate {
         searchParams.set('useWebSocket', 'true');
         searchParams.set('hostTheme', hostTheme);
         searchParams.set('enableMicrophone', 'false');
+        // Pass `platform` ('web' or 'electron') based on `vscode.env.uiKind` to align with
+        // upstream VS Code's webview convention (see `src/vs/workbench/contrib/webview/browser/pre/main.js`).
+        // This allows the webview to distinguish between desktop Electron environments (which support
+        // `document.execCommand('paste')` and have native menus) and browser-hosted environments like
+        // GitHub Codespaces and vscode.dev (where standard browsers forbid `execCommand('paste')` and
+        // rely on native browser paste events).
+        searchParams.set('platform', vscode.env.uiKind === vscode.UIKind?.Web ? 'web' : 'electron');
         if (extraParams) {
             /** @type {!URLSearchParams} */
             const parsedExtra = new URLSearchParams(extraParams.startsWith('&') ? extraParams.slice(1) : extraParams);
@@ -281,30 +292,42 @@ class DesktopWebviewDelegate {
         <iframe id="jetski-frame" src="${fullUrlString}" style="top:0;height:100%;position:absolute;width:100%;border:none;opacity:0;transition:opacity 0.4s ease-in-out;" allow="clipboard-read; clipboard-write" sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-popups-to-escape-sandbox"></iframe>
         <script>
           let attempts = 0;
-          function checkAndReveal() {
-            const iframe = document.getElementById('jetski-frame');
+          let isConnected = false;
+          const iframe = document.getElementById('jetski-frame');
+
+          function revealIframe() {
+            if (isConnected) return;
+            isConnected = true;
             const loader = document.getElementById('loading-indicator');
+            iframe.style.opacity = '1';
+            if (loader) loader.style.display = 'none';
+          }
+
+          iframe.addEventListener('load', revealIframe);
+          window.addEventListener('message', (event) => {
+            if (event.source === iframe.contentWindow) {
+              revealIframe();
+            }
+          });
+
+          // In VS Code Web / Remote, webview origin (https://*.vscode-cdn.net) is blocked
+          // by Chrome's Private Network Access (PNA) policy from fetching loopback (127.0.0.1)
+          // endpoints via window.fetch(). We check the iframe's connection status directly to
+          // avoid CORS/PNA loopback errors while preserving the retry and status indicator loop.
+          function checkAndReveal() {
             const details = document.getElementById('loading-details');
-            if (!iframe) return;
+            if (isConnected || iframe.style.opacity === '1') {
+              revealIframe();
+              return;
+            }
             attempts++;
-            fetch('${fullUrlString}', { method: 'GET' })
-              .then(res => {
-                if (res.ok || res.status < 500) {
-                  iframe.style.opacity = '1';
-                  if (loader) loader.style.display = 'none';
-                } else {
-                  throw new Error('Status ' + res.status);
-                }
-              })
-              .catch(() => {
-                if (attempts < 20) {
-                  if (details) details.textContent = 'Connecting to Remote Antigravity tunnel (' + attempts + ')...';
-                  iframe.src = '${fullUrlString}';
-                  setTimeout(checkAndReveal, 1000);
-                } else {
-                  if (details) details.textContent = 'Could not connect to remote port. Please check VS Code Ports tab.';
-                }
-              });
+            if (attempts < 20) {
+              if (details) details.textContent = 'Connecting to Remote Antigravity tunnel (' + attempts + ')...';
+              iframe.src = '${fullUrlString}';
+              setTimeout(checkAndReveal, 1000);
+            } else {
+              if (details) details.textContent = 'Could not connect to remote port. Please check VS Code Ports tab.';
+            }
           }
           setTimeout(checkAndReveal, 600);
         </script>

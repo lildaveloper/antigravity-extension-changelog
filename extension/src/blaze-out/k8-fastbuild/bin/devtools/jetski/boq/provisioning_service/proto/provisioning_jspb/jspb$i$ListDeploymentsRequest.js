@@ -99,6 +99,30 @@ jspb$devtools_jetski_provisioning$ImmutableListDeploymentsRequest = function() {
    */
   this.getForceRefreshCacheOrUndefined;
 
+  /**
+   * optional string filter = 4;
+   * @override
+   * @return {string}
+   * @abstract
+   */
+  this.getFilter;
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   * @abstract
+   */
+  this.hasFilter;
+
+  /**
+   * optional string filter = 4;
+   * @override
+   * @return {string|undefined}
+   * @abstract
+   */
+  this.getFilterOrUndefined;
+
 };
 
 /**

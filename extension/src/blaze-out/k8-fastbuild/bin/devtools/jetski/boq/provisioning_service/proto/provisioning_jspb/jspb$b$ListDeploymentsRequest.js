@@ -24,7 +24,8 @@ jspb$b$devtools_jetski_provisioning$ListDeploymentsRequest.fields = /** @pureOrB
   0,
   jspb_internal_binary.RWEnum,
   jspb_internal_binary.RRepeatedStringRequireUtf8WRepeatedString,
-  jspb_internal_binary.RWBool
+  jspb_internal_binary.RWBool,
+  jspb_internal_binary.RStringRequireUtf8WString
 ]);
 
 /**

@@ -219,6 +219,54 @@ jspb$devtools_jetski_provisioning$MutableListDeploymentsRequest = class extends 
   }
 
 
+  /**
+   * optional string filter = 4;
+   * @override
+   * @return {string}
+   */
+  getFilter() {
+    return jspb_internal_adapters.getStringFieldWithDefault(this, 4);
+  }
+
+
+  /**
+   * @param {string|null|undefined} value
+   * @return {!jspb$devtools_jetski_provisioning$MutableListDeploymentsRequest} returns this
+   */
+  setFilter(value) {
+    return jspb_internal_adapters.setStringField(this, 4, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$devtools_jetski_provisioning$MutableListDeploymentsRequest} returns this
+   */
+  clearFilter() {
+    return jspb_internal_adapters.clearField(this, 4);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasFilter() {
+    return jspb_internal_adapters.hasStringField(this, 4);
+  }
+
+
+  /**
+   * optional string filter = 4;
+   * @override
+   * @return {string|undefined}
+   */
+  getFilterOrUndefined() {
+    return jspb_internal_adapters.getStringFieldOrUndefined(this, 4);
+  }
+
+
 };
 
 /**
@@ -247,7 +295,8 @@ jspb$devtools_jetski_provisioning$MutableListDeploymentsRequest.hasInstance = /*
  * @typedef {{
  *  view: (?number|undefined),
  *  tagsList: (?Array<string>|undefined),
- *  forceRefreshCache: (?boolean|undefined)
+ *  forceRefreshCache: (?boolean|undefined),
+ *  filter: (?string|undefined)
  * }}
  */
 jspb$devtools_jetski_provisioning$MutableListDeploymentsRequest.ObjectFormat;
@@ -308,7 +357,8 @@ if (goog.DEBUG && !COMPILED) {
  * @typedef {{
  *  view: (!jspb$e.devtools_jetski_provisioning$ListDeploymentsRequest$View|undefined),
  *  tagsList: (!ReadonlyArray<string>|undefined),
- *  forceRefreshCache: (boolean|undefined)
+ *  forceRefreshCache: (boolean|undefined),
+ *  filter: (string|undefined)
  * }}
  */
 jspb$devtools_jetski_provisioning$MutableListDeploymentsRequest.FieldsInterface;

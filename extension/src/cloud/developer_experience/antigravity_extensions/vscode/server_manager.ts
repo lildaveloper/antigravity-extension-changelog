@@ -140,6 +140,12 @@ function categorizeServerStartError(err) {
  * Implements the Dynamic Auto-Installation strategy (`~/.gemini/bin/agy`).
  */
 class AntigravityServerManager {
+    constructor() {
+        /**
+         * Indicates whether the server is undergoing intentional shutdown to suppress false-positive crash telemetry.
+         */
+        this.isStopping = false;
+    }
     /**
      * @public
      * @return {!AntigravityServerManager}
@@ -158,6 +164,14 @@ class AntigravityServerManager {
      */
     getInstalledTargetPath() {
         return (0, binary_downloader_1.getInstalledTargetPath)();
+    }
+    /**
+     * Allocates a free ephemeral loopback port (127.0.0.1).
+     * @public
+     * @return {!Promise<number>}
+     */
+    async getAvailableEphemeralPort() {
+        return await getAvailableEphemeralPort();
     }
     /**
      * Executes the Dynamic Auto-Installation state machine via `binary_downloader.ts`.
@@ -283,6 +297,7 @@ class AntigravityServerManager {
         if (this.serverProcess && this.serverUrl) {
             return this.serverUrl;
         }
+        this.isStopping = false;
         /** @type {number} */
         const startTime = Date.now();
         void activeTelemetry?.logEvent(telemetry_constants_1.AntigravityEvent.SERVER_START);
@@ -290,11 +305,19 @@ class AntigravityServerManager {
          * @return {!Promise<string>}
          */
         async () => {
+            /** @type {(undefined|number)} */
+            let startupExitCode;
             try {
+                /** @type {(undefined|number)} */
+                const configuredPort = vscode.workspace
+                    .getConfiguration('antigravity')
+                    .get('serverPort');
+                /** @type {number} */
+                const port = Number(configuredPort) || (await this.getAvailableEphemeralPort());
+                /** @type {string} */
+                const backendUrl = `http://127.0.0.1:${port}`;
                 /** @type {string} */
                 const binaryPath = await this.acquireBinaryPath(context, options.configOverride);
-                /** @type {number} */
-                const port = await getAvailableEphemeralPort();
                 /** @type {!Array<string>} */
                 const args = [
                     '--hub',
@@ -395,25 +418,45 @@ class AntigravityServerManager {
                         }
                     }));
                 }
-                /** @type {string} */
-                const backendUrl = `http://127.0.0.1:${port}`;
+                // Log telemetry when the process fails to spawn directly (e.g. executable not runnable).
                 this.serverProcess.on('error', (/**
                  * @param {!Error} err
                  * @return {void}
                  */
                 (err) => {
                     this.outputChannel?.appendLine(`[LAUNCH PROCESS ERROR] Failed to spawn process: ${err.message}`);
+                    void activeTelemetry?.logError?.(telemetry_constants_1.AntigravityEvent.SERVER_CRASH, {
+                        'exit_code': -1,
+                        'error': err.message,
+                        'stack': err.stack,
+                        'failure_reason': 'spawn_error',
+                    });
                 }));
+                // Track process exit. If the process terminates unexpectedly (not triggered via intentional stop()),
+                // emit a SERVER_CRASH event for both non-zero exit codes and signal kills (e.g. OOM SIGKILL, SIGSEGV).
                 this.serverProcess.on('exit', (/**
                  * @param {(null|number)} code
                  * @param {(null|string)} signal
                  * @return {void}
                  */
                 (code, signal) => {
+                    if (!this.isStopping) {
+                        startupExitCode = code ?? -1;
+                    }
                     /** @type {string} */
                     const msg = `[LAUNCH ERROR] Server process exited unexpectedly with code ${code}, signal ${signal}`;
                     console.error(msg);
                     this.outputChannel?.appendLine(msg);
+                    if (!this.isStopping && (code !== 0 || signal !== null)) {
+                        void activeTelemetry?.logError?.(telemetry_constants_1.AntigravityEvent.SERVER_CRASH, {
+                            'exit_code': code ?? -1,
+                            'signal': signal || 'none',
+                            'error': msg,
+                            'failure_reason': signal
+                                ? `killed_by_${signal}`
+                                : 'process_exit_nonzero',
+                        });
+                    }
                     this.serverProcess = undefined;
                     this.serverUrl = undefined;
                 }));
@@ -433,13 +476,22 @@ class AntigravityServerManager {
                 return this.serverUrl;
             }
             catch (err) {
+                // Record startup failure duration, categorized reason, exit code, sanitized error message, and stack trace in telemetry.
                 /** @type {number} */
                 const durationMs = Date.now() - startTime;
                 /** @type {string} */
                 const failureReason = categorizeServerStartError(err);
+                /** @type {number} */
+                const exitCode = startupExitCode ??
+                    (typeof ((/** @type {{exitCode: *}} */ (err)))?.exitCode === 'number'
+                        ? ((/** @type {{exitCode: number}} */ (err))).exitCode
+                        : -1);
                 void activeTelemetry?.logError?.(telemetry_constants_1.AntigravityEvent.SERVER_START_FAILURE, {
                     'duration_ms': durationMs,
                     'failure_reason': failureReason,
+                    'exit_code': exitCode,
+                    'error': err instanceof Error ? (/** @type {!Error} */ (err)).message : String(err),
+                    'stack': err instanceof Error ? (/** @type {!Error} */ (err)).stack : undefined,
                 });
                 throw err;
             }
@@ -455,6 +507,7 @@ class AntigravityServerManager {
      * @return {!Promise<void>}
      */
     async stop() {
+        this.isStopping = true;
         if (!this.serverProcess) {
             return;
         }
@@ -523,4 +576,10 @@ if (false) {
      * @private
      */
     AntigravityServerManager.prototype.startingPromise;
+    /**
+     * Indicates whether the server is undergoing intentional shutdown to suppress false-positive crash telemetry.
+     * @type {boolean}
+     * @private
+     */
+    AntigravityServerManager.prototype.isStopping;
 }

@@ -9,6 +9,7 @@
 goog.provide('jspb$devtools_jetski_provisioning$MutableBlueprintBinding');
 goog.provide('jspb$ro.devtools_jetski_provisioning$ReadonlyBlueprintBinding');
 
+goog.require('jspb$google$protobuf$MutableAny');
 goog.require('jspb_internal_adapters');
 goog.require('jspb_internal_public_for_gencode');
 /** @suppress {extraRequire} */
@@ -16,6 +17,7 @@ goog.requireType('google3.javascript.apps.jspb.internal_records');
 goog.requireType('google3.javascript.common.asserts.asserts');
 goog.requireType('jspb$devtools_jetski_provisioning$ImmutableBlueprintBinding');
 goog.requireType('jspb$r$devtools_jetski_provisioning$BlueprintBinding$internalDoNotUseReader');
+goog.requireType('jspb$ro.google$protobuf$ReadonlyAny');
 
 /**
  * @final
@@ -84,6 +86,7 @@ jspb$devtools_jetski_provisioning$MutableBlueprintBinding = class extends jspb_i
    * map<string, string> params = 2;
    * @override
    * @return {!Map<string,string>}
+   * @deprecated
    */
   getParamsMap() {
     return jspb_internal_adapters.getStringStringMapField(this, 2);}
@@ -94,6 +97,7 @@ jspb$devtools_jetski_provisioning$MutableBlueprintBinding = class extends jspb_i
    * @param {string} key The key of value to set or replace.
    * @param {string} value The new value.
    * @return {!jspb$devtools_jetski_provisioning$MutableBlueprintBinding} returns this
+   * @deprecated
    */
   putParams(key, value) {
     return jspb_internal_adapters.putStringStringMapField(this, 2, key, value);
@@ -103,6 +107,7 @@ jspb$devtools_jetski_provisioning$MutableBlueprintBinding = class extends jspb_i
   /**
    * @param {!ReadonlyMap<string,string>} value The new values.
    * @return {!jspb$devtools_jetski_provisioning$MutableBlueprintBinding} returns this
+   * @deprecated
    */
   putAllParams(value) {
     return jspb_internal_adapters.putAllStringStringMapField(this, 2, value);
@@ -112,6 +117,7 @@ jspb$devtools_jetski_provisioning$MutableBlueprintBinding = class extends jspb_i
   /**
    * @param {!ReadonlyMap<string,string>|undefined} value The new values.
    * @return {!jspb$devtools_jetski_provisioning$MutableBlueprintBinding} returns this
+   * @deprecated
    */
   setParamsMap(value) {
     return jspb_internal_adapters.setStringStringMapField(this, 2, value);
@@ -121,6 +127,7 @@ jspb$devtools_jetski_provisioning$MutableBlueprintBinding = class extends jspb_i
   /**
    * @param {string} key The key of value to remove.
    * @return {!jspb$devtools_jetski_provisioning$MutableBlueprintBinding} returns this
+   * @deprecated
    */
   deleteParams(key) {
     return jspb_internal_adapters.deleteStringStringMapField(this, 2, key);
@@ -130,6 +137,7 @@ jspb$devtools_jetski_provisioning$MutableBlueprintBinding = class extends jspb_i
   /**
    * Clears the field.
    * @return {!jspb$devtools_jetski_provisioning$MutableBlueprintBinding} returns this
+   * @deprecated
    */
   clearParamsMap() {
     return jspb_internal_adapters.clearMapField(this, 2);
@@ -184,6 +192,78 @@ jspb$devtools_jetski_provisioning$MutableBlueprintBinding = class extends jspb_i
   }
 
 
+  /**
+   * optional google.protobuf.Any user_config = 4;
+   * @override
+   * @return {!jspb$google$protobuf$MutableAny|undefined}
+   */
+  getUserConfig() {
+    return jspb_internal_adapters.getWrapperFieldOrUndefined(this, jspb$google$protobuf$MutableAny, 4);
+  }
+
+
+  /**
+   * optional google.protobuf.Any user_config = 4;
+   * @override
+   * @return {!jspb$ro.google$protobuf$ReadonlyAny}
+   */
+  getReadonlyUserConfig() {
+    return jspb_internal_adapters.getReadonlyWrapperField(this, jspb$google$protobuf$MutableAny, 4);
+  }
+
+
+  /**
+   * optional google.protobuf.Any user_config = 4;
+   * @param {!jspb_internal_public_for_gencode.OrUndefinedToken<U>=} legacyOrUndefined
+   * @return {!jspb$google$protobuf$MutableAny|R}
+   * @template U
+   * @template R := cond(eq(U, 'undefined'), 'undefined', 'jspb$google$protobuf$MutableAny') =:
+   * @tsType (legacyOrUndefined: import('google3/javascript/apps/jspb/internal_public').OrUndefinedToken<undefined>): ಠ_ಠ.clutz.jspb$google$protobuf$MutableAny|undefined
+   * @tsType (): ಠ_ಠ.clutz.jspb$google$protobuf$MutableAny
+   */
+  getMutableUserConfig(legacyOrUndefined) {
+    return jspb_internal_adapters.getMutableWrapperField(this, jspb$google$protobuf$MutableAny, 4, legacyOrUndefined);
+  }
+
+
+  /**
+   * @param {!jspb$ro.google$protobuf$ReadonlyAny|null|undefined} value
+   * @return {!jspb$devtools_jetski_provisioning$MutableBlueprintBinding} returns this
+   */
+  setUserConfig(value) {
+    return jspb_internal_adapters.setWrapperField(this, jspb$google$protobuf$MutableAny, 4, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$devtools_jetski_provisioning$MutableBlueprintBinding} returns this
+   */
+  clearUserConfig() {
+    return jspb_internal_adapters.clearField(this, 4);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasUserConfig() {
+    return jspb_internal_adapters.hasWrapperField(this, jspb$google$protobuf$MutableAny, 4);
+  }
+
+
+  /**
+   * optional google.protobuf.Any user_config = 4;
+   * @override
+   * @return {!jspb$ro.google$protobuf$ReadonlyAny|undefined}
+   */
+  getUserConfigOrUndefined() {
+    return jspb_internal_adapters.getReadonlyWrapperFieldOrUndefined(this, jspb$google$protobuf$MutableAny, 4);
+  }
+
+
 };
 
 /**
@@ -212,7 +292,8 @@ jspb$devtools_jetski_provisioning$MutableBlueprintBinding.hasInstance = /** @pur
  * @typedef {{
  *  blueprintId: (?string|undefined),
  *  paramsMap: (?Array<!Array<string>>|undefined),
- *  fullVersion: (?string|undefined)
+ *  fullVersion: (?string|undefined),
+ *  userConfig: (?jspb$google$protobuf$MutableAny.ObjectFormat|undefined)
  * }}
  */
 jspb$devtools_jetski_provisioning$MutableBlueprintBinding.ObjectFormat;
@@ -273,7 +354,8 @@ if (goog.DEBUG && !COMPILED) {
  * @typedef {{
  *  blueprintId: (string|undefined),
  *  paramsMap: (!ReadonlyMap<string,string>|undefined),
- *  fullVersion: (string|undefined)
+ *  fullVersion: (string|undefined),
+ *  userConfig: (!jspb$ro.google$protobuf$ReadonlyAny|undefined)
  * }}
  */
 jspb$devtools_jetski_provisioning$MutableBlueprintBinding.FieldsInterface;
@@ -311,7 +393,7 @@ jspb$devtools_jetski_provisioning$MutableBlueprintBinding.fromFields = /** @pure
  */
 jspb$devtools_jetski_provisioning$MutableBlueprintBinding.getFields = /** @pureOrBreakMyCode */ (jspb_internal_public_for_gencode.makeGetFieldsForTesting());
 
-var jspb$b$devtools_jetski_provisioning$BlueprintBinding;
-Object.defineProperty(this, 'jspb$b$devtools_jetski_provisioning$BlueprintBinding', {
-  get() { return jspb$b$devtools_jetski_provisioning$BlueprintBinding; },
-  set(v) { jspb$b$devtools_jetski_provisioning$BlueprintBinding = v; },
+var jspb$b$google$protobuf$Any;
+Object.defineProperty(this, 'jspb$b$google$protobuf$Any', {
+  get() { return jspb$b$google$protobuf$Any; },
+  set(v) { jspb$b$google$protobuf$Any = v; },

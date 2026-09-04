@@ -6,6 +6,107 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 ---
 
+## [1.2.0] - 2026-09-03
+
+### 🚀 Highlights
+- **Status Bar Integration & Settings Command**: Introduced a dedicated status bar button (`Antigravity - Settings`) and registered the `antigravity.openSettings` command for direct access to Antigravity and Jetski configuration panels with screen targeting.
+
+- **Git & GitLens Deep Integration**: Added automatic GitLens blame cache invalidation (via `.git/index` mtime updates) and `git.refresh` synchronization upon diff resolution, ensuring new and accepted agent edits appear as uncommitted working changes rather than attributing lines to historical commits.
+
+- **Custom Editor Tab Deduplication**: Resolved editor tab duplication for both Settings (`jetski-settings://global`) and Artifacts (`jetski-artifact://`) across split editor groups, transitioning to canonical queryless URIs and in-place webview navigation.
+
+- **Configurable Server Port & Process Crash Telemetry**: Added `antigravity.serverPort` configuration to allow binding fixed ports, alongside comprehensive `SERVER_CRASH` telemetry tracking unexpected process terminations, signals, and spawn failures.
+
+### ✨ Improvements & Features
+- **Status Bar Item**: Added a persistent, right-aligned status bar item (`Antigravity - Settings`) linking directly to settings.
+
+- **Customizable Server Port**: Added `antigravity.serverPort` setting (default `0` for ephemeral port allocation) with automatic window reload prompting on change.
+
+- **Auto-Open Agent Edits**: Added native `antigravity.autoOpenFiles` setting (with backward compatibility for `jetski-web.autoOpenFiles`) to reveal agent-modified files in the editor.
+
+- **In-Memory Binary Version Cache**: Keyed by SHA-256 file checksums in `binary_downloader.ts`, eliminating redundant `agy --version` child process executions during startup and installation while automatically invalidating if binaries change on disk.
+
+- **Web & Remote Tunnel Connection Overhaul**: Fixed Chrome Private Network Access (PNA) and CORS blocking when connecting from webview host origins (`https://*.vscode-cdn.net`) to local servers (`127.0.0.1`), switching to iframe `load` and `message` event tracking.
+
+- **Platform-Aware Webview Delegate**: Passes `platform` parameter (`web` vs `electron`) based on `vscode.env.uiKind`, enabling webviews to use environment-appropriate clipboard and paste mechanics.
+
+- **Non-Destructive Tab Closure**: Closing a document with active inline diffs now safely unregisters tracking state in memory without reverting or mutating files on disk.
+
+- **Automatic Formatted Content Adoption**: If workspace formatters alter on-disk file content during an agent's turn, the inline diff renderer automatically adopts the on-disk text as `modifiedContents` instead of erroneously failing with "content diverged" read-only diffs.
+
+- **Multi-Step Edit Deduplication**: Improved hunk tracking across multi-turn and same-turn edits by verifying matching `conversationId` and `turnIndex`.
+
+- **Notification Deduplication & Window Focus Awareness**: Deduplicates OS notifications via an in-memory ID cache and suppresses notifications when the window is actively focused on the conversation.
+
+- **New AI Models & Multimodal Options**: Added enum mappings for Gemini Next (model 1260) and internal research models (`gemini-harness-le`, `gdm-safety-tf-2-non-logging`, `gemini-3p7-raw-thoughts`, `gdm-safety-tf-yolo`). Added WebM audio format, `Resolution` tokenization options (`P640X368`, `P368X640`), and `DocsOptions.ImageMode` for embedded document image extraction.
+
+### 🐛 Fixes & Patches
+- **Duplicate Settings Tabs**: Prevented duplicate settings tabs from spawning across split editor groups or different navigation routes by checking existing tabs via `findOpenCustomTab` and navigating in-place via `updateActiveSettings`.
+
+- **Duplicate Artifact Tabs**: Canonicalized artifact URIs by stripping URL fragments, caching `cascadeId` per file path in memory, and focusing existing custom editor tabs across all editor groups.
+
+- **Premature Edit Acceptance on New Chat**: Fixed an issue where transitioning from `/` to `/c/<id>` upon starting a new chat prematurely auto-accepted pending edits before user review.
+
+- **Non-Git Workspace Modal Dialog Fix**: Guarded `git.refresh` calls with `hasOpenGitRepositories()`, preventing VS Code's Git extension from throwing modal warning dialogs ("Git: There are no available repositories") in Google3/CitC or non-Git workspaces.
+
+- **GitLens Blame Desynchronization**: Touched `.git/index` mtime upon diff resolution (handling worktrees and submodules) to flush GitLens in-memory blame caches.
+
+- **CodeLens UI Thrashing**: Debounced inline diff CodeLens refreshes with a 250ms timer to eliminate visual flickering during rapid edits.
+
+- **Server Crash & Process Telemetry**: Added structured logging for `SERVER_CRASH` capturing `exit_code`, termination signals, and sanitized error stacks, while suppressing false-positive crashes during intentional extension deactivation.
+
+- **Enhanced Telemetry PII Scrubbing**: Integrated `stacktrace_parser` to sanitize stack traces down to file basenames and line numbers, while scrubbing home directory paths across Windows, macOS, and Linux to `<USER_DIR>`.
+
+---
+
+### ⚙️ Under the Hood (Technical & Internal Intelligence)
+*This section documents exact Google3 monorepo changes, schemas, and build revisions.*
+
+- **Core & Lifecycle (`extension/src/cloud/...`)**:
+  - `status_bar.ts`: [NEW] Registered right-aligned status bar item (`Antigravity - Settings`) and `antigravity.openSettings` command delegating to `SettingsEditorProvider`.
+  - `extension.ts`: Registered status bar item during activation; added `onDidChangeConfiguration` listener for `antigravity.serverPort` with window reload confirmation.
+  - `server_manager.ts`: Added `isStopping` intentional-shutdown flag; read `antigravity.serverPort` from configuration; added `getAvailableEphemeralPort()`; wired `SERVER_CRASH` event logging on process exit and spawn error; added `exit_code` and sanitized stack traces to `SERVER_START_FAILURE`.
+  - `binary_downloader.ts`: Added `binaryVersionCache` Map keyed on SHA-256 checksums; added `clearBinaryVersionCache()`; increased version command timeout to 5000ms; updated extension version resolution via `context?.extension?.packageJSON?.version`.
+  - `desktop_webview_delegate.ts`: Added `platform` query parameter (`web` / `electron`) based on `vscode.env.uiKind`; replaced raw `fetch` loopback polling with iframe `load`/`message` event tracking (`revealIframe`); applied flex column centering for `.container`.
+  - `telemetry_service.ts`: Integrated `stacktrace_parser` for frame path sanitization; added PII filters for user home directories (`<USER_DIR>`) and URL parameters (`<REDACTED_PARAMS>`); mapped `exit_code`, `exitCode`, `error_code`, `errorCode`, `error_message`, and `failure_reason`.
+  - `telemetry_constants.ts`: Added `SERVER_CRASH: "google.antigravity.vscode.extension.server.crash"`.
+
+- **Jetski & Diff Zones (`extension/src/devtools/cider/...`)**:
+  - `diff_zones/inline_diff_manager.ts`: Added `refreshGitAndGitLens()` with `hasOpenGitRepositories()` guard; added `touchGitIndexForUri()` supporting worktree/submodule `gitdir:` resolution; added `debouncedRefreshCodeLenses()` (250ms); eliminated destructive `rejectRemaining` on document tab close; synchronized `antigravity.hasActiveDiff` context key across all files.
+  - `diff_zones/agent_edit_manager.ts`: Added `isAutoOpenEnabled()` supporting `antigravity.autoOpenFiles` and `jetski-web.autoOpenFiles`; implemented automatic on-disk content divergence adoption for formatted files; enhanced `handleExistingDiffZone` to recognize `isSameTurn`.
+  - `extension_api.ts`: Implemented tab deduplication and in-place navigation in `openSettings` and `openArtifact` via `findOpenCustomTab` and `revealOpenCustomTab`; guarded concurrent tab opens via `pendingOpenSettingsPromise` and `pendingOpenArtifacts`; updated `notifyPathChange` to prevent auto-accepting edits on initial `/` to `/c/<id>` navigation; added bounded `sentNotificationIds` cache (50 entries) and focused-window suppression in `showBrowserNotification`.
+  - `settings_editor_provider.ts`: Added `setPendingOptions()`, `updateActiveSettings()`, and `activePanel` lifecycle tracking.
+  - `artifact_editor_provider.ts`: Added `cascadeIdByPath` Map and `setCascadeIdForPath()`.
+  - `core_activation.ts`: Instantiated singletons for `ArtifactEditorProvider` and `SettingsEditorProvider` shared with `ExtensionApiImpl`.
+  - `webview_provider.ts`: Synchronized `lastConversationId` into `workspaceState`.
+
+- **Protobuf & IPC Schemas (`extension/src/blaze-out/` & `extension/src/third_party/jetski/`)**:
+  - Reconstructed 891 Google3 Piper monorepo modules (507 Closure, 384 CJS), adding 4 new files.
+  - New Schemas: `google.protobuf.Any` (`jspb$b$Any.js`, `jspb$m$Any.js`, `jspb$o$Any.js` under `google/protobuf/any_jspb/`).
+  - Relocated Schemas: Relocated `MarketplaceInstall` from `third_party/jetski/config_pb` to `third_party/jetski/cortex_pb` (`cortex_jspb/`) to resolve layering constraints for provenance surfacing.
+  - Updated Schemas:
+    - `BlueprintBinding`: Deprecated `paramsMap` (field 2); added `user_config` (field 4, `google.protobuf.Any`).
+    - `ListDeploymentsRequest`: Added `filter` (field 4, string).
+    - `MemoryConfig`: Added `release_track` (field 7, `ReleaseTrack` enum).
+    - `UserSettings`: Deprecated `enable_personal_customizations` (field 38).
+    - `cortex_pb.ts`: Added `SidecarStatus.STARTING = 5`; updated message schemas following `MarketplaceInstall` insertion.
+    - `content_pb.ts`: Added `AudioContent.MimeType.TYPE_WEBM = 15`; replaced `FunctionContent` with `Function` message and `Function.Behavior` enum (`UNSPECIFIED = 0`, `BLOCKING = 1`, `NON_BLOCKING = 2`).
+    - `processing_options_pb.ts`: Added `WorkspaceOptions.DocsOptions.ImageMode` enum (`IMAGE_MODE_UNSPECIFIED = 0`, `EMBEDDED_IMAGES_ONLY = 1`).
+    - `resolution_pb.ts`: Added `Resolution.RESOLUTION_P640X368 = 8` and `Resolution.RESOLUTION_P368X640 = 9`.
+    - `hooks_pb.ts`: Added `agent_name` (field 9, string) to `HookArgsCommon`.
+    - `codeium_common_pb.ts`: Added models 1260 (`Gemini Next`), 1313 (`gemini-harness-le`), 1314 (`gdm-safety-tf-2-non-logging`), 1315 (`gemini-3p7-raw-thoughts`), 1316 (`gdm-safety-tf-yolo`).
+    - `constants.ts` (DataCloud): Added `AUTH_METHOD: "authMethod"`.
+
+- **Webview Bridges (`extension/bridge.js`, `extension/loading_bridge.js`)**:
+  - `bridge.js`: Normalized and signature-stripped runtime (1,048 diff lines), updated protobuf descriptors (`hooks.proto`, `cortex.proto`, `content.proto`, `resolution.proto`, `processing_options.proto`) and enum bindings (`SidecarStatus`, `AudioContent_MimeType`, `Function_Behavior`, `DocsOptions_ImageMode`, `Resolution`).
+
+- **Build Metadata (`extension/package.json`)**:
+  - `BUILD_BLAZE_RELEASE`: `release blaze-2026.08.18-1 (mainline @965897722)`
+  - `BUILD_EMBED_LABEL`: `antigravity_vscode_extension_1.2.0_RC00`
+  - `BUILD_HOSTNAME`: `lmbgv8.prod.google.com`
+
+---
+
 ## [1.1.0] - 2026-08-27
 
 ### 🚀 Highlights

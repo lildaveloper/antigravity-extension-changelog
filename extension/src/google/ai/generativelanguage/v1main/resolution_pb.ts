@@ -26,7 +26,7 @@ const logs_annotations_pb_1 = goog.require('google3.logs.proto.logs_annotations.
  * Describes the file google/ai/generativelanguage/v1main/resolution.proto.
  * @type {?}
  */
-exports.file_google_ai_generativelanguage_v1main_resolution = (0, codegenv2_1.fileDesc)("CjRnb29nbGUvYWkvZ2VuZXJhdGl2ZWxhbmd1YWdlL3YxbWFpbi9yZXNvbHV0aW9uLnByb3RvEiNnb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxbWFpbiLXAgoPTWVkaWFSZXNvbHV0aW9uEksKBWxldmVsGAEgASgOMjouZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MW1haW4uTWVkaWFSZXNvbHV0aW9uLkxldmVsSAASLQoKbnVtX3Rva2VucxgCIAEoBUIX+tLkkwIREg9HT09HTEVfSU5URVJOQUxIACKcAQoFTGV2ZWwSIAocTUVESUFfUkVTT0xVVElPTl9VTlNQRUNJRklFRBAAEhgKFE1FRElBX1JFU09MVVRJT05fTE9XEAESGwoXTUVESUFfUkVTT0xVVElPTl9NRURJVU0QAhIZChVNRURJQV9SRVNPTFVUSU9OX0hJR0gQAxIfChtNRURJQV9SRVNPTFVUSU9OX1VMVFJBX0hJR0gQBDog8pzioQQaEhh2MW1haW4sdjFhbHBoYSx2MWJldGEsdjFCBwoFdmFsdWUq+AEKClJlc29sdXRpb24SGgoWUkVTT0xVVElPTl9VTlNQRUNJRklFRBAAEhgKFFJFU09MVVRJT05fUDEyODBYNzIwEAESGAoUUkVTT0xVVElPTl9QNzIwWDEyODAQAhIZChVSRVNPTFVUSU9OX1AxOTIwWDEwODAQAxIZChVSRVNPTFVUSU9OX1AxMDgwWDE5MjAQBBIZChVSRVNPTFVUSU9OX1AzODQwWDIxNjAQBRIZChVSRVNPTFVUSU9OX1AyMTYwWDM4NDAQBhIXChNSRVNPTFVUSU9OX1A3MjBYNzIwEAcaFfrS5JMCAPKc4qEECRIHdjFhbHBoYULrAQonY29tLmdvb2dsZS5haS5nZW5lcmF0aXZlbGFuZ3VhZ2UudjFtYWluQg9SZXNvbHV0aW9uUHJvdG9QASgC8gIVT1BFTl9UT19PUEFRVUVfSFlCUklEgIqxUgGK1dvSD4kBCiRwYWNrYWdlOmdvb2dsZS9haS9nZW5lcmF0aXZlbGFuZ3VhZ2UKH3BhY2thZ2U6Z29vZ2xlL2Nsb3VkL2FpcGxhdGZvcm0KIHBhY2thZ2U6Z29vZ2xlL2ZpcmViYXNlL3ZlcnRleGFpCh5wYWNrYWdlOmdvb2dsZS9pbnRlcm5hbC9hbGthbGliBnByb3RvMw", [inclusion_pb_1.file_google_api_inclusion, versioning_pb_1.file_google_api_versioning, visibility_pb_1.file_google_api_visibility, logs_annotations_pb_1.file_logs_proto_logs_annotations_logs_annotations]);
+exports.file_google_ai_generativelanguage_v1main_resolution = (0, codegenv2_1.fileDesc)("CjRnb29nbGUvYWkvZ2VuZXJhdGl2ZWxhbmd1YWdlL3YxbWFpbi9yZXNvbHV0aW9uLnByb3RvEiNnb29nbGUuYWkuZ2VuZXJhdGl2ZWxhbmd1YWdlLnYxbWFpbiLXAgoPTWVkaWFSZXNvbHV0aW9uEksKBWxldmVsGAEgASgOMjouZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MW1haW4uTWVkaWFSZXNvbHV0aW9uLkxldmVsSAASLQoKbnVtX3Rva2VucxgCIAEoBUIX+tLkkwIREg9HT09HTEVfSU5URVJOQUxIACKcAQoFTGV2ZWwSIAocTUVESUFfUkVTT0xVVElPTl9VTlNQRUNJRklFRBAAEhgKFE1FRElBX1JFU09MVVRJT05fTE9XEAESGwoXTUVESUFfUkVTT0xVVElPTl9NRURJVU0QAhIZChVNRURJQV9SRVNPTFVUSU9OX0hJR0gQAxIfChtNRURJQV9SRVNPTFVUSU9OX1VMVFJBX0hJR0gQBDog8pzioQQaEhh2MW1haW4sdjFhbHBoYSx2MWJldGEsdjFCBwoFdmFsdWUqqgIKClJlc29sdXRpb24SGgoWUkVTT0xVVElPTl9VTlNQRUNJRklFRBAAEhgKFFJFU09MVVRJT05fUDEyODBYNzIwEAESGAoUUkVTT0xVVElPTl9QNzIwWDEyODAQAhIZChVSRVNPTFVUSU9OX1AxOTIwWDEwODAQAxIZChVSRVNPTFVUSU9OX1AxMDgwWDE5MjAQBBIZChVSRVNPTFVUSU9OX1AzODQwWDIxNjAQBRIZChVSRVNPTFVUSU9OX1AyMTYwWDM4NDAQBhIXChNSRVNPTFVUSU9OX1A3MjBYNzIwEAcSFwoTUkVTT0xVVElPTl9QNjQwWDM2OBAIEhcKE1JFU09MVVRJT05fUDM2OFg2NDAQCRoV+tLkkwIA8pzioQQJEgd2MWFscGhhQusBCidjb20uZ29vZ2xlLmFpLmdlbmVyYXRpdmVsYW5ndWFnZS52MW1haW5CD1Jlc29sdXRpb25Qcm90b1ABKALyAhVPUEVOX1RPX09QQVFVRV9IWUJSSUSAirFSAYrV29IPiQEKJHBhY2thZ2U6Z29vZ2xlL2FpL2dlbmVyYXRpdmVsYW5ndWFnZQofcGFja2FnZTpnb29nbGUvY2xvdWQvYWlwbGF0Zm9ybQogcGFja2FnZTpnb29nbGUvZmlyZWJhc2UvdmVydGV4YWkKHnBhY2thZ2U6Z29vZ2xlL2ludGVybmFsL2Fsa2FsaWIGcHJvdG8z", [inclusion_pb_1.file_google_api_inclusion, versioning_pb_1.file_google_api_versioning, visibility_pb_1.file_google_api_visibility, logs_annotations_pb_1.file_logs_proto_logs_annotations_logs_annotations]);
 /**
  * Media resolution for tokenization.
  *
@@ -151,6 +151,18 @@ var Resolution = {
      * \@generated from enum value: RESOLUTION_P720X720 = 7;
      */
     P720X720: 7,
+    /**
+     * 640x368 landscape 368p.
+     *
+     * \@generated from enum value: RESOLUTION_P640X368 = 8;
+     */
+    P640X368: 8,
+    /**
+     * 368x640 portrait 368p.
+     *
+     * \@generated from enum value: RESOLUTION_P368X640 = 9;
+     */
+    P368X640: 9,
 };
 exports.Resolution = Resolution;
 Resolution[Resolution.UNSPECIFIED] = 'UNSPECIFIED';
@@ -161,6 +173,8 @@ Resolution[Resolution.P1080X1920] = 'P1080X1920';
 Resolution[Resolution.P3840X2160] = 'P3840X2160';
 Resolution[Resolution.P2160X3840] = 'P2160X3840';
 Resolution[Resolution.P720X720] = 'P720X720';
+Resolution[Resolution.P640X368] = 'P640X368';
+Resolution[Resolution.P368X640] = 'P368X640';
 /**
  * Describes the enum google.ai.generativelanguage.v1main.Resolution.
  * @type {?}

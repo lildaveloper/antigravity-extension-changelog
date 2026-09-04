@@ -47,13 +47,50 @@ class SettingsEditorProvider {
         }));
     }
     /**
+     * Sets pending navigation options to be applied when the custom editor resolves.
+     * Used when opening the settings tab with a specific target screen or project.
+     * @public
+     * @param {?} options
+     * @return {void}
+     */
+    setPendingOptions(options) {
+        this.pendingOptions = options;
+    }
+    /**
+     * Updates an already-open settings editor panel with new target options
+     * (e.g. switching from 'General' to 'Customizations') without creating a new editor tab.
+     *
+     * @public
+     * @param {?} options Target navigation options to update in the settings view.
+     * @return {!Promise<void>}
+     */
+    async updateActiveSettings(options) {
+        if (this.activePanel == null) {
+            return;
+        }
+        /** @type {string} */
+        const parameterString = (0, util_1.buildExtraParams)({
+            'targetScreen': options.targetScreen,
+            'targetProjectId': options.targetProjectId,
+            'targetWorkspaceUri': options.targetWorkspaceUri,
+        });
+        /** @type {string} */
+        const extraParams = parameterString ? `&${parameterString}` : '';
+        await this.renderer.renderJetskiIframe(this.activePanel, {
+            extraParams,
+            targetRoute: 'settings-standalone',
+            type: 'settings',
+            location: 'editor',
+        });
+    }
+    /**
      * @public
      * @param {!tsickle_vscode_1.Uri} uri
      * @param {!tsickle_vscode_1.CustomDocumentOpenContext} openContext
      * @param {!tsickle_vscode_1.CancellationToken} token
-     * @return {!Promise<!tsickle_vscode_1.CustomDocument>}
+     * @return {!tsickle_vscode_1.CustomDocument}
      */
-    async openCustomDocument(uri, openContext, token) {
+    openCustomDocument(uri, openContext, token) {
         return {
             uri,
             dispose: (/**
@@ -70,28 +107,46 @@ class SettingsEditorProvider {
      * @return {!Promise<void>}
      */
     async resolveCustomEditor(document, webviewPanel, token) {
+        // Retain reference to active panel and clean up on disposal.
+        this.activePanel = webviewPanel;
+        webviewPanel.onDidDispose((/**
+         * @return {void}
+         */
+        () => {
+            if (this.activePanel === webviewPanel) {
+                this.activePanel = undefined;
+            }
+        }));
         webviewPanel.webview.options = {
             enableScripts: true,
         };
         /** @type {string} */
         const displayName = this.naming?.displayName ?? 'Jetski';
         webviewPanel.title = `${displayName} Settings`;
+        // Prioritize pending in-memory options to maintain canonical document URIs
+        // (without query string pollution). Fall back to document URI query parameters
+        // for backward compatibility with external links or legacy callers across all environments.
         /** @type {!URLSearchParams} */
         const query = new URLSearchParams(document.uri.query);
         /** @type {string} */
-        const targetScreen = query.get('targetScreen') ?? '';
+        const targetScreen = this.pendingOptions?.targetScreen ?? query.get('targetScreen') ?? '';
         /** @type {string} */
-        const targetProjectId = query.get('targetProjectId') ?? '';
+        const targetProjectId = this.pendingOptions?.targetProjectId ??
+            query.get('targetProjectId') ??
+            '';
         /** @type {string} */
-        const targetWorkspaceUri = query.get('targetWorkspaceUri') ?? '';
+        const targetWorkspaceUri = this.pendingOptions?.targetWorkspaceUri ??
+            query.get('targetWorkspaceUri') ??
+            '';
+        this.pendingOptions = undefined;
         /** @type {string} */
-        const paramsStr = (0, util_1.buildExtraParams)({
-            'targetScreen': targetScreen || undefined,
-            'targetProjectId': targetProjectId || undefined,
-            'targetWorkspaceUri': targetWorkspaceUri || undefined,
+        const parameterString = (0, util_1.buildExtraParams)({
+            'targetScreen': targetScreen,
+            'targetProjectId': targetProjectId,
+            'targetWorkspaceUri': targetWorkspaceUri,
         });
         /** @type {string} */
-        const extraParams = paramsStr ? `&${paramsStr}` : '';
+        const extraParams = parameterString ? `&${parameterString}` : '';
         await this.renderer.renderJetskiIframe(webviewPanel, {
             extraParams,
             targetRoute: 'settings-standalone',
@@ -115,6 +170,26 @@ if (false) {
      * @public
      */
     SettingsEditorProvider.fileScheme;
+    /**
+     * Reference to the currently active and resolved Settings WebviewPanel.
+     * Tracking the active panel enables:
+     * 1. Dynamic in-place navigation (switching screens) without opening duplicate tabs.
+     * 2. Re-rendering or updating iframe parameters on an already opened panel.
+     * @type {(undefined|!tsickle_vscode_1.WebviewPanel)}
+     * @private
+     */
+    SettingsEditorProvider.prototype.activePanel;
+    /**
+     * Pending navigation options to apply during the next resolveCustomEditor call.
+     * By keeping dynamic target options (targetScreen, targetProjectId, targetWorkspaceUri)
+     * in memory rather than in the document URI's query string, the document URI remains
+     * canonical (`jetski-settings://global`). This ensures VS Code's editor matcher
+     * (`CustomEditorInput.matches`, which does strict URI equality) recognizes that
+     * any subsequent open request refers to the exact same document, preventing duplicate tabs.
+     * @type {(undefined|{targetScreen: (undefined|string), targetProjectId: (undefined|string), targetWorkspaceUri: (undefined|string)})}
+     * @private
+     */
+    SettingsEditorProvider.prototype.pendingOptions;
     /**
      * @const {!tsickle_webview_renderer_4.WebviewRenderer}
      * @private

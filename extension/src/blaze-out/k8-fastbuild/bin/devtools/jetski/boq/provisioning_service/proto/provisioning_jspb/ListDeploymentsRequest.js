@@ -109,7 +109,7 @@ proto.devtools_jetski_provisioning.ImmutableListDeploymentsRequest = jspb$devtoo
 jspb$devtools_jetski_provisioning$MutableListDeploymentsRequest.View = jspb$e.devtools_jetski_provisioning$ListDeploymentsRequest$View;
 
 
-var jspb$devtools_jetski_provisioning$MutableBlueprintBinding;
-Object.defineProperty(this, 'jspb$devtools_jetski_provisioning$MutableBlueprintBinding', {
-  get() { return jspb$devtools_jetski_provisioning$MutableBlueprintBinding; },
-  set(v) { jspb$devtools_jetski_provisioning$MutableBlueprintBinding = v; },
+var jspb$google$protobuf$MutableAny;
+Object.defineProperty(this, 'jspb$google$protobuf$MutableAny', {
+  get() { return jspb$google$protobuf$MutableAny; },
+  set(v) { jspb$google$protobuf$MutableAny = v; },

@@ -69,7 +69,7 @@ jspb$o$exa$config_pb$ConversationGroupRegistry.fromObject = function(obj) {
 };
 }
 
-var jspb$o$exa$config_pb$MarketplaceInstall;
-Object.defineProperty(this, 'jspb$o$exa$config_pb$MarketplaceInstall', {
-  get() { return jspb$o$exa$config_pb$MarketplaceInstall; },
-  set(v) { jspb$o$exa$config_pb$MarketplaceInstall = v; },
+var jspb$o$exa$cortex_pb$MarketplaceInstall;
+Object.defineProperty(this, 'jspb$o$exa$cortex_pb$MarketplaceInstall', {
+  get() { return jspb$o$exa$cortex_pb$MarketplaceInstall; },
+  set(v) { jspb$o$exa$cortex_pb$MarketplaceInstall = v; },

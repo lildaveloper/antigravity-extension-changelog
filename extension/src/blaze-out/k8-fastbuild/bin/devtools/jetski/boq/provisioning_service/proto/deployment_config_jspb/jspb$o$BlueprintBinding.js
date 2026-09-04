@@ -9,6 +9,8 @@
 goog.provide('jspb$o$devtools_jetski_provisioning$BlueprintBinding');
 
 goog.require('jspb$devtools_jetski_provisioning$MutableBlueprintBinding');
+goog.require('jspb$google$protobuf$MutableAny');
+goog.require('jspb$o$google$protobuf$Any');
 goog.require('jspb_internal_adapters');
 goog.require('jspb_internal_public_for_gencode');
 
@@ -27,6 +29,7 @@ jspb$o$devtools_jetski_provisioning$BlueprintBinding.internal_toObject = functio
     blueprintId: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getStringFieldLegacyNullable(msg, 1)),
     paramsMap: jspb_internal_public_for_gencode.mapToObject(msg.getParamsMap()),
     fullVersion: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getStringFieldLegacyNullable(msg, 3)),
+    userConfig: jspb$o$google$protobuf$Any.internal_toObject(msg.getUserConfig()),
   }));
 
 };
@@ -68,6 +71,9 @@ jspb$o$devtools_jetski_provisioning$BlueprintBinding.fromObject = function(obj) 
   jspb_internal_adapters.setStringField(msg, 1, obj.blueprintId);
   obj.paramsMap && jspb_internal_public_for_gencode.mapFromObject(msg.getParamsMap(), obj.paramsMap);
   jspb_internal_adapters.setStringField(msg, 3, obj.fullVersion);
+  jspb_internal_adapters.setWrapperField(msg,
+      jspb$google$protobuf$MutableAny,
+      4, jspb_internal_public_for_gencode.fromObjectNullable(obj.userConfig, jspb$o$google$protobuf$Any.fromObject));
   return msg;
 };
 }

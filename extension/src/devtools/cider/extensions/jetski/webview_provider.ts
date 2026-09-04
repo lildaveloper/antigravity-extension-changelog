@@ -39,6 +39,9 @@ class JetskiWebviewProvider {
      */
     setStartupConversationId(id) {
         this.startupConversationId = id;
+        if (id) {
+            void this.context.workspaceState.update('lastConversationId', id);
+        }
     }
     /**
      * @public
@@ -147,7 +150,9 @@ class JetskiWebviewProvider {
         const conversationId = this.startupConversationId ??
             this.context.workspaceState.get('lastConversationId');
         this.startupConversationId = undefined; // consume it
-        // consume it
+        if (conversationId) {
+            void this.context.workspaceState.update('lastConversationId', conversationId);
+        }
         await this.renderer.renderJetskiIframe(this.view, {
             targetRoute: conversationId ? `c/${conversationId}` : '',
             type: 'main',

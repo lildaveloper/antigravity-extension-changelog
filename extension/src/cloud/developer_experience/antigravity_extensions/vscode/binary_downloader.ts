@@ -306,16 +306,46 @@ function isVersionAtLeast(actualVersion, minVersion) {
 }
 exports.isVersionAtLeast = isVersionAtLeast;
 /**
- * Verifies whether the specified binary exists and reports a version >= minVersion.
+ * In-memory cache mapping binary SHA256 checksums to their resolved version strings.
+ * Keying by checksum ensures that the cached version corresponds directly to the binary's
+ * actual content on disk, avoiding redundant `agy --version` child processes while automatically
+ * invalidating if the file on disk is modified or replaced.
+ * @type {!Map<string, string>}
+ */
+const binaryVersionCache = new Map();
+/**
+ * Clears the in-memory binary version cache (primarily used in tests).
+ * @return {void}
+ */
+function clearBinaryVersionCache() {
+    binaryVersionCache.clear();
+}
+exports.clearBinaryVersionCache = clearBinaryVersionCache;
+/**
+ * Returns the version string reported by the binary, or undefined if unavailable.
+ * Reuses in-memory cached version keyed by the binary's SHA256 checksum.
  * @param {string} binaryPath
- * @param {string} minVersion
  * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
  * @return {!Promise<(undefined|string)>}
  */
-async function verifyBinaryVersion(binaryPath, minVersion, outputChannel) {
+async function getBinaryVersionString(binaryPath, outputChannel) {
     if (!(await pathExists(binaryPath))) {
         outputChannel?.appendLine(`[INSTALL] Binary path does not exist: ${binaryPath}`);
         return undefined;
+    }
+    /** @type {string} */
+    let checksum;
+    try {
+        checksum = await computeFileSha256(binaryPath);
+    }
+    catch (error) {
+        outputChannel?.appendLine(`[INSTALL] Failed to compute checksum for binary ${binaryPath}: ${error}`);
+        return undefined;
+    }
+    /** @type {(undefined|string)} */
+    const cachedVersion = binaryVersionCache.get(checksum);
+    if (cachedVersion !== undefined) {
+        return cachedVersion;
     }
     try {
         const { stdout, stderr } = await execFileAsync(binaryPath, ['--version'], {
@@ -323,44 +353,42 @@ async function verifyBinaryVersion(binaryPath, minVersion, outputChannel) {
         });
         /** @type {string} */
         const combinedOutput = `${stdout} ${stderr}`.trim();
-        /** @type {boolean} */
-        const result = isVersionAtLeast(combinedOutput, minVersion);
-        if (!result) {
-            outputChannel?.appendLine(`[INSTALL] Version check failed: actual='${combinedOutput}', expected>=${minVersion}`);
-            return undefined;
-        }
-        return combinedOutput;
+        /** @type {(null|!RegExpMatchArray)} */
+        const match = combinedOutput.match(/(\d+\.\d+\.\d+[^ \t\n\r]*)/);
+        /** @type {string} */
+        const resolvedVersion = match ? match[1] : combinedOutput;
+        binaryVersionCache.set(checksum, resolvedVersion);
+        return resolvedVersion;
     }
     catch (error) {
         outputChannel?.appendLine(`[INSTALL] Failed to execute binary ${binaryPath}: ${error}`);
         return undefined;
     }
 }
-exports.verifyBinaryVersion = verifyBinaryVersion;
+exports.getBinaryVersionString = getBinaryVersionString;
 /**
- * Returns the version string reported by the binary, or undefined if unavailable.
+ * Verifies whether the specified binary exists and reports a version >= minVersion.
+ * Reuses getBinaryVersionString (and its checksum-based in-memory cache) to avoid redundant subprocess spawns.
  * @param {string} binaryPath
+ * @param {string} minVersion
+ * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
  * @return {!Promise<(undefined|string)>}
  */
-async function getBinaryVersionString(binaryPath) {
-    if (!(await pathExists(binaryPath))) {
+async function verifyBinaryVersion(binaryPath, minVersion, outputChannel) {
+    /** @type {(undefined|string)} */
+    const version = await getBinaryVersionString(binaryPath, outputChannel);
+    if (!version) {
         return undefined;
     }
-    try {
-        const { stdout, stderr } = await execFileAsync(binaryPath, ['--version'], {
-            timeout: 3000,
-        });
-        /** @type {string} */
-        const combinedOutput = `${stdout} ${stderr}`.trim();
-        /** @type {(null|!RegExpMatchArray)} */
-        const match = combinedOutput.match(/(\d+\.\d+\.\d+[^ \t\n\r]*)/);
-        return match ? match[1] : combinedOutput;
-    }
-    catch (error) {
+    /** @type {boolean} */
+    const result = isVersionAtLeast(version, minVersion);
+    if (!result) {
+        outputChannel?.appendLine(`[INSTALL] Version check failed: actual='${version}', expected>=${minVersion}`);
         return undefined;
     }
+    return version;
 }
-exports.getBinaryVersionString = getBinaryVersionString;
+exports.verifyBinaryVersion = verifyBinaryVersion;
 /**
  * Downloads a file from URL to destPath with HTTP/HTTPS redirect following, progress reporting, and retry logic.
  *
@@ -937,8 +965,7 @@ async function acquireInstalledBinaryPath(options) {
     /** @type {string} */
     const installPath = targetPathOverride ?? getInstalledTargetPath();
     /** @type {?} */
-    const extVersion = vscode.extensions.getExtension('google.antigravity')?.packageJSON
-        ?.version ?? 'unknown';
+    const extVersion = context?.extension?.packageJSON?.version ?? 'unknown';
     outputChannel.appendLine(`[INSTALL] Initializing update check. Platform: ${process.platform}-${process.arch}, Extension Version: ${extVersion}`);
     /** @type {!tsickle_vscode_11.WorkspaceConfiguration} */
     const config = configOverride ?? vscode.workspace.getConfiguration('antigravity');
@@ -1064,6 +1091,14 @@ async function acquireInstalledBinaryPath(options) {
             });
             outputChannel.appendLine(`[INSTALL] Antigravity Backend successfully installed to ${installPath}.`);
             await context.globalState.update('antigravity.lastInstalledReleaseBaseUrl', releaseBaseUrl);
+            try {
+                /** @type {string} */
+                const checksum = await computeFileSha256(installPath);
+                binaryVersionCache.set(checksum, targetVersion);
+            }
+            catch {
+                // Non-fatal if checksum cannot be computed here.
+            }
             return installPath;
         }
         catch (error) {
