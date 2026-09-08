@@ -6,6 +6,37 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 ---
 
+## [1.2.1] - 2026-09-08
+
+### 🚀 Highlights
+- **Third-Party Webview Compatibility & Prototype Isolation**: Scoped webview message serialization directly to the Antigravity webview instance, preventing global prototype mutation that affected third-party extension webviews (such as GitLens).
+
+- **Binary Webview Message Support**: Added direct pass-through for `ArrayBuffer` and typed array views (`ArrayBuffer.isView`) in webview IPC, avoiding destructive JSON stringification of binary payloads.
+
+### 🐛 Fixes & Patches
+- **Third-Party Extension Webview Interference**: Removed global `Object.getPrototypeOf(webview)` prototype patching in `desktop_webview_delegate.ts`. Webview patching for BigInt serialization is now applied strictly to the individual Antigravity webview instance, eliminating side effects on other extensions sharing the VS Code Webview prototype.
+
+- **Binary Message Serialization**: Guarded `postMessage` JSON serialization against `ArrayBuffer` and `ArrayBufferView` payloads, ensuring binary buffers are forwarded untouched rather than mangled by `JSON.stringify`.
+
+---
+
+### ⚙️ Under the Hood (Technical & Internal Intelligence)
+*This section documents exact Google3 monorepo changes, schemas, and build revisions.*
+
+- **Core & Lifecycle (`extension/src/cloud/...`)**:
+  - `desktop_webview_delegate.ts`:
+    - Refactored `patchWebviewPostMessage(webview)` to eliminate prototype-level mutation (`Object.getPrototypeOf(webview)`).
+    - Inlined instance-level patching with safety check (`typeof webview.postMessage !== 'function'`) and idempotency guard (`extendedWebview._patchedForBigInt`).
+    - Added fast-path bypass for binary messages (`ArrayBuffer.isView(message) || message instanceof ArrayBuffer`) before JSON BigInt stringification.
+
+- **Build Metadata (`extension/package.json`)**:
+  - `BUILD_DEPOT_PATH`: `//depot/branches/antigravity_vscode_extension_release_branch/974744555.1/google3`
+  - `BUILD_BLAZE_RELEASE`: `release blaze-2026.08.18-1 (mainline @965897722)`
+  - `BUILD_EMBED_LABEL`: `antigravity_vscode_extension_1.2.1_RC02`
+  - `BUILD_HOSTNAME`: `lman20.prod.google.com`
+
+---
+
 ## [1.2.0] - 2026-09-03
 
 ### 🚀 Highlights

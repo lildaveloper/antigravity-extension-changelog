@@ -458,65 +458,15 @@ function getHostThemeString() {
  * @return {void}
  */
 function patchWebviewPostMessage(webview) {
-    /** @type {?} */
-    const proto = Object.getPrototypeOf(webview);
-    if (!proto) {
-        patchInstance(webview);
-        return;
-    }
-    // tslint:disable-next-line:no-any
-    /** @type {?} */
-    const extendedProto = (/** @type {?} */ (proto));
-    if (extendedProto._patchedForBigInt) {
-        return;
-    }
-    extendedProto._patchedForBigInt = true;
-    /** @type {?} */
-    const originalPostMessage = proto.postMessage;
-    if (typeof originalPostMessage === 'function') {
-        proto.postMessage = (/**
-         * @this {!tsickle_vscode_4.Webview}
-         * @param {?} message
-         * @param {...?} args
-         * @return {?}
-         */
-        function (
-        // tslint:disable-next-line:no-any
-        message, 
-        // tslint:disable-next-line:no-any
-        ...args) {
-            if (message && typeof message === 'object') {
-                try {
-                    message = JSON.parse(JSON.stringify(message, (/**
-                     * @param {string} key
-                     * @param {?} value
-                     * @return {?}
-                     */
-                    (key, value) => {
-                        return typeof value === 'bigint' ? (/** @type {bigint} */ (value)).toString() : value;
-                    })));
-                }
-                catch (e) {
-                    // Ignore
-                }
-            }
-            // tslint:disable-next-line:no-any
-            return originalPostMessage.call(this, message, ...args);
-        });
-    }
-    else {
-        patchInstance(webview);
-    }
-}
-/**
- * @param {!tsickle_vscode_4.Webview} webview
- * @return {void}
- */
-function patchInstance(webview) {
+    // Only patch the specific Antigravity webview instance to avoid corrupting
+    // third-party extension webviews (such as GitLens) sharing the global prototype.
     // tslint:disable-next-line:no-any
     /** @type {?} */
     const extendedWebview = (/** @type {?} */ (webview));
     if (extendedWebview._patchedForBigInt) {
+        return;
+    }
+    if (typeof webview.postMessage !== 'function') {
         return;
     }
     extendedWebview._patchedForBigInt = true;
@@ -529,6 +479,9 @@ function patchInstance(webview) {
      */
     (message) => {
         if (message && typeof message === 'object') {
+            if (ArrayBuffer.isView(message) || message instanceof ArrayBuffer) {
+                return originalPostMessage(message);
+            }
             try {
                 message = JSON.parse(JSON.stringify(message, (/**
                  * @param {string} key
