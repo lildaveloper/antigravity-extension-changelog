@@ -64,7 +64,8 @@ jspb$b$jetbox_state_pb$UserSettings.fields = /** @pureOrBreakMyCode */([
   jspb_internal_binary.REnumIgnoringDefaultWEnum,
   jspb_internal_binary.RStringRequireUtf8WString,
   jspb_internal_binary.RWBool,
-  -2
+  -2,
+  jspb_internal_binary.RStringRequireUtf8WString
 ]);
 
 /**

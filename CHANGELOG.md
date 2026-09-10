@@ -6,6 +6,109 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 ---
 
+## [1.3.0] - 2026-09-10
+
+### 🚀 Highlights
+- **Branded Initialization & Loading Experience**: Overhauled the extension activation and webview loading interface with the official Antigravity logo, ambient glow effects, indeterminate progress bar, and smooth transitions.
+
+- **Enterprise Proxy & ZTNA Support**: Automatic discovery and propagation of system root CA bundles across Linux and macOS, alongside HTTP/HTTPS proxy configuration inheritance, enabling seamless operation behind enterprise security gateways (e.g. Zscaler).
+
+- **Cursor-Focused Diff Hunk Controls**: Introduced dedicated commands and context keys to accept or reject the specific diff hunk currently focused under the editor cursor, without requiring mouse interaction.
+
+- **Subagents Architecture & Hub Schemas**: Introduced core protobuf schemas and persistence models for autonomous subagents (`SubagentDescriptor`, `SubagentMetadata`, `SubagentSpec`, `SubagentResult`, `SubagentState`).
+
+- **Unified Remote & CitC Workspace Navigation**: Modularized remote workspace URI translation (`toCiderWebclientUri` / `toJetskiFileUri`), supporting linked worktree and Jujutsu (`jj`) commit resolution.
+
+### ✨ Improvements & Features
+- **Branded Loading View**: Added vector Antigravity logo (`ANTIGRAVITY_LOGO_SVG`) with radial blur glow, styled product branding, animated progress bar, and 10s fallback reveal in `desktop_webview_delegate.ts`.
+
+- **Focused Diff Hunk Commands**: Registered `antigravity.prioritized.agentAcceptFocusedHunk`, `agentRejectFocusedHunk`, `agentFocusNextHunk`, `agentFocusPreviousHunk`, `agentAcceptAllInFile`, and `agentRejectAllInFile`.
+
+- **Active Diff Context Keys**: Added real-time tracking of unresolved hunks in the active document via `antigravity.canAcceptOrRejectFocusedHunk` and `antigravity.canAcceptOrRejectAllAgentEditsInFile`.
+
+- **Enterprise Root CA Auto-Resolution**: Automatically detects OS certificate stores (`/etc/ssl/certs/ca-certificates.crt`, `/etc/pki/tls/certs/ca-bundle.crt`, `/etc/ssl/ca-bundle.pem`, `/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem`, `/etc/ssl/cert.pem`) and sets `NODE_EXTRA_CA_CERTS`, `SSL_CERT_FILE`, and `NODE_USE_SYSTEM_CA` in the extension host and server process.
+
+- **Proxy Configuration Propagation**: Reads VS Code `http.proxy` and `http.noProxy` settings and populates `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` environment variables for backend server processes.
+
+- **Remote Worktree & Jujutsu Resolution**: Chat file links in linked worktrees and CitC workspaces are dynamically translated to accessible editor URIs (e.g. `jj-commits://`) via `workspaceManager.resolveFileUri()`.
+
+- **Webview Double-Render Prevention**: Cached server resolution in `webview_renderer.ts` avoids redundant DOM teardown and recreation when opening secondary views (Settings, Artifacts, Terminal), eliminating blank flashes and latency (b/558282887).
+
+- **Graceful Webview RPC Error Handling**: Suppressed noisy `ConnectError` (`NotFound`) rejections when webviews are mounting or not yet listening for editor state or category updates.
+
+- **Non-Stealing View Reveal**: Added `show({ preserveFocus })` on `JetskiInstance` to reveal panels and views without stealing focus from active editors.
+
+- **User Theme Preference Synchronization**: Added `UserThemePreferenceChangeMessage` protocol supporting bidirectional theme preference announcements between framed webview apps and host editors (b/545227979).
+
+- **New Gemini Models & Vertex Settings**: Added enum mappings in `codeium_common_pb.ts` for `gemini-3.8-flash-cyber` (1317), `gemini-3.8-flash-high` (1318), `gemini-3.8-flash-medium` (1319), `gemini-3.8-flash-low` (1320), `gemini-3.8-flash (Cyber Permissive)` (1321), `gemini-3.8-flash-tiered` (1322), and `abc-hillclimbing-tf` (1323). Added `vertex_service_tier` in `UserSettings`.
+
+- **Grounding Citations & Media ID**: Added `Source` and `GroundingMetadata` messages for search/document citations, and added `media_id` field to `Media`.
+
+- **Plugin MCP Configuration**: Added `PluginMcpUserConfig` schema with configurable variables map for MCP plugins.
+
+### 🐛 Fixes & Patches
+- **Safe `.git/index` Timestamp Updating**: Replaced dangerous `readFile` + `writeFile` cycle on `.git/index` with `fs.promises.utimes` (`safeTouchFile`), avoiding file content truncation or race conditions during GitLens blame cache invalidation.
+
+- **GitLens Guard**: Avoids touching `.git/index` if the GitLens extension (`eamodio.gitlens`) is not installed or active.
+
+- **Debounced Git/GitLens Invalidation**: Consolidated consecutive git and GitLens cache flushes into a single debounced timer (100ms).
+
+- **Network Telemetry IP Sanitization**: Extended telemetry PII scrubber to redact IPv4 addresses and port combinations to `<IP_REDACTED>`.
+
+- **Server Startup Error Recovery**: Ensured `getServerInfo()` clears rejected promises on failure so subsequent user retry attempts re-invoke server startup rather than caching failures.
+
+---
+
+### ⚙️ Under the Hood (Technical & Internal Intelligence)
+*This section documents exact Google3 monorepo changes, schemas, and build revisions.*
+
+- **Core & Lifecycle (`extension/src/cloud/...`)**:
+  - `extension.ts`: Initialized host security environment on activation via `initializeHostSecurityEnvironment()`.
+  - `server_manager.ts`: Added `resolveSystemCaBundlePath()` scanning platform CA bundles (`LINUX_SYSTEM_CA_PATHS`, `MACOS_SYSTEM_CA_PATH`); added `initializeHostSecurityEnvironment()`; added `buildServerEnvironment()` propagating proxy settings and SSL environment flags (`NODE_EXTRA_CA_CERTS`, `SSL_CERT_FILE`, `NODE_USE_SYSTEM_CA`).
+  - `desktop_webview_delegate.ts`: Redesigned loading template with `ANTIGRAVITY_LOGO_SVG`, `LOADING_COMMON_CSS`, `getLoadingContentHtml()`, progress bar keyframe animation, and 10-second safety fallback.
+  - `telemetry_service.ts`: Added regex to scrub IPv4 addresses with optional ports (`<IP_REDACTED>`).
+
+- **Jetski & Diff Zones (`extension/src/devtools/cider/...`)**:
+  - `diff_zones/diff_zone_renderer.ts`: Added `acceptFocusedHunk(fileUri)`, `rejectFocusedHunk(fileUri)`, and `revealDocument(fileUri, preview)` to `DiffZoneRenderer` interface.
+  - `diff_zones/inline_diff_zone_renderer.ts`: Implemented `acceptFocusedHunk` and `rejectFocusedHunk`, locating cursor line inside active diff ranges.
+  - `diff_zones/side_by_side_diff_zone_renderer.ts`: Implemented `revealDocument(fileUri, preview)` with `vscode.diff`.
+  - `diff_zones/agent_edit_manager.ts`: Added `handleAcceptFocusedHunk` and `handleRejectFocusedHunk`; integrated `revealDocument`; used `toJetskiFileUri`.
+  - `diff_zones/inline_diff_manager.ts`: Replaced index rewrite with `safeTouchFile` (`fs.promises.utimes`); added `isGitLensActive()`; added `gitRefreshTimeout` debouncer.
+  - `diff_zones/utils.ts`: Integrated `toCiderWebclientUri` into `normalizeUri`.
+  - `extension_api.ts`: Registered prioritized commands (`agentFocusNextHunk`, `agentFocusPreviousHunk`, `agentAcceptFocusedHunk`, `agentRejectFocusedHunk`, `agentAcceptAllInFile`, `agentRejectAllInFile`); added `updateHunkContext()` publishing `antigravity.canAcceptOrRejectFocusedHunk` and `antigravity.canAcceptOrRejectAllAgentEditsInFile`; added worktree URI translation via `workspaceManager.resolveFileUri()`; handled `ConnectError.NotFound` in `setContextCategories`.
+  - `editor_state_watcher.ts`: Normalized document URIs with `toJetskiFileUri`; caught `ConnectError.NotFound` in `setEditorState`.
+  - `extensionutils/workspace.ts`: [NEW] Modular workspace URI translation (`parseWorkspaceRootUri`, `getRemoteWorkspaceInfo`, `toCiderWebclientUri`, `toJetskiFileUri`, `getResourceFromWorkspacePath`).
+  - `webclient/workspace/ids.ts`: [NEW] VCS workspace identity mapping (`workspaceIdToCitcId`, `workspaceIdToPiperId`, `workspaceIdToVcsId`, `workspaceIdToString`) supporting `PIPER`, `FIG`, `COG`, `JJ`, `REMOTE`.
+  - `setup/cider_host_management.ts`: Added remote host awareness via `getRemoteWorkspaceInfo()`.
+  - `webview_renderer.ts`: Cached `serverInfo` to skip duplicate `renderLoading()` during secondary view registration (b/558282887); cleared cached state on failure.
+  - `jetski_instance.ts`: Added `show({ preserveFocus })`.
+
+- **Protobuf & IPC Schemas (`extension/src/blaze-out/` & `extension/src/third_party/jetski/`)**:
+  - Reconstructed 911 Google3 Piper monorepo modules (518 Closure, 393 CJS), adding 20 new files.
+  - New Schemas & Modules:
+    - `SubagentDescriptor`, `SubagentMetadata`, `SubagentSpec`, `SubagentResult`, `CortexStepInvokeSubagent` under `third_party/jetski/cortex_pb/`.
+    - `WorkspaceId` (`jspb$b$WorkspaceId.js`, `jspb$m$WorkspaceId.js`, `jspb$o$WorkspaceId.js`, etc.) under `blaze-out/.../devtools/sourcerers/workspace/`.
+    - `PluginMcpUserConfig` (`jspb$b$PluginMcpUserConfig.js`, `jspb$m$PluginMcpUserConfig.js`, `jspb$o$PluginMcpUserConfig.js`) under `third_party/jetski/config_pb/`.
+    - Vendored VS Code base runtime modules under `third_party/antigravity/src/vs/base/common/` (`uri.ts`, `path.ts`, `extpath.ts`, `marshallingIds.ts`, `network.ts`, `platform.ts`, `process.ts`, `resources.ts`, `nls.ts`).
+  - Updated Schemas:
+    - `cortex_pb.ts`: Added `SubagentState` enum (`UNSPECIFIED = 0`, `ALIVE = 1`, `KILLED = 2`).
+    - `codeium_common_pb.ts`: Added models 1317–1323 (`gemini-3.8-flash-cyber`, `gemini-3.8-flash-high`, `gemini-3.8-flash-medium`, `gemini-3.8-flash-low`, `gemini-3.8-flash (Cyber Permissive)`, `gemini-3.8-flash-tiered`, `abc-hillclimbing-tf`); added `Source` and `GroundingMetadata` messages; added `media_id` (field 9) to `Media`.
+    - `iframe_messages_pb.ts`: Added `UserThemePreferenceChangeMessage` and `UserThemePreferenceChangeResponse` with `UserThemePreference` enum.
+    - `config_pb`: Added `mcp` map (field 3) to `PluginUserConfig`.
+    - `jetbox_state_pb`: Added `vertex_service_tier` (field 46) to `UserSettings`.
+    - `closure/net/xhrio.js` & `xmlhttpfactory.js`: Added `RequestInit` and `FetchXmlHttpFactory` parameter support.
+
+- **Webview Bridges (`extension/bridge.js`, `extension/loading_bridge.js`)**:
+  - `bridge.js`: Normalized runtime (988 diff lines), updated protobuf descriptors (`codeium_common.proto`, `cortex.proto`, `iframe_messages.proto`, `config.proto`, `workspace_id.proto`) and bindings (`SubagentDescriptor`, `SubagentMetadata`, `GroundingMetadata`, `Source`, `PluginMcpUserConfig`, `WorkspaceId`).
+
+- **Build Metadata (`extension/package.json`)**:
+  - `BUILD_DEPOT_PATH`: `//depot/google3`
+  - `BUILD_BLAZE_RELEASE`: `release blaze-2026.09.02-1 (mainline @974746007)`
+  - `BUILD_EMBED_LABEL`: `antigravity_vscode_extension_1.3.0_RC01`
+  - `BUILD_HOSTNAME`: `ovo11.prod.google.com`
+
+---
+
 ## [1.2.1] - 2026-09-08
 
 ### 🚀 Highlights

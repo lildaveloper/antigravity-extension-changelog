@@ -140,6 +140,7 @@ async function desktopSetup(context, messageNotifier, telemetry) {
  * @return {void}
  */
 function activate(context) {
+    (0, server_manager_1.initializeHostSecurityEnvironment)();
     (0, status_bar_1.registerAntigravityStatusBar)(context);
     // Command to clear persistent conversation and diff state from workspaceState:
     // - 'lastConversationId': The conversation route to restore on reload. If pointing to a deleted

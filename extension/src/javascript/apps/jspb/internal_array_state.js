@@ -204,9 +204,11 @@ const ArrayStateFlags = {
 const PIVOT_OFFSET = 14;
 // Some implementations (Rhino) may incorrectly implement Math.log2 and produce
 // a non-integer answer, which is in violation of the spec.
-asserts.assert(
-    Math.round(Math.log2(Math.max(...Object.values(ArrayStateFlags)))) ===
-    PIVOT_OFFSET - 1);
+if (asserts.ENABLE_ASSERTS) {
+  asserts.assert(
+      Math.round(Math.log2(Math.max(...Object.values(ArrayStateFlags)))) ===
+      PIVOT_OFFSET - 1);
+}
 const PIVOT_BITS = 10;
 const PIVOT_LIMIT = (1 << PIVOT_BITS);
 const PIVOT_MASK = PIVOT_LIMIT - 1;

@@ -22,6 +22,143 @@ const extensionApi_1 = goog.require('google3.third_party.gemini_coder.agent_ui_t
 const vscode = goog.require('vscode'); // from //third_party/javascript/typings/vscode
 // from //third_party/javascript/typings/vscode
 /**
+ * Official Antigravity loading screen vector logo with gradient mask and blurs.
+ * @type {string}
+ */
+const ANTIGRAVITY_LOGO_SVG = `
+  <svg class="logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="13 18 85 78" fill="none">
+    <defs>
+      <filter id="shared_blur_heavy" x="-50%" y="-50%" width="200%" height="200%" filterUnits="objectBoundingBox">
+        <feGaussianBlur stdDeviation="15" />
+      </filter>
+      <filter id="shared_blur_light" x="-50%" y="-50%" width="200%" height="200%" filterUnits="objectBoundingBox">
+        <feGaussianBlur stdDeviation="4" />
+      </filter>
+      <mask id="mask0_6001_463" maskUnits="userSpaceOnUse" x="13" y="18" width="85" height="78">
+        <path d="M89.6992 93.695C94.3659 97.195 101.366 94.8617 94.9492 88.445C75.6992 69.7783 79.7825 18.445 55.8659 18.445C31.9492 18.445 36.0325 69.7783 16.7825 88.445C9.78251 95.445 17.3658 97.195 22.0325 93.695C40.1159 81.445 38.9492 59.8617 55.8659 59.8617C72.7825 59.8617 71.6159 81.445 89.6992 93.695Z" fill="white"/>
+      </mask>
+    </defs>
+    <g mask="url(#mask0_6001_463)">
+      <g filter="url(#shared_blur_light)"><ellipse cx="22.787" cy="26.81" rx="22.787" ry="26.81" transform="matrix(-0.112 0.993 -0.993 -0.112 66.247 -15.534)" fill="#FFE432"/></g>
+      <g filter="url(#shared_blur_heavy)"><ellipse cx="96.491" cy="35.123" rx="29.501" ry="30.149" transform="rotate(76.924 96.491 35.123)" fill="#FC413D"/></g>
+      <g filter="url(#shared_blur_heavy)"><ellipse cx="9.03" cy="41.665" rx="30.832" ry="39.942" transform="rotate(74.126 9.03 41.665)" fill="#00B95C"/></g>
+      <g filter="url(#shared_blur_heavy)"><ellipse cx="9.03" cy="41.665" rx="30.832" ry="39.942" transform="rotate(74.126 9.03 41.665)" fill="#00B95C"/></g>
+      <g filter="url(#shared_blur_heavy)"><ellipse cx="11.221" cy="42.892" rx="30.22" ry="33.27" transform="rotate(45.607 11.221 42.892)" fill="#00B95C"/></g>
+      <g filter="url(#shared_blur_heavy)"><ellipse cx="75.755" cy="104.822" rx="29.018" ry="27.943" transform="rotate(76.924 75.755 104.822)" fill="#3186FF"/></g>
+      <g filter="url(#shared_blur_heavy)"><ellipse cx="33.566" cy="35.404" rx="33.566" ry="35.404" transform="matrix(-0.409 0.912 -0.912 -0.409 101.25 -15.167)" fill="#FBBC04"/></g>
+      <g filter="url(#shared_blur_heavy)"><path d="M2.568 149.695C-15.812 142.48 15.599 83.116 23.409 63.22C31.22 43.324 52.451 33.045 70.831 40.26C89.211 47.475 110.996 87.216 103.185 107.112C95.374 127.008 20.948 156.91 2.568 149.695Z" fill="#3186FF"/></g>
+      <g filter="url(#shared_blur_heavy)"><path d="M113.934 75.808C109.013 81.551 96.172 78.622 85.253 69.267C74.334 59.911 69.47 47.671 74.391 41.928C79.312 36.185 92.153 39.114 103.072 48.469C113.991 57.825 118.855 70.065 113.934 75.808Z" fill="#749BFF"/></g>
+      <g filter="url(#shared_blur_heavy)"><ellipse cx="92.611" cy="23.796" rx="44.241" ry="27.502" transform="rotate(34.076 92.611 23.796)" fill="#FC413D"/></g>
+      <g filter="url(#shared_blur_heavy)"><ellipse cx="23.495" cy="29.589" rx="23.707" ry="13.787" transform="rotate(112.516 23.495 29.589)" fill="#FFEE48"/></g>
+    </g>
+  </svg>`;
+/**
+ * Common CSS styles for the initialization state matching Figma / Visual Studio.
+ * @type {string}
+ */
+const LOADING_COMMON_CSS = `
+  .logo-container {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+  .ambient-glow {
+    position: absolute;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #FC413D 0%, #3186FF 45%, #00B95C 75%, transparent 100%);
+    filter: blur(32px);
+    opacity: 0.38;
+    pointer-events: none;
+  }
+  .logo-svg {
+    position: relative;
+    width: 78px;
+    height: 72px;
+    z-index: 1;
+  }
+  .product-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--vscode-foreground, #ffffff);
+    margin: 0 0 4px 0;
+    letter-spacing: -0.3px;
+  }
+  .product-subtitle {
+    font-size: 13px;
+    color: var(--vscode-descriptionForeground, #999999);
+    opacity: 0.75;
+    margin: 0 0 32px 0;
+  }
+  .progress-track {
+    width: 240px;
+    max-width: 80%;
+    height: 3px;
+    background: rgba(127, 127, 127, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 12px;
+  }
+  .progress-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 40%;
+    background: var(--vscode-progressBar-background, #007acc);
+    border-radius: 2px;
+    animation: progress-indeterminate 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+  @keyframes progress-indeterminate {
+    0% {
+      left: -40%;
+      width: 40%;
+    }
+    50% {
+      left: 30%;
+      width: 60%;
+    }
+    100% {
+      left: 100%;
+      width: 40%;
+    }
+  }
+  .loading-details {
+    font-size: 13px;
+    color: var(--vscode-descriptionForeground, #888888);
+    opacity: 0.75;
+    line-height: 1.4;
+    max-width: 260px;
+    text-align: center;
+    transition: opacity 0.2s ease;
+  }
+`;
+/**
+ * Returns the common HTML layout for the initialization state matching Figma / Visual Studio.
+ * @param {string} defaultDetailsText
+ * @return {string}
+ */
+function getLoadingContentHtml(defaultDetailsText) {
+    return `
+    <div class="logo-container">
+      <div class="ambient-glow"></div>
+      ${ANTIGRAVITY_LOGO_SVG}
+    </div>
+    <div class="product-title">Google Antigravity</div>
+    <div class="product-subtitle">for VS Code</div>
+    <div class="progress-track">
+      <div class="progress-bar"></div>
+    </div>
+    <div id="loading-details" class="loading-details">${defaultDetailsText}</div>
+  `;
+}
+/**
  * Standard VS Code Desktop implementation of WebviewDelegate.
  * Uses raw HTML strings and standard VS Code APIs.
  * @implements {tsickle_delegate_interfaces_1.WebviewDelegate}
@@ -67,24 +204,13 @@ class DesktopWebviewDelegate {
             color: var(--vscode-agy-foreground, #ccc);
             background-color: var(--vscode-agy-background, #1e1e1e);
           }
-          .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border-left-color: var(--vscode-progressBar-background, #007acc);
-            animation: spin 1s linear infinite;
-          }
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
           .container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
+            user-select: none;
           }
           .retry-btn {
             padding: 8px 24px;
@@ -102,12 +228,12 @@ class DesktopWebviewDelegate {
           .retry-btn:hover {
             background-color: var(--vscode-button-hoverBackground, #1177bb);
           }
+          ${LOADING_COMMON_CSS}
         </style>
       </head>
       <body>
         <div id="loading-indicator" class="container">
-          <div class="spinner" style="margin: 0 auto;"></div>
-          <div id="loading-details" style="margin-top: 16px; font-size: 13px;">Initializing Antigravity...</div>
+          ${getLoadingContentHtml('Checking your setup...')}
         </div>
         <div id="loading-error" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; visibility: hidden; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 24px; box-sizing: border-box;">
           <div style="font-size: 15px; font-weight: 600; color: var(--vscode-foreground, #ccc);">Unable to start Antigravity</div>
@@ -263,25 +389,19 @@ class DesktopWebviewDelegate {
             font-family: var(--vscode-font-family, sans-serif);
             pointer-events: none;
             z-index: 1;
+            transition: opacity 0.3s ease-out;
+            user-select: none;
           }
-          .spinner {
-            width: 24px;
-            height: 24px;
-            border: 2.5px solid var(--vscode-progressBar-background, #0e639c);
-            border-top: 2.5px solid transparent;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+          .loading-container.hidden {
+            opacity: 0;
+            pointer-events: none;
           }
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
+          ${LOADING_COMMON_CSS}
         </style>
       </head>
       <body>
         <div id="loading-indicator" class="loading-container" style="top:0;height:100%;">
-          <div class="spinner"></div>
-          <div id="loading-details" style="margin-top: 16px; font-size: 12px; opacity: 0.8;">Loading Antigravity...</div>
+          ${getLoadingContentHtml('Loading Antigravity...')}
         </div>
         <div id="compatibility-modal" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 100;">
           <div style="background: var(--vscode-sideBar-background, #252526); padding: 24px; border-radius: 6px;">
@@ -295,18 +415,15 @@ class DesktopWebviewDelegate {
           let isConnected = false;
           const iframe = document.getElementById('jetski-frame');
 
-          function revealIframe() {
+          function markConnected() {
             if (isConnected) return;
             isConnected = true;
-            const loader = document.getElementById('loading-indicator');
-            iframe.style.opacity = '1';
-            if (loader) loader.style.display = 'none';
           }
 
-          iframe.addEventListener('load', revealIframe);
+          iframe.addEventListener('load', markConnected);
           window.addEventListener('message', (event) => {
             if (event.source === iframe.contentWindow) {
-              revealIframe();
+              markConnected();
             }
           });
 
@@ -315,21 +432,34 @@ class DesktopWebviewDelegate {
           // endpoints via window.fetch(). We check the iframe's connection status directly to
           // avoid CORS/PNA loopback errors while preserving the retry and status indicator loop.
           function checkAndReveal() {
-            const details = document.getElementById('loading-details');
             if (isConnected || iframe.style.opacity === '1') {
-              revealIframe();
               return;
             }
             attempts++;
+            const details = document.getElementById('loading-details');
+            if (details) {
+              details.textContent =
+                attempts < 20
+                  ? 'Connecting to Remote Antigravity tunnel (' + attempts + ')...'
+                  : 'Could not connect to remote port. Please check VS Code Ports tab.';
+            }
             if (attempts < 20) {
-              if (details) details.textContent = 'Connecting to Remote Antigravity tunnel (' + attempts + ')...';
               iframe.src = '${fullUrlString}';
               setTimeout(checkAndReveal, 1000);
-            } else {
-              if (details) details.textContent = 'Could not connect to remote port. Please check VS Code Ports tab.';
             }
           }
           setTimeout(checkAndReveal, 600);
+
+          // Safety fallback: ensure the iframe is revealed even if bridge initialization encounters an issue.
+          setTimeout(() => {
+            if (iframe.style.opacity === '1') return;
+            iframe.style.opacity = '1';
+            const loader = document.getElementById('loading-indicator');
+            if (loader) {
+              loader.classList.add('hidden');
+              setTimeout(() => loader.remove(), 300);
+            }
+          }, 10000);
         </script>
         <script>
           (function() {

@@ -34,3 +34,9 @@ jspb$b$devtools_jetski_provisioning$ListDeploymentsRequest.fields = /** @pureOrB
  * @return {!Uint8Array}
  */
 jspb$devtools_jetski_provisioning$MutableListDeploymentsRequest.prototype.serializeBinary = /** @pureOrBreakMyCode */(jspb_internal_public_for_gencode.makePrototypeSerializeBinaryFunction(jspb$b$devtools_jetski_provisioning$ListDeploymentsRequest.fields));
+
+
+var jspb$devtools_jetski_provisioning$ImmutableListDeploymentsRequest;
+Object.defineProperty(this, 'jspb$devtools_jetski_provisioning$ImmutableListDeploymentsRequest', {
+  get() { return jspb$devtools_jetski_provisioning$ImmutableListDeploymentsRequest; },
+  set(v) { jspb$devtools_jetski_provisioning$ImmutableListDeploymentsRequest = v; },

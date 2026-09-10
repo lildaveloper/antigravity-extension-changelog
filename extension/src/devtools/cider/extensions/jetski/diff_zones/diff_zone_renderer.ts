@@ -197,6 +197,20 @@ if (false) {
      */
     DiffZoneRenderer.prototype.focusExistingZone = function (fileUri) { };
     /**
+     * Accepts the currently focused diff hunk in the given file.
+     * @public
+     * @param {string} fileUri
+     * @return {!Promise<void>}
+     */
+    DiffZoneRenderer.prototype.acceptFocusedHunk = function (fileUri) { };
+    /**
+     * Rejects the currently focused diff hunk in the given file.
+     * @public
+     * @param {string} fileUri
+     * @return {!Promise<void>}
+     */
+    DiffZoneRenderer.prototype.rejectFocusedHunk = function (fileUri) { };
+    /**
      * Closes and resolves the active diff zone for a specific file (accepting or reverting changes).
      * @public
      * @param {string} fileUri
@@ -223,6 +237,14 @@ if (false) {
      * @return {void}
      */
     DiffZoneRenderer.prototype.onAgentEditsChanged = function () { };
+    /**
+     * Optionally reveals/opens the document or diff view in the editor.
+     * @public
+     * @param {string} fileUri
+     * @param {(undefined|boolean)=} preview
+     * @return {!Promise<void>}
+     */
+    DiffZoneRenderer.prototype.revealDocument = function (fileUri, preview) { };
 }
 /**
  * Counts inserted/deleted lines between original and modified content strings.

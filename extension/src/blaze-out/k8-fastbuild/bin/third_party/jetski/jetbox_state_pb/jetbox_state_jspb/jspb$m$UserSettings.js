@@ -2160,6 +2160,54 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
   }
 
 
+  /**
+   * optional string vertex_service_tier = 46;
+   * @override
+   * @return {string}
+   */
+  getVertexServiceTier() {
+    return jspb_internal_adapters.getStringFieldWithDefault(this, 46);
+  }
+
+
+  /**
+   * @param {string|null|undefined} value
+   * @return {!jspb$jetbox_state_pb$MutableUserSettings} returns this
+   */
+  setVertexServiceTier(value) {
+    return jspb_internal_adapters.setStringField(this, 46, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$jetbox_state_pb$MutableUserSettings} returns this
+   */
+  clearVertexServiceTier() {
+    return jspb_internal_adapters.clearField(this, 46);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasVertexServiceTier() {
+    return jspb_internal_adapters.hasStringField(this, 46);
+  }
+
+
+  /**
+   * optional string vertex_service_tier = 46;
+   * @override
+   * @return {string|undefined}
+   */
+  getVertexServiceTierOrUndefined() {
+    return jspb_internal_adapters.getStringFieldOrUndefined(this, 46);
+  }
+
+
 };
 
 /**
@@ -2227,7 +2275,8 @@ jspb$jetbox_state_pb$MutableUserSettings.hasInstance = /** @pureOrBreakMyCode */
  *  permissionPreset: (?number|undefined),
  *  enableAdc: (?boolean|undefined),
  *  permissionGrantsV2Migrated: (?boolean|undefined),
- *  sandboxEnabledAtV2Migration: (?boolean|undefined)
+ *  sandboxEnabledAtV2Migration: (?boolean|undefined),
+ *  vertexServiceTier: (?string|undefined)
  * }}
  */
 jspb$jetbox_state_pb$MutableUserSettings.ObjectFormat;
@@ -2327,7 +2376,8 @@ if (goog.DEBUG && !COMPILED) {
  *  permissionPreset: (!jspb$e.exa$codeium_common_pb$AgentPermissionPreset|undefined),
  *  enableAdc: (boolean|undefined),
  *  permissionGrantsV2Migrated: (boolean|undefined),
- *  sandboxEnabledAtV2Migration: (boolean|undefined)
+ *  sandboxEnabledAtV2Migration: (boolean|undefined),
+ *  vertexServiceTier: (string|undefined)
  * }}
  */
 jspb$jetbox_state_pb$MutableUserSettings.FieldsInterface;

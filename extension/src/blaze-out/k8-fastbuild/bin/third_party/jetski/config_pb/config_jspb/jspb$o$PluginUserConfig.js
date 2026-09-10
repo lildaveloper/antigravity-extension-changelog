@@ -10,6 +10,7 @@ goog.provide('jspb$o$exa$config_pb$PluginUserConfig');
 
 goog.require('jspb$exa$config_pb$MutablePluginUserConfig');
 goog.require('jspb$exa$cortex_pb$MutableMarketplaceInstall');
+goog.require('jspb$o$exa$config_pb$PluginMcpUserConfig');
 goog.require('jspb$o$exa$cortex_pb$MarketplaceInstall');
 goog.require('jspb_internal_adapters');
 goog.require('jspb_internal_public_for_gencode');
@@ -28,6 +29,8 @@ jspb$o$exa$config_pb$PluginUserConfig.internal_toObject = function(msg) {
   return /** @type {?} */ (/** @type {!jspb$exa$config_pb$MutablePluginUserConfig.ObjectFormat} */ ({
     enabled: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getBooleanFieldLegacyNullable(msg, 1)),
     installedFrom: jspb$o$exa$cortex_pb$MarketplaceInstall.internal_toObject(msg.getInstalledFrom()),
+    mcpMap: jspb_internal_public_for_gencode.mapToObject(msg.getMcpMap(),
+      jspb$o$exa$config_pb$PluginMcpUserConfig.internal_toObject),
   }));
 
 };
@@ -70,6 +73,7 @@ jspb$o$exa$config_pb$PluginUserConfig.fromObject = function(obj) {
   jspb_internal_adapters.setWrapperField(msg,
       jspb$exa$cortex_pb$MutableMarketplaceInstall,
       2, jspb_internal_public_for_gencode.fromObjectNullable(obj.installedFrom, jspb$o$exa$cortex_pb$MarketplaceInstall.fromObject));
+  obj.mcpMap && jspb_internal_public_for_gencode.mapFromObject(msg.getMcpMap(), obj.mcpMap, jspb$o$exa$config_pb$PluginMcpUserConfig.fromObject);
   return msg;
 };
 }

@@ -8,6 +8,7 @@
 
 goog.provide('jspb$b$exa$config_pb$PluginUserConfig');
 
+goog.require('jspb$b$exa$config_pb$PluginMcpUserConfig');
 goog.require('jspb$b$exa$cortex_pb$MarketplaceInstall');
 goog.require('jspb$exa$config_pb$MutablePluginUserConfig');
 goog.require('jspb_internal_binary');
@@ -24,7 +25,11 @@ goog.require('jspb_internal_public_for_gencode');
 jspb$b$exa$config_pb$PluginUserConfig.fields = /** @pureOrBreakMyCode */([
   0,
   jspb_internal_binary.RWBool,
-  jspb$b$exa$cortex_pb$MarketplaceInstall.fields
+  jspb$b$exa$cortex_pb$MarketplaceInstall.fields,
+  jspb_internal_binary.RWMapEntry,
+  jspb_internal_binary.createMessageMapEntryBinaryFields(
+      jspb_internal_binary.RStringRequireUtf8WString,
+      jspb$b$exa$config_pb$PluginMcpUserConfig.fields)
 ]);
 
 /**

@@ -227,6 +227,80 @@ class InlineDiffZoneRenderer {
     /**
      * @public
      * @param {string} fileUri
+     * @return {!Promise<void>}
+     */
+    async acceptFocusedHunk(fileUri) {
+        /** @type {string} */
+        const normalizedUri = (0, utils_1.normalizeUri)(fileUri);
+        /** @type {(undefined|!tsickle_vscode_1.TextEditor)} */
+        const editor = (0, utils_1.findEditorForUri)(normalizedUri);
+        /** @type {(undefined|!tsickle_inline_diff_manager_6.ActiveDiff)} */
+        const activeDiff = this.inlineDiffManager.getActiveDiff(normalizedUri);
+        if (!activeDiff || activeDiff.changes.ranges.length === 0)
+            return;
+        /** @type {number} */
+        let targetIndex = 0;
+        if (editor) {
+            /** @type {number} */
+            const cursorLine = editor.selection.active.line;
+            /** @type {number} */
+            const found = activeDiff.changes.ranges.findIndex((/**
+             * @param {!tsickle_inline_diff_change_range_8.InlineDiffChangeRange} r
+             * @return {(undefined|boolean)}
+             */
+            (r) => {
+                /** @type {(undefined|!tsickle_vscode_1.Range)} */
+                const range = r.additionRange ?? r.deletionRange;
+                return (range &&
+                    cursorLine >= range.start.line &&
+                    cursorLine <= range.end.line);
+            }));
+            if (found !== -1) {
+                targetIndex = found;
+            }
+        }
+        await this.inlineDiffManager.acceptHunk(normalizedUri, targetIndex);
+    }
+    /**
+     * @public
+     * @param {string} fileUri
+     * @return {!Promise<void>}
+     */
+    async rejectFocusedHunk(fileUri) {
+        /** @type {string} */
+        const normalizedUri = (0, utils_1.normalizeUri)(fileUri);
+        /** @type {(undefined|!tsickle_vscode_1.TextEditor)} */
+        const editor = (0, utils_1.findEditorForUri)(normalizedUri);
+        /** @type {(undefined|!tsickle_inline_diff_manager_6.ActiveDiff)} */
+        const activeDiff = this.inlineDiffManager.getActiveDiff(normalizedUri);
+        if (!activeDiff || activeDiff.changes.ranges.length === 0)
+            return;
+        /** @type {number} */
+        let targetIndex = 0;
+        if (editor) {
+            /** @type {number} */
+            const cursorLine = editor.selection.active.line;
+            /** @type {number} */
+            const found = activeDiff.changes.ranges.findIndex((/**
+             * @param {!tsickle_inline_diff_change_range_8.InlineDiffChangeRange} r
+             * @return {(undefined|boolean)}
+             */
+            (r) => {
+                /** @type {(undefined|!tsickle_vscode_1.Range)} */
+                const range = r.additionRange ?? r.deletionRange;
+                return (range &&
+                    cursorLine >= range.start.line &&
+                    cursorLine <= range.end.line);
+            }));
+            if (found !== -1) {
+                targetIndex = found;
+            }
+        }
+        await this.inlineDiffManager.rejectHunk(normalizedUri, targetIndex);
+    }
+    /**
+     * @public
+     * @param {string} fileUri
      * @param {boolean} accept
      * @return {!Promise<boolean>}
      */

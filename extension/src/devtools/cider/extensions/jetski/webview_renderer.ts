@@ -77,6 +77,7 @@ class WebviewRenderer {
      * @return {void}
      */
     refresh() {
+        this.cachedServerInfo = undefined;
         this.serverInfo = undefined;
     }
     /**
@@ -86,7 +87,25 @@ class WebviewRenderer {
      */
     getServerInfo() {
         if (!this.serverInfo) {
-            this.serverInfo = this.setupFn(this.context, this.messageNotifier);
+            this.serverInfo = ((/**
+             * @return {!Promise<!tsickle_util_5.ServerInfo>}
+             */
+            async () => {
+                try {
+                    /** @type {!tsickle_util_5.ServerInfo} */
+                    const serverInfo = await this.setupFn(this.context, this.messageNotifier);
+                    this.cachedServerInfo = serverInfo;
+                    return serverInfo;
+                }
+                catch (error) {
+                    // Reset cached promise and server info on error so subsequent calls
+                    // (e.g. user retrying after failure or re-rendering) can re-invoke
+                    // setupFn instead of permanently caching the rejected promise.
+                    this.cachedServerInfo = undefined;
+                    this.serverInfo = undefined;
+                    throw error;
+                }
+            }))();
         }
         return this.serverInfo;
     }
@@ -108,13 +127,22 @@ class WebviewRenderer {
      * @return {!Promise<void>}
      */
     async renderJetskiIframe(view, options) {
-        // Show loading indicator while the server URL is resolved.
-        this.messageNotifier.resolveWebviewView(view);
-        this.delegate.renderLoading(view.webview, options.location);
+        // When opening secondary views (e.g. Settings, Artifacts, Terminal), the backend
+        // server is already running and cached. Avoid calling renderLoading() if serverInfo
+        // is already available, because rewriting webview.html in rapid succession forces
+        // Chromium to tear down and recreate the webview DOM twice, leading to blank screens
+        // and noticeable latency (b/558282887). The template rendered by delegate.renderIframe
+        // already includes its own loading indicator and spinner while the iframe connects.
+        if (!this.cachedServerInfo) {
+            this.messageNotifier.resolveWebviewView(view);
+            this.delegate.renderLoading(view.webview, options.location);
+        }
         try {
             // Resolve and validate the server URL.
+            /** @type {!tsickle_util_5.ServerInfo} */
+            const serverInfo = this.cachedServerInfo ?? (await this.getServerInfo());
             /** @type {string} */
-            const serverUrl = this.delegate.validateServerUrl((await this.getServerInfo()).effectiveUrl);
+            const serverUrl = this.delegate.validateServerUrl(serverInfo.effectiveUrl);
             // Render the Jetski iframe.
             await this.delegate.renderIframe(view.webview, serverUrl, options);
             this.messageNotifier.dispose();
@@ -122,6 +150,12 @@ class WebviewRenderer {
             await this.apiImpl.registerWebview(view, options.type);
         }
         catch (error) {
+            if (this.cachedServerInfo) {
+                // If server info was cached, renderLoading was skipped above; set it up now
+                // so the user sees the error message and retry options.
+                this.messageNotifier.resolveWebviewView(view);
+                this.delegate.renderLoading(view.webview, options.location);
+            }
             this.messageNotifier.notifyError((0, util_1.getHumanReadableError)(error));
         }
     }
@@ -149,6 +183,11 @@ if (false) {
      * @private
      */
     WebviewRenderer.prototype.messageNotifier;
+    /**
+     * @type {(undefined|!tsickle_util_5.ServerInfo)}
+     * @private
+     */
+    WebviewRenderer.prototype.cachedServerInfo;
     /**
      * @type {(undefined|!Promise<!tsickle_util_5.ServerInfo>)}
      * @private

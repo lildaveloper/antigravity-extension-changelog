@@ -72,6 +72,7 @@ jspb$o$jetbox_state_pb$UserSettings.internal_toObject = function(msg) {
     enableAdc: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getBooleanFieldLegacyNullable(msg, 43)),
     permissionGrantsV2Migrated: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getBooleanFieldLegacyNullable(msg, 44)),
     sandboxEnabledAtV2Migration: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getBooleanFieldLegacyNullable(msg, 45)),
+    vertexServiceTier: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getStringFieldLegacyNullable(msg, 46)),
   }));
 
 };
@@ -160,6 +161,7 @@ jspb$o$jetbox_state_pb$UserSettings.fromObject = function(obj) {
   jspb_internal_adapters.setBooleanField(msg, 43, obj.enableAdc);
   jspb_internal_adapters.setBooleanField(msg, 44, obj.permissionGrantsV2Migrated);
   jspb_internal_adapters.setBooleanField(msg, 45, obj.sandboxEnabledAtV2Migration);
+  jspb_internal_adapters.setStringField(msg, 46, obj.vertexServiceTier);
   return msg;
 };
 }

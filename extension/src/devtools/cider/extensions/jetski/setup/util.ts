@@ -335,7 +335,6 @@ class BufferedOutputChannel {
             this.delegate.show(column);
         }
         else {
-            // @ts-ignore
             this.delegate.show(column, preserveFocus);
         }
     }

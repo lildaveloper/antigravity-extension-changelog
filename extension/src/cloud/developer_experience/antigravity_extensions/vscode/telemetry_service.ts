@@ -66,6 +66,8 @@ function sanitizeString(message) {
         .replace(/\?[^#\s]*/g, '?<REDACTED_PARAMS>')
         .replace(/'[^']+'/g, "'<REDACTED>'") // Scrub single quoted strings
         .replace(/"[^"]+"/g, '"<REDACTED>"') // Scrub double quoted strings
+        // Scrub IPv4 addresses with optional port (e.g. 127.0.0.1:45123, 192.168.1.1)
+        .replace(/\b\d{1,3}(?:\.\d{1,3}){3}(?::\d+)?\b/g, '<IP_REDACTED>')
         // Scrub file paths and names with various extensions, preserving the extension
         .replace(/(?:[\w/\\.:<>-]+[/\\])?[\w-]+\.((?:ts|js|json|md|py|go|html|css|txt|code-workspace|vsix|sock|log|out|sh|cfg|conf|yaml|yml))\b/gi, '<REDACTED>.$1')
         // Scrub git commit hashes (SHA-1)

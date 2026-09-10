@@ -213,7 +213,10 @@ exports.additional_properties = (0, codegenv2_1.extDesc)(exports.file_learning_g
 /**
  * Allows specifying multiple discriminator values that map to this field.
  * This is used in implicit/explicit union mode when multiple JSON
- * discriminator values should resolve to the same proto field.
+ * discriminator values should resolve to the same proto field, to
+ * specify subtype restrictions on supertype fields, or when applied to
+ * a genai.Value field to turn it into a union of primitives and a list
+ * of discriminated values.
  *
  * See go/gaos-annotations#json_discriminator_values for details and examples.
  *
@@ -275,8 +278,12 @@ exports.add_union_value = (0, codegenv2_1.extDesc)(exports.file_learning_genai_a
 exports.flexible_map = (0, codegenv2_1.extDesc)(exports.file_learning_genai_api_parsing_genai_json_annotations, 11);
 /**
  * Specifies the target schema name to be generated for sub-content union
- * definitions in OpenAPI generation. Example:
- * [(gaos.parsing.sub_content_name) = "ThoughtSummaryContent"]
+ * definitions in OpenAPI generation.
+ *
+ * See go/gaos-annotations#sub_content_name for details and examples.
+ *
+ * Example:
+ *   [(gaos.parsing.sub_content_name) = "ThoughtSummaryContent"]
  *
  * \@generated from extension: string sub_content_name = 525000227;
  * @type {?}
@@ -319,6 +326,8 @@ exports.add_static_field = (0, codegenv2_1.extDesc)(exports.file_learning_genai_
  * When set, all fields of this type are automatically treated
  * according to the specified JSON type by the parser, serializer,
  * and OAD generator.
+ *
+ * See go/gaos-annotations#message_json_type for details and examples.
  *
  * \@generated from extension: gaos.parsing.JsonType message_json_type = 535801963;
  * @type {?}

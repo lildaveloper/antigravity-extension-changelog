@@ -27,9 +27,10 @@ const tsickle_delegate_interfaces_10 = goog.requireType("google3.devtools.cider.
 const tsickle_editor_state_watcher_11 = goog.requireType("google3.devtools.cider.extensions.jetski.editor_state_watcher");
 const tsickle_jetski_instance_12 = goog.requireType("google3.devtools.cider.extensions.jetski.jetski_instance");
 const tsickle_notebook_utils_interface_13 = goog.requireType("google3.devtools.cider.extensions.jetski.notebook_utils_interface");
-const tsickle_settings_editor_provider_14 = goog.requireType("google3.devtools.cider.extensions.jetski.settings_editor_provider");
-const tsickle_util_15 = goog.requireType("google3.devtools.cider.extensions.jetski.setup.util");
-const tsickle_terminal_panel_provider_16 = goog.requireType("google3.devtools.cider.extensions.jetski.terminal_panel_provider");
+const tsickle_workspace_14 = goog.requireType("google3.devtools.cider.extensionutils.workspace");
+const tsickle_settings_editor_provider_15 = goog.requireType("google3.devtools.cider.extensions.jetski.settings_editor_provider");
+const tsickle_util_16 = goog.requireType("google3.devtools.cider.extensions.jetski.setup.util");
+const tsickle_terminal_panel_provider_17 = goog.requireType("google3.devtools.cider.extensions.jetski.terminal_panel_provider");
 const protobuf_1 = goog.require('google3.third_party.javascript.bufbuild_protobuf.src.index'); // from //third_party/javascript/bufbuild_protobuf
 // from //third_party/javascript/bufbuild_protobuf
 const connect_1 = goog.require('google3.third_party.javascript.connectrpc_connect.src.index'); // from //third_party/javascript/connectrpc_connect
@@ -43,6 +44,7 @@ const vscode = goog.require('vscode'); // from //devtools/cider/extensions:vscod
 const artifact_editor_provider_1 = goog.require('google3.devtools.cider.extensions.jetski.artifact_editor_provider');
 const editor_state_watcher_1 = goog.require('google3.devtools.cider.extensions.jetski.editor_state_watcher');
 const jetski_instance_1 = goog.require('google3.devtools.cider.extensions.jetski.jetski_instance');
+const workspace_1 = goog.require('google3.devtools.cider.extensionutils.workspace');
 const settings_editor_provider_1 = goog.require('google3.devtools.cider.extensions.jetski.settings_editor_provider');
 const util_1 = goog.require('google3.devtools.cider.extensions.jetski.setup.util');
 /** @typedef {!tsickle_delegate_interfaces_10.DynamicContextCategoryItem} */
@@ -200,6 +202,26 @@ async function revealOpenCustomTab(match, viewType) {
         preserveFocus: false,
     });
 }
+// CitC: /google/src/cloud/user/workspace(/google3)?
+/** @type {!RegExp} */
+const CITC_REGEX = /^\/google\/src\/cloud\/[^/]+\/[^/]+(\/google3)?\/?$/;
+// Cog: /google/cog/cloud/user/workspace
+/** @type {!RegExp} */
+const COG_REGEX = /^\/google\/cog\/cloud\/[^/]+\/[^/]+\/?$/;
+/**
+ * @param {!tsickle_vscode_8.Uri} uri
+ * @return {boolean}
+ */
+function isWorkspaceRoot(uri) {
+    /** @type {(undefined|!tsickle_workspace_14.RemoteWorkspaceInfo)} */
+    const remoteInfo = (0, workspace_1.getRemoteWorkspaceInfo)();
+    if (remoteInfo) {
+        return (0, workspace_1.cleanPath)(uri.path) === remoteInfo.folder;
+    }
+    /** @type {string} */
+    const path = uri.path;
+    return CITC_REGEX.test(path) || COG_REGEX.test(path);
+}
 /**
  * Central implementation of the ExtensionApi service.
  *
@@ -219,7 +241,7 @@ class ExtensionApiImpl {
     /**
      * Registers the TerminalPanelProvider with this extension API instance.
      * @public
-     * @param {!tsickle_terminal_panel_provider_16.TerminalPanelProvider} provider
+     * @param {!tsickle_terminal_panel_provider_17.TerminalPanelProvider} provider
      * @return {void}
      */
     setTerminalPanelProvider(provider) {
@@ -228,7 +250,7 @@ class ExtensionApiImpl {
     /**
      * Registers the SettingsEditorProvider with this extension API instance.
      * @public
-     * @param {!tsickle_settings_editor_provider_14.SettingsEditorProvider} provider
+     * @param {!tsickle_settings_editor_provider_15.SettingsEditorProvider} provider
      * @return {void}
      */
     setSettingsEditorProvider(provider) {
@@ -511,6 +533,7 @@ class ExtensionApiImpl {
          * @return {void}
          */
         (states) => {
+            this.updateHunkContext(vscode.window.activeTextEditor);
             for (const view of this.views) {
                 void view.api.setFileDiffs({ fileDiffs: states }).catch((/**
                  * @param {?} e
@@ -533,6 +556,7 @@ class ExtensionApiImpl {
             if (editor) {
                 this.setChatFocused(false);
             }
+            this.updateHunkContext(editor);
         })), vscode.window.onDidChangeTextEditorSelection((/**
          * @return {void}
          */
@@ -792,6 +816,7 @@ class ExtensionApiImpl {
             await view.api.triggerSend({});
         })));
         this.registerCascadeListeners();
+        this.registerDiffZoneCommands();
         this.editorStateWatcher = new editor_state_watcher_1.EditorStateWatcher({
             views: (/**
              * @return {!Array<!tsickle_jetski_instance_12.JetskiInstance>}
@@ -808,6 +833,7 @@ class ExtensionApiImpl {
         const activeDoc = this.editorStateWatcher.buildTextDocument(activeEditor, activeEditor?.document) ??
             this.editorStateWatcher.buildNotebookDocument(vscode.window.activeNotebookEditor);
         this.editorStateWatcher.forward('STARTUP', activeDoc);
+        this.updateHunkContext(activeEditor);
     }
     /**
      * @public
@@ -994,6 +1020,106 @@ class ExtensionApiImpl {
         })));
     }
     /**
+     * @private
+     * @return {void}
+     */
+    registerDiffZoneCommands() {
+        this.context.subscriptions.push(vscode.commands.registerCommand('antigravity.prioritized.agentFocusNextHunk', (/**
+         * @param {(undefined|string|!tsickle_vscode_8.Uri)=} fileUri
+         * @return {void}
+         */
+        (fileUri) => {
+            /** @type {(undefined|string)} */
+            const uriStr = typeof fileUri === 'string'
+                ? fileUri
+                : (fileUri?.toString() ??
+                    vscode.window.activeTextEditor?.document.uri.toString());
+            if (uriStr) {
+                this.agentEditManager.focusHunk(uriStr, 'next');
+            }
+        })), vscode.commands.registerCommand('antigravity.prioritized.agentFocusPreviousHunk', (/**
+         * @param {(undefined|string|!tsickle_vscode_8.Uri)=} fileUri
+         * @return {void}
+         */
+        (fileUri) => {
+            /** @type {(undefined|string)} */
+            const uriStr = typeof fileUri === 'string'
+                ? fileUri
+                : (fileUri?.toString() ??
+                    vscode.window.activeTextEditor?.document.uri.toString());
+            if (uriStr) {
+                this.agentEditManager.focusHunk(uriStr, 'previous');
+            }
+        })), vscode.commands.registerCommand('antigravity.prioritized.agentAcceptFocusedHunk', (/**
+         * @param {(undefined|string|!tsickle_vscode_8.Uri)=} fileUri
+         * @return {!Promise<void>}
+         */
+        async (fileUri) => {
+            /** @type {(undefined|string)} */
+            const uriStr = typeof fileUri === 'string'
+                ? fileUri
+                : (fileUri?.toString() ??
+                    vscode.window.activeTextEditor?.document.uri.toString());
+            if (uriStr) {
+                await this.agentEditManager.handleAcceptFocusedHunk(uriStr);
+            }
+        })), vscode.commands.registerCommand('antigravity.prioritized.agentRejectFocusedHunk', (/**
+         * @param {(undefined|string|!tsickle_vscode_8.Uri)=} fileUri
+         * @return {!Promise<void>}
+         */
+        async (fileUri) => {
+            /** @type {(undefined|string)} */
+            const uriStr = typeof fileUri === 'string'
+                ? fileUri
+                : (fileUri?.toString() ??
+                    vscode.window.activeTextEditor?.document.uri.toString());
+            if (uriStr) {
+                await this.agentEditManager.handleRejectFocusedHunk(uriStr);
+            }
+        })), vscode.commands.registerCommand('antigravity.prioritized.agentAcceptAllInFile', (/**
+         * @param {(undefined|string|!tsickle_vscode_8.Uri)=} fileUri
+         * @return {!Promise<void>}
+         */
+        async (fileUri) => {
+            /** @type {(undefined|string)} */
+            const uriStr = typeof fileUri === 'string'
+                ? fileUri
+                : (fileUri?.toString() ??
+                    vscode.window.activeTextEditor?.document.uri.toString());
+            if (uriStr) {
+                await this.agentEditManager.handleResolveAllAgentEditsInFile(uriStr, true);
+            }
+        })), vscode.commands.registerCommand('antigravity.prioritized.agentRejectAllInFile', (/**
+         * @param {(undefined|string|!tsickle_vscode_8.Uri)=} fileUri
+         * @return {!Promise<void>}
+         */
+        async (fileUri) => {
+            /** @type {(undefined|string)} */
+            const uriStr = typeof fileUri === 'string'
+                ? fileUri
+                : (fileUri?.toString() ??
+                    vscode.window.activeTextEditor?.document.uri.toString());
+            if (uriStr) {
+                await this.agentEditManager.handleResolveAllAgentEditsInFile(uriStr, false);
+            }
+        })));
+    }
+    /**
+     * @private
+     * @param {(undefined|!tsickle_vscode_8.TextEditor)=} editor
+     * @return {void}
+     */
+    updateHunkContext(editor) {
+        /** @type {(undefined|string)} */
+        const activeUri = editor?.document.uri.toString();
+        /** @type {boolean} */
+        const hasHunks = activeUri
+            ? this.agentEditManager.hasUnresolvedHunks(activeUri)
+            : false;
+        void vscode.commands.executeCommand('setContext', 'antigravity.canAcceptOrRejectFocusedHunk', hasHunks);
+        void vscode.commands.executeCommand('setContext', 'antigravity.canAcceptOrRejectAllAgentEditsInFile', hasHunks);
+    }
+    /**
      * @public
      * @param {(!tsickle_vscode_8.WebviewView|!tsickle_vscode_8.WebviewPanel)} webviewView
      * @param {string} type
@@ -1072,20 +1198,11 @@ class ExtensionApiImpl {
                 'userAction': true,
             });
         })), view.api.onWebviewFocused((/**
-         * @return {!Promise<void>}
+         * @return {void}
          */
-        async () => {
+        () => {
             this.editorStateWatcher.webviewFocused();
             this.setChatFocused(true);
-            if (view.type !== 'main') {
-                return;
-            }
-            try {
-                await view.api.sendCommand({ commandId: 'focusInput' });
-            }
-            catch (e) {
-                console.warn('[ExtensionAPI] Failed to focus input in webview:', e);
-            }
         })));
         if ('onDidChangeVisibility' in webviewView &&
             typeof (/** @type {!tsickle_vscode_8.WebviewView} */ (webviewView)).onDidChangeVisibility === 'function') {
@@ -1355,8 +1472,10 @@ class ExtensionApiImpl {
             throw new Error('Notebook execution is not supported in this environment.');
         }
         try {
+            /** @type {string} */
+            const ciderNotebookUri = (0, workspace_1.toCiderWebclientUri)(request.notebookUri).toString();
             /** @type {!Array<!tsickle_delegate_interfaces_10.CellExecutionOutput>} */
-            const outputs = await this.notebookExecutor.executeNotebookCells(request.notebookUri, request.cellIds ?? []);
+            const outputs = await this.notebookExecutor.executeNotebookCells(ciderNotebookUri, request.cellIds ?? []);
             return (0, protobuf_1.create)(iframe_messages_pb_1.ExecuteNotebookCellsResponseSchema, {
                 result: {
                     case: 'executionResult',
@@ -1388,8 +1507,8 @@ class ExtensionApiImpl {
         if (request.fileUri) {
             try {
                 /** @type {!tsickle_vscode_8.Uri} */
-                const uri = vscode.Uri.parse(request.fileUri);
-                if (this.isWorkspaceRoot(uri)) {
+                const uri = (0, workspace_1.toCiderWebclientUri)(request.fileUri);
+                if (isWorkspaceRoot(uri)) {
                     await this.changeWorkspace((0, protobuf_1.create)(iframe_messages_pb_1.ChangeWorkspaceRequestSchema, {
                         workspaceUri: request.fileUri,
                     }));
@@ -1417,8 +1536,27 @@ class ExtensionApiImpl {
                     await this.openVirtualDiff(request.fileUri, diffDetails.originalContents, diffDetails.modifiedContents, `Diff: ${request.fileUri.substring(request.fileUri.lastIndexOf('/') + 1)} (Resolved)`);
                     return {};
                 }
+                // When Jetski runs an agent in a linked worktree, file links in chat point
+                // to that worktree CitC workspace. Because Cider only mounts the active
+                // workspace, opening worktree URIs directly fails with "nonexistent file".
+                // Attempt to resolve the worktree URI into an accessible URI for the active
+                // editor (e.g. a jj-commits:// URI pointing to the agent's commit).
+                /** @type {!tsickle_vscode_8.Uri} */
+                const targetUri = (await this.workspaceManager?.resolveFileUri?.(uri)) ?? uri;
+                // Open the resolved target URI. If opening the resolved URI fails (e.g.
+                // the commit is unavailable or unreadable), fall back to opening the
+                // original URI.
                 /** @type {!tsickle_vscode_8.TextDocument} */
-                const doc = await vscode.workspace.openTextDocument(uri);
+                let doc;
+                try {
+                    doc = await vscode.workspace.openTextDocument(targetUri);
+                }
+                catch (openErr) {
+                    if (targetUri.toString() === uri.toString()) {
+                        throw openErr;
+                    }
+                    doc = await vscode.workspace.openTextDocument(uri);
+                }
                 /** @type {!tsickle_vscode_8.TextDocumentShowOptions} */
                 const options = { preview: true };
                 if (request.line > 0) {
@@ -1430,26 +1568,11 @@ class ExtensionApiImpl {
             }
             catch (e) {
                 console.error(`[Jetski] Failed to open file: ${request.fileUri}`, e);
+                void vscode.window.showWarningMessage(`Unable to open ${request.fileUri}: ${e instanceof Error ? (/** @type {!Error} */ (e)).message : String(e)}`);
                 throw e;
             }
         }
         return {};
-    }
-    /**
-     * @private
-     * @param {!tsickle_vscode_8.Uri} uri
-     * @return {boolean}
-     */
-    isWorkspaceRoot(uri) {
-        /** @type {string} */
-        const path = uri.path;
-        // CitC: /google/src/cloud/user/workspace(/google3)?
-        /** @type {!RegExp} */
-        const citcRegex = /^\/google\/src\/cloud\/[^/]+\/[^/]+(\/google3)?\/?$/;
-        // Cog: /google/cog/cloud/user/workspace
-        /** @type {!RegExp} */
-        const cogRegex = /^\/google\/cog\/cloud\/[^/]+\/[^/]+\/?$/;
-        return citcRegex.test(path) || cogRegex.test(path);
     }
     /**
      * Opens an Artifact custom editor tab for a given file URI.
@@ -1583,9 +1706,9 @@ class ExtensionApiImpl {
         if (request.originalUri && request.modifiedUri) {
             try {
                 /** @type {!tsickle_vscode_8.Uri} */
-                const original = vscode.Uri.parse(request.originalUri);
+                const original = (0, workspace_1.toCiderWebclientUri)(request.originalUri);
                 /** @type {!tsickle_vscode_8.Uri} */
-                const modified = vscode.Uri.parse(request.modifiedUri);
+                const modified = (0, workspace_1.toCiderWebclientUri)(request.modifiedUri);
                 /** @type {string} */
                 const title = request.title ?? 'Diff';
                 await vscode.commands.executeCommand('vscode.diff', original, modified, title);
@@ -1907,7 +2030,7 @@ class ExtensionApiImpl {
      * @return {(!Promise<{success: boolean, errorMessage: (undefined|string)}>|{success: boolean, errorMessage: undefined}|{success: boolean, errorMessage: string})}
      */
     resolveConnection(request) {
-        /** @type {!tsickle_util_15.OutputChannelWithNetwork} */
+        /** @type {!tsickle_util_16.OutputChannelWithNetwork} */
         const log = (0, util_1.getOutputChannel)();
         log.appendLine(`[ExtensionApi] resolveConnection called with type: ${request.type}`);
         if (request.type === iframe_messages_pb_1.ConnectionResolutionType.RECONNECT) {
@@ -1947,7 +2070,19 @@ class ExtensionApiImpl {
         /** @type {!Array<!tsickle_jetski_instance_12.JetskiInstance>} */
         const viewsToNotify = targetView ? [targetView] : this.views;
         for (const view of viewsToNotify) {
-            void view.api.setContextCategories({ categories });
+            void view.api.setContextCategories({ categories }).catch((/**
+             * @param {*} e
+             * @return {void}
+             */
+            (e) => {
+                // Ignore NotFound: the webview may not have registered the handler yet
+                // during initial startup/focus, or the view does not support this RPC method
+                // (e.g. non-chat views or version skew). Once ready, the webview pulls categories.
+                if (connect_1.ConnectError.from(e).code === connect_1.Code.NotFound) {
+                    return;
+                }
+                throw e;
+            }));
         }
     }
     /**
@@ -2143,7 +2278,7 @@ if (false) {
      */
     ExtensionApiImpl.prototype.workspaceManager;
     /**
-     * @type {(undefined|!tsickle_terminal_panel_provider_16.TerminalPanelProvider)}
+     * @type {(undefined|!tsickle_terminal_panel_provider_17.TerminalPanelProvider)}
      * @private
      */
     ExtensionApiImpl.prototype.terminalPanelProvider;
@@ -2154,7 +2289,7 @@ if (false) {
      *    prior to opening the settings tab, preserving a canonical URI without query params.
      * 2. Dynamically update an already-open Settings panel in-place when navigation requests
      *    arrive, avoiding duplicate editor tabs in VS Code.
-     * @type {(undefined|!tsickle_settings_editor_provider_14.SettingsEditorProvider)}
+     * @type {(undefined|!tsickle_settings_editor_provider_15.SettingsEditorProvider)}
      * @private
      */
     ExtensionApiImpl.prototype.settingsEditorProvider;

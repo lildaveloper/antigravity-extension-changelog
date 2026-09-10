@@ -639,6 +639,10 @@ class InlineDiffManager {
             clearTimeout(this.refreshTimeout);
             this.refreshTimeout = undefined;
         }
+        if (this.gitRefreshTimeout) {
+            clearTimeout(this.gitRefreshTimeout);
+            this.gitRefreshTimeout = undefined;
+        }
         this.cleanUpAll()
             .then((/**
          * @return {void}
@@ -696,45 +700,51 @@ class InlineDiffManager {
     async refreshGitAndGitLens(targetUri) {
         /** @type {(undefined|!tsickle_vscode_1.Uri)} */
         const docUri = targetUri ?? vscode.window?.activeTextEditor?.document?.uri;
-        /** @type {function(): !Promise<void>} */
-        const refresh = (/**
+        try {
+            await vscode.commands.executeCommand('gitlens.clearFileAnnotations');
+        }
+        catch { }
+        if (hasOpenGitRepositories()) {
+            try {
+                await vscode.commands.executeCommand('git.refresh');
+            }
+            catch {
+                // git.refresh may fail if the repository is busy or locked; safe to ignore.
+            }
+        }
+        if (this.gitRefreshTimeout) {
+            clearTimeout(this.gitRefreshTimeout);
+            this.gitRefreshTimeout = undefined;
+        }
+        this.gitRefreshTimeout = setTimeout((/**
          * @return {!Promise<void>}
          */
         async () => {
-            try {
-                await vscode.commands.executeCommand('gitlens.clearFileAnnotations');
-            }
-            catch { }
+            this.gitRefreshTimeout = undefined;
             if (hasOpenGitRepositories()) {
                 try {
                     await vscode.commands.executeCommand('git.refresh');
                 }
-                catch {
-                    // git.refresh may fail if the repository is busy or locked; safe to ignore.
-                }
+                catch { }
             }
             if (docUri) {
                 await this.touchGitIndexForUri(docUri);
             }
-        });
-        await refresh();
-        setTimeout((/**
-         * @return {void}
-         */
-        () => {
-            void refresh();
-        }), 150);
+        }), 100);
     }
     // Updates the modification time of .git/index if the document is inside a Git repository.
     // This notifies GitLens's repository index watcher to invalidate in-memory blame snapshots,
     // preventing GitLens from attributing newly inserted lines to historical commits.
     /**
-     * @private
+     * @public
      * @param {(undefined|!tsickle_vscode_1.Uri)=} targetUri
      * @return {!Promise<void>}
      */
     async touchGitIndexForUri(targetUri) {
-        if (!targetUri || targetUri.scheme !== 'file' || !vscode.workspace?.fs) {
+        if (!targetUri ||
+            targetUri.scheme !== 'file' ||
+            !isGitLensActive() ||
+            !vscode.workspace?.fs) {
             return;
         }
         try {
@@ -756,9 +766,7 @@ class InlineDiffManager {
                     if (stat.type & vscode.FileType.Directory) {
                         /** @type {!tsickle_vscode_1.Uri} */
                         const indexUri = vscode.Uri.joinPath(gitUri, 'index');
-                        /** @type {!Uint8Array} */
-                        const data = await vscode.workspace.fs.readFile(indexUri);
-                        await vscode.workspace.fs.writeFile(indexUri, data);
+                        await safeTouchFile(indexUri);
                         return;
                     }
                     else if (stat.type & vscode.FileType.File) {
@@ -776,9 +784,7 @@ class InlineDiffManager {
                                 : vscode.Uri.joinPath(cur, gitdirStr);
                             /** @type {!tsickle_vscode_1.Uri} */
                             const indexUri = vscode.Uri.joinPath(resolvedGitDir, 'index');
-                            /** @type {!Uint8Array} */
-                            const data = await vscode.workspace.fs.readFile(indexUri);
-                            await vscode.workspace.fs.writeFile(indexUri, data);
+                            await safeTouchFile(indexUri);
                             return;
                         }
                     }
@@ -1106,6 +1112,11 @@ if (false) {
      */
     InlineDiffManager.prototype.refreshTimeout;
     /**
+     * @type {(undefined|number)}
+     * @private
+     */
+    InlineDiffManager.prototype.gitRefreshTimeout;
+    /**
      * @const {!DiffStyles}
      * @private
      */
@@ -1245,3 +1256,75 @@ function hasOpenGitRepositories() {
         return false;
     }
 }
+/**
+ * Checks whether GitLens is installed and active in the current editor session.
+ * @return {boolean}
+ */
+function isGitLensActive() {
+    try {
+        /** @type {(undefined|!tsickle_vscode_1.Extension<?>)} */
+        const gitLens = vscode.extensions?.getExtension('eamodio.gitlens');
+        return Boolean(gitLens?.isActive);
+    }
+    catch {
+        return false;
+    }
+}
+/**
+ * @record
+ */
+function NodeFsPromises() { }
+/* istanbul ignore if */
+if (false) {
+    /**
+     * @public
+     * @param {string} path
+     * @param {(string|number|!Date)} atime
+     * @param {(string|number|!Date)} mtime
+     * @return {!Promise<void>}
+     */
+    NodeFsPromises.prototype.utimes = function (path, atime, mtime) { };
+}
+/**
+ * @record
+ */
+function NodeFs() { }
+/* istanbul ignore if */
+if (false) {
+    /**
+     * @type {(undefined|!NodeFsPromises)}
+     * @public
+     */
+    NodeFs.prototype.promises;
+}
+/**
+ * Safely touches a file's access and modification timestamps without opening or
+ * truncating the file contents. Gracefully no-ops in non-Node environments.
+ * @param {!tsickle_vscode_1.Uri} uri
+ * @return {!Promise<void>}
+ */
+async function safeTouchFile(uri) {
+    if (uri.scheme !== 'file') {
+        return;
+    }
+    try {
+        // tslint:disable-next-line:no-require-imports
+        /** @type {(undefined|function(string): *)} */
+        const req = typeof require === 'function' ? require : undefined;
+        /** @type {(undefined|!NodeFs)} */
+        const fs = req ? ((/** @type {(undefined|!NodeFs)} */ (req('fs')))) : undefined;
+        if (fs?.promises?.utimes) {
+            /** @type {!Date} */
+            const now = new Date();
+            await fs.promises.utimes(uri.fsPath, now, now);
+        }
+    }
+    catch {
+        // Best-effort timestamp update; ignore if file is inaccessible or locked.
+    }
+}
+/** @type {{isGitLensActive: function(): boolean, safeTouchFile: function(!tsickle_vscode_1.Uri): !Promise<void>}} */
+exports.TEST_ONLY = {
+    isGitLensActive,
+    safeTouchFile,
+};

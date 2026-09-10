@@ -144,13 +144,21 @@ class JetskiInstance {
      * @return {void}
      */
     focus() {
+        this.show({ preserveFocus: false });
+    }
+    /**
+     * @public
+     * @param {{preserveFocus: (undefined|boolean)}=} __0
+     * @return {void}
+     */
+    show({ preserveFocus = false } = {}) {
         if ('reveal' in this.view) {
             // WebviewPanel
-            (/** @type {!tsickle_vscode_1.WebviewPanel} */ (this.view)).reveal();
+            (/** @type {!tsickle_vscode_1.WebviewPanel} */ (this.view)).reveal(undefined, preserveFocus);
         }
         else {
             // WebviewView
-            (/** @type {!tsickle_vscode_1.WebviewView} */ (this.view)).show();
+            (/** @type {!tsickle_vscode_1.WebviewView} */ (this.view)).show(preserveFocus);
         }
     }
     /**

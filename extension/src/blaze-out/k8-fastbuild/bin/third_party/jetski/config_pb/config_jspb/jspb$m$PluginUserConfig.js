@@ -9,14 +9,17 @@
 goog.provide('jspb$exa$config_pb$MutablePluginUserConfig');
 goog.provide('jspb$ro.exa$config_pb$ReadonlyPluginUserConfig');
 
+goog.require('jspb$exa$config_pb$MutablePluginMcpUserConfig');
 goog.require('jspb$exa$cortex_pb$MutableMarketplaceInstall');
 goog.require('jspb_internal_adapters');
 goog.require('jspb_internal_public_for_gencode');
 /** @suppress {extraRequire} */
 goog.requireType('google3.javascript.apps.jspb.internal_records');
 goog.requireType('google3.javascript.common.asserts.asserts');
+goog.requireType('jspb$exa$config_pb$ImmutablePluginMcpUserConfig');
 goog.requireType('jspb$exa$config_pb$ImmutablePluginUserConfig');
 goog.requireType('jspb$r$exa$config_pb$PluginUserConfig$internalDoNotUseReader');
+goog.requireType('jspb$ro.exa$config_pb$ReadonlyPluginMcpUserConfig');
 goog.requireType('jspb$ro.exa$cortex_pb$ReadonlyMarketplaceInstall');
 
 /**
@@ -154,6 +157,74 @@ jspb$exa$config_pb$MutablePluginUserConfig = class extends jspb_internal_public_
   }
 
 
+  /**
+   * map<string, PluginMcpUserConfig> mcp = 3;
+   * @override
+   * @return {!Map<string,!jspb$exa$config_pb$MutablePluginMcpUserConfig>}
+   */
+  getMcpMap() {
+    return jspb_internal_adapters.getStringWrapperMapField(this, 3,
+        jspb$exa$config_pb$MutablePluginMcpUserConfig);}
+
+
+
+  /**
+   * map<string, PluginMcpUserConfig> mcp = 3;
+   * @override
+   * @return {!Map<string,!jspb$ro.exa$config_pb$ReadonlyPluginMcpUserConfig>}
+   */
+  getReadonlyMcpMap() {
+    return jspb_internal_adapters.getReadonlyStringWrapperMapField(this, 3,
+        jspb$exa$config_pb$MutablePluginMcpUserConfig);}
+
+
+
+  /**
+   * @param {string} key The key of value to set or replace.
+   * @param {!jspb$ro.exa$config_pb$ReadonlyPluginMcpUserConfig} value The new value.
+   * @return {!jspb$exa$config_pb$MutablePluginUserConfig} returns this
+   */
+  putMcp(key, value) {
+    return jspb_internal_adapters.putStringWrapperMapField(this, 3, key, value, jspb$exa$config_pb$MutablePluginMcpUserConfig);
+  }
+
+
+  /**
+   * @param {!ReadonlyMap<string,!jspb$ro.exa$config_pb$ReadonlyPluginMcpUserConfig>} value The new values.
+   * @return {!jspb$exa$config_pb$MutablePluginUserConfig} returns this
+   */
+  putAllMcp(value) {
+    return jspb_internal_adapters.putAllStringWrapperMapField(this, 3, value, jspb$exa$config_pb$MutablePluginMcpUserConfig);
+  }
+
+
+  /**
+   * @param {!ReadonlyMap<string,!jspb$ro.exa$config_pb$ReadonlyPluginMcpUserConfig>|undefined} value The new values.
+   * @return {!jspb$exa$config_pb$MutablePluginUserConfig} returns this
+   */
+  setMcpMap(value) {
+    return jspb_internal_adapters.setStringWrapperMapField(this, 3, value, jspb$exa$config_pb$MutablePluginMcpUserConfig);
+  }
+
+
+  /**
+   * @param {string} key The key of value to remove.
+   * @return {!jspb$exa$config_pb$MutablePluginUserConfig} returns this
+   */
+  deleteMcp(key) {
+    return jspb_internal_adapters.deleteStringWrapperMapField(this, 3, key, jspb$exa$config_pb$MutablePluginMcpUserConfig);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$exa$config_pb$MutablePluginUserConfig} returns this
+   */
+  clearMcpMap() {
+    return jspb_internal_adapters.clearMapField(this, 3);
+  }
+
+
 };
 
 /**
@@ -181,7 +252,8 @@ jspb$exa$config_pb$MutablePluginUserConfig.hasInstance = /** @pureOrBreakMyCode 
  * Object form of PluginUserConfig as accepted by the `fromObject` method.
  * @typedef {{
  *  enabled: (?boolean|undefined),
- *  installedFrom: (?jspb$exa$cortex_pb$MutableMarketplaceInstall.ObjectFormat|undefined)
+ *  installedFrom: (?jspb$exa$cortex_pb$MutableMarketplaceInstall.ObjectFormat|undefined),
+ *  mcpMap: (?Array<!Array<!jspb$exa$config_pb$MutablePluginMcpUserConfig.ObjectFormat|string>>|undefined)
  * }}
  */
 jspb$exa$config_pb$MutablePluginUserConfig.ObjectFormat;
@@ -241,7 +313,8 @@ if (goog.DEBUG && !COMPILED) {
  * Interface form of PluginUserConfig as accepted by `fromFields` and produced by `getFields`.
  * @typedef {{
  *  enabled: (boolean|undefined),
- *  installedFrom: (!jspb$ro.exa$cortex_pb$ReadonlyMarketplaceInstall|undefined)
+ *  installedFrom: (!jspb$ro.exa$cortex_pb$ReadonlyMarketplaceInstall|undefined),
+ *  mcpMap: (!ReadonlyMap<string,!jspb$ro.exa$config_pb$ReadonlyPluginMcpUserConfig>|!ReadonlyMap<string,!jspb$exa$config_pb$ImmutablePluginMcpUserConfig>|undefined)
  * }}
  */
 jspb$exa$config_pb$MutablePluginUserConfig.FieldsInterface;

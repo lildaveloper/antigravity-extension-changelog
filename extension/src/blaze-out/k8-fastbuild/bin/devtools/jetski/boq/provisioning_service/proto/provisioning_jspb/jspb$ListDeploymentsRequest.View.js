@@ -16,3 +16,9 @@ jspb$e.devtools_jetski_provisioning$ListDeploymentsRequest$View = {
   ACTIVE_ONLY: 1,
   ALL: 2
 };
+
+
+var jspb$devtools_jetski_provisioning$MutableListDeploymentsRequest;
+Object.defineProperty(this, 'jspb$devtools_jetski_provisioning$MutableListDeploymentsRequest', {
+  get() { return jspb$devtools_jetski_provisioning$MutableListDeploymentsRequest; },
+  set(v) { jspb$devtools_jetski_provisioning$MutableListDeploymentsRequest = v; },

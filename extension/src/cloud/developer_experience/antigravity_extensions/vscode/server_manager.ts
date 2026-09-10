@@ -15,16 +15,18 @@ goog.module('google3.cloud.developer_experience.antigravity_extensions.vscode.se
 var module = module || { id: 'cloud/developer_experience/antigravity_extensions/vscode/server_manager.closure.js' };
 goog.require('google3.third_party.javascript.tslib.tslib');
 const tsickle_child_process_1 = goog.requireType("google3.third_party.javascript.typings.node.node.child_process");
-const tsickle_delegate_interfaces_2 = goog.requireType("google3.devtools.cider.extensions.jetski.delegate_interfaces");
-const tsickle_loading_message_impl_3 = goog.requireType("google3.devtools.cider.extensions.jetski.loading.loading_message_impl");
-const tsickle_http_4 = goog.requireType("google3.third_party.javascript.typings.node.node.http");
-const tsickle_net_5 = goog.requireType("google3.third_party.javascript.typings.node.node.net");
-const tsickle_os_6 = goog.requireType("google3.third_party.javascript.typings.node.node.os");
-const tsickle_readline_7 = goog.requireType("google3.third_party.javascript.typings.node.node.readline");
-const tsickle_vscode_8 = goog.requireType("vscode");
-const tsickle_binary_downloader_9 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.binary_downloader");
-const tsickle_telemetry_constants_10 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.telemetry_constants");
+const tsickle_fs_2 = goog.requireType("google3.third_party.javascript.typings.node.node.fs");
+const tsickle_delegate_interfaces_3 = goog.requireType("google3.devtools.cider.extensions.jetski.delegate_interfaces");
+const tsickle_loading_message_impl_4 = goog.requireType("google3.devtools.cider.extensions.jetski.loading.loading_message_impl");
+const tsickle_http_5 = goog.requireType("google3.third_party.javascript.typings.node.node.http");
+const tsickle_net_6 = goog.requireType("google3.third_party.javascript.typings.node.node.net");
+const tsickle_os_7 = goog.requireType("google3.third_party.javascript.typings.node.node.os");
+const tsickle_readline_8 = goog.requireType("google3.third_party.javascript.typings.node.node.readline");
+const tsickle_vscode_9 = goog.requireType("vscode");
+const tsickle_binary_downloader_10 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.binary_downloader");
+const tsickle_telemetry_constants_11 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.telemetry_constants");
 const child_process_1 = goog.require('google3.third_party.javascript.typings.node.node.child_process');
+const fs = goog.require('google3.third_party.javascript.typings.node.node.fs');
 const http = goog.require('google3.third_party.javascript.typings.node.node.http');
 const net = goog.require('google3.third_party.javascript.typings.node.node.net');
 const os = goog.require('google3.third_party.javascript.typings.node.node.os');
@@ -33,6 +35,134 @@ const vscode = goog.require('vscode'); // from //third_party/javascript/typings/
 // from //third_party/javascript/typings/vscode
 const binary_downloader_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.binary_downloader');
 const telemetry_constants_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.telemetry_constants');
+/**
+ * Known system CA bundle paths by platform in order of priority.
+ * @type {!Array<string>}
+ */
+exports.LINUX_SYSTEM_CA_PATHS = [
+    '/etc/ssl/certs/ca-certificates.crt', // Debian/Ubuntu/Gentoo/glinux
+    '/etc/pki/tls/certs/ca-bundle.crt', // Fedora/RHEL/CentOS
+    '/etc/ssl/ca-bundle.pem', // OpenSUSE
+    '/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem', // Alpine / newer RHEL
+];
+/**
+ * Default system CA bundle path on macOS (LibreSSL / Keychain export).
+ * @type {string}
+ */
+exports.MACOS_SYSTEM_CA_PATH = '/etc/ssl/cert.pem';
+/**
+ * Resolves the default OS root CA certificate bundle path if present.
+ * @param {string=} platform
+ * @param {function(string): boolean=} fsExists
+ * @return {(undefined|string)}
+ */
+function resolveSystemCaBundlePath(platform = process.platform, fsExists = fs.existsSync) {
+    if (platform === 'darwin') {
+        if (fsExists(exports.MACOS_SYSTEM_CA_PATH)) {
+            return exports.MACOS_SYSTEM_CA_PATH;
+        }
+    }
+    else if (platform === 'linux') {
+        for (const candidate of exports.LINUX_SYSTEM_CA_PATHS) {
+            if (fsExists(candidate)) {
+                return candidate;
+            }
+        }
+    }
+    return undefined;
+}
+exports.resolveSystemCaBundlePath = resolveSystemCaBundlePath;
+/**
+ * Initializes security environment variables (such as OS CA certificates) in the current
+ * extension host process so outbound network requests (e.g. manifest/binary downloads)
+ * succeed behind corporate TLS inspection proxies (e.g. Zscaler).
+ * @param {string=} platform
+ * @param {function(string): boolean=} fsExists
+ * @return {void}
+ */
+function initializeHostSecurityEnvironment(platform = process.platform, fsExists = fs.existsSync) {
+    /** @type {(undefined|string)} */
+    const systemCaPath = resolveSystemCaBundlePath(platform, fsExists);
+    if (systemCaPath) {
+        if (!process.env['NODE_EXTRA_CA_CERTS']) {
+            process.env['NODE_EXTRA_CA_CERTS'] = systemCaPath;
+        }
+        if (!process.env['SSL_CERT_FILE']) {
+            process.env['SSL_CERT_FILE'] = systemCaPath;
+        }
+    }
+    if (!process.env['NODE_USE_SYSTEM_CA'] &&
+        (platform === 'darwin' || platform === 'win32')) {
+        process.env['NODE_USE_SYSTEM_CA'] = '1';
+    }
+}
+exports.initializeHostSecurityEnvironment = initializeHostSecurityEnvironment;
+/**
+ * Builds the process environment for launching the Antigravity backend language server,
+ * propagating system proxy configurations and OS root CA certificates for corporate ZTNA/TLS inspection.
+ * @param {(undefined|{baseEnv: (undefined|?), configOverride: (undefined|!tsickle_vscode_9.WorkspaceConfiguration), platform: (undefined|string), fsExists: (undefined|function(string): boolean)})=} options
+ * @return {?}
+ */
+function buildServerEnvironment(options) {
+    const baseEnv = options?.baseEnv ?? process.env;
+    /** @type {string} */
+    const platform = options?.platform ?? process.platform;
+    /** @type {function(string): boolean} */
+    const fsExists = options?.fsExists ?? fs.existsSync;
+    /** @type {!tsickle_vscode_9.WorkspaceConfiguration} */
+    const httpConfig = options?.configOverride ?? vscode.workspace.getConfiguration('http');
+    const env = {
+        ...baseEnv,
+        ['HOME']: os.homedir(),
+        ['USERPROFILE']: os.homedir(),
+        ['AGY_ENABLE_HUB']: '1',
+        ['ANTIGRAVITY_VSCODE_HOST']: '1',
+        ['ANTIGRAVITY_AUTH_SUCCESS_APP']: vscode.env.uriScheme || 'vscode',
+    };
+    // 1. HTTP / HTTPS Proxy configuration propagation
+    /** @type {*} */
+    const rawProxy = httpConfig?.get('proxy');
+    /** @type {(undefined|string)} */
+    const proxySetting = typeof rawProxy === 'string' ? (/** @type {string} */ (rawProxy)).trim() : undefined;
+    if (proxySetting) {
+        if (!env['HTTP_PROXY'] && !env['http_proxy']) {
+            env['HTTP_PROXY'] = proxySetting;
+            env['http_proxy'] = proxySetting;
+        }
+        if (!env['HTTPS_PROXY'] && !env['https_proxy']) {
+            env['HTTPS_PROXY'] = proxySetting;
+            env['https_proxy'] = proxySetting;
+        }
+    }
+    /** @type {*} */
+    const rawNoProxy = httpConfig?.get('noProxy');
+    /** @type {(undefined|string)} */
+    const noProxySetting = typeof rawNoProxy === 'string' ? (/** @type {string} */ (rawNoProxy)).trim() : undefined;
+    if (noProxySetting) {
+        if (!env['NO_PROXY'] && !env['no_proxy']) {
+            env['NO_PROXY'] = noProxySetting;
+            env['no_proxy'] = noProxySetting;
+        }
+    }
+    // 2. OS Root CA Certificate propagation (for Zscaler/ZTNA SSL inspection)
+    /** @type {(undefined|string)} */
+    const systemCaPath = resolveSystemCaBundlePath(platform, fsExists);
+    if (systemCaPath) {
+        if (!env['NODE_EXTRA_CA_CERTS']) {
+            env['NODE_EXTRA_CA_CERTS'] = systemCaPath;
+        }
+        if (!env['SSL_CERT_FILE']) {
+            env['SSL_CERT_FILE'] = systemCaPath;
+        }
+    }
+    // 3. Node system CA flag for Node.js runtimes
+    if (!env['NODE_USE_SYSTEM_CA'] &&
+        (platform === 'darwin' || platform === 'win32')) {
+        env['NODE_USE_SYSTEM_CA'] = '1';
+    }
+    return env;
+}
+exports.buildServerEnvironment = buildServerEnvironment;
 /**
  * Allocates a free ephemeral loopback port (127.0.0.1).
  * @return {!Promise<number>}
@@ -84,25 +214,25 @@ exports.ServerStartOptions = ServerStartOptions;
 if (false) {
     /**
      * The active VS Code extension context.
-     * @type {!tsickle_vscode_8.ExtensionContext}
+     * @type {!tsickle_vscode_9.ExtensionContext}
      * @public
      */
     ServerStartOptions.prototype.context;
     /**
      * Optional loading notifier to report progress status.
-     * @type {(undefined|!tsickle_loading_message_impl_3.MessageNotifierImpl)}
+     * @type {(undefined|!tsickle_loading_message_impl_4.MessageNotifierImpl)}
      * @public
      */
     ServerStartOptions.prototype.messageNotifier;
     /**
      * Optional workspace configuration override (primarily used in tests).
-     * @type {(undefined|!tsickle_vscode_8.WorkspaceConfiguration)}
+     * @type {(undefined|!tsickle_vscode_9.WorkspaceConfiguration)}
      * @public
      */
     ServerStartOptions.prototype.configOverride;
     /**
      * Optional telemetry service to log start duration (`duration_ms`) and failure telemetry.
-     * @type {(undefined|!tsickle_delegate_interfaces_2.Telemetry)}
+     * @type {(undefined|!tsickle_delegate_interfaces_3.Telemetry)}
      * @public
      */
     ServerStartOptions.prototype.telemetry;
@@ -176,9 +306,9 @@ class AntigravityServerManager {
     /**
      * Executes the Dynamic Auto-Installation state machine via `binary_downloader.ts`.
      * @public
-     * @param {!tsickle_vscode_8.ExtensionContext} context
-     * @param {(undefined|!tsickle_vscode_8.Progress<{message: (undefined|string), increment: (undefined|number)}>)=} progress
-     * @param {(undefined|!tsickle_vscode_8.WorkspaceConfiguration)=} configOverride
+     * @param {!tsickle_vscode_9.ExtensionContext} context
+     * @param {(undefined|!tsickle_vscode_9.Progress<{message: (undefined|string), increment: (undefined|number)}>)=} progress
+     * @param {(undefined|!tsickle_vscode_9.WorkspaceConfiguration)=} configOverride
      * @return {!Promise<string>}
      */
     async acquireInstalledBinaryPath(context, progress, configOverride) {
@@ -196,8 +326,8 @@ class AntigravityServerManager {
     /**
      * Resolves the Antigravity language server executable path via the Auto-Install approach (`~/.gemini/bin/agy`).
      * @public
-     * @param {!tsickle_vscode_8.ExtensionContext} context
-     * @param {(undefined|!tsickle_vscode_8.WorkspaceConfiguration)=} configOverride
+     * @param {!tsickle_vscode_9.ExtensionContext} context
+     * @param {(undefined|!tsickle_vscode_9.WorkspaceConfiguration)=} configOverride
      * @return {!Promise<string>}
      */
     async acquireBinaryPath(context, configOverride) {
@@ -270,18 +400,18 @@ class AntigravityServerManager {
      * Starts the Antigravity backend language server (`agy --hub`).
      *
      * @public
-     * @param {(!tsickle_vscode_8.ExtensionContext|!ServerStartOptions)} optionsOrContext Either a ServerStartOptions object or the active VS Code extension context.
-     * @param {(undefined|!tsickle_loading_message_impl_3.MessageNotifierImpl)=} messageNotifier Optional loading notifier to report progress status (legacy parameter).
-     * @param {(undefined|!tsickle_vscode_8.WorkspaceConfiguration)=} configOverride Optional workspace configuration override (legacy parameter).
-     * @param {(undefined|!tsickle_delegate_interfaces_2.Telemetry)=} telemetry Optional telemetry service to log start duration (`duration_ms`) and failure telemetry (legacy parameter).
+     * @param {(!tsickle_vscode_9.ExtensionContext|!ServerStartOptions)} optionsOrContext Either a ServerStartOptions object or the active VS Code extension context.
+     * @param {(undefined|!tsickle_loading_message_impl_4.MessageNotifierImpl)=} messageNotifier Optional loading notifier to report progress status (legacy parameter).
+     * @param {(undefined|!tsickle_vscode_9.WorkspaceConfiguration)=} configOverride Optional workspace configuration override (legacy parameter).
+     * @param {(undefined|!tsickle_delegate_interfaces_3.Telemetry)=} telemetry Optional telemetry service to log start duration (`duration_ms`) and failure telemetry (legacy parameter).
      * @return {!Promise<string>}
      */
     async start(optionsOrContext, messageNotifier, configOverride, telemetry) {
         /** @type {!ServerStartOptions} */
-        const options = typeof ((/** @type {!tsickle_vscode_8.ExtensionContext} */ (optionsOrContext))).subscriptions !==
+        const options = typeof ((/** @type {!tsickle_vscode_9.ExtensionContext} */ (optionsOrContext))).subscriptions !==
             'undefined'
             ? {
-                context: (/** @type {!tsickle_vscode_8.ExtensionContext} */ (optionsOrContext)),
+                context: (/** @type {!tsickle_vscode_9.ExtensionContext} */ (optionsOrContext)),
                 messageNotifier,
                 configOverride,
                 telemetry,
@@ -324,7 +454,7 @@ class AntigravityServerManager {
                     `--hub-port=${port}`,
                     '--app_data_dir=antigravity',
                 ];
-                /** @type {!ReadonlyArray<!tsickle_vscode_8.WorkspaceFolder>} */
+                /** @type {!ReadonlyArray<!tsickle_vscode_9.WorkspaceFolder>} */
                 const workspaceFolders = vscode.workspace.workspaceFolders ?? [];
                 for (const folder of workspaceFolders) {
                     if (folder?.uri?.fsPath) {
@@ -347,16 +477,12 @@ class AntigravityServerManager {
                 this.outputChannel?.appendLine(`[LAUNCH] Spawning ${binaryPath}${versionLog} ${args.join(' ')}`);
                 /** @type {string} */
                 const activeCwd = workspaceFolders[0]?.uri?.fsPath ?? context.extensionPath;
+                const serverEnv = buildServerEnvironment({
+                    configOverride: options.configOverride,
+                });
                 this.serverProcess = (0, child_process_1.spawn)(binaryPath, args, {
                     cwd: activeCwd,
-                    env: {
-                        ...process.env,
-                        ['HOME']: os.homedir(),
-                        ['USERPROFILE']: os.homedir(),
-                        ['AGY_ENABLE_HUB']: '1',
-                        ['ANTIGRAVITY_VSCODE_HOST']: '1',
-                        ['ANTIGRAVITY_AUTH_SUCCESS_APP']: vscode.env.uriScheme || 'vscode',
-                    },
+                    env: serverEnv,
                     stdio: ['ignore', 'pipe', 'pipe'],
                 });
                 if (this.serverProcess.stdout) {
@@ -378,7 +504,7 @@ class AntigravityServerManager {
                                     .trim();
                                 this.outputChannel?.appendLine(`[LAUNCH] Intercepted auth URL: ${url}`);
                                 try {
-                                    /** @type {!tsickle_vscode_8.Uri} */
+                                    /** @type {!tsickle_vscode_9.Uri} */
                                     const uri = vscode.Uri.parse(url);
                                     vscode.env.openExternal(uri).then((/**
                                      * @param {boolean} success
@@ -567,7 +693,7 @@ if (false) {
      */
     AntigravityServerManager.prototype.serverUrl;
     /**
-     * @type {(undefined|!tsickle_vscode_8.OutputChannel)}
+     * @type {(undefined|!tsickle_vscode_9.OutputChannel)}
      * @private
      */
     AntigravityServerManager.prototype.outputChannel;

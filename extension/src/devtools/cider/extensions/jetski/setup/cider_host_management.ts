@@ -15,11 +15,13 @@ goog.module('google3.devtools.cider.extensions.jetski.setup.cider_host_managemen
 var module = module || { id: 'devtools/cider/extensions/jetski/setup/cider_host_management.closure.js' };
 goog.require('google3.third_party.javascript.tslib.tslib');
 const tsickle_cider_1 = goog.requireType("google3.devtools.cider.extensions.cider");
-const tsickle_ListDeploymentsRequest_2 = goog.requireType("proto.devtools_jetski_provisioning.ListDeploymentsRequest");
-const tsickle_ListDeploymentsResponse_3 = goog.requireType("proto.devtools_jetski_provisioning.ListDeploymentsResponse");
-const tsickle_vscode_4 = goog.requireType("vscode");
-const tsickle_util_5 = goog.requireType("google3.devtools.cider.extensions.jetski.setup.util");
+const tsickle_workspace_2 = goog.requireType("google3.devtools.cider.extensionutils.workspace");
+const tsickle_ListDeploymentsRequest_3 = goog.requireType("proto.devtools_jetski_provisioning.ListDeploymentsRequest");
+const tsickle_ListDeploymentsResponse_4 = goog.requireType("proto.devtools_jetski_provisioning.ListDeploymentsResponse");
+const tsickle_vscode_5 = goog.requireType("vscode");
+const tsickle_util_6 = goog.requireType("google3.devtools.cider.extensions.jetski.setup.util");
 const cider_1 = goog.require('google3.devtools.cider.extensions.cider');
+const workspace_1 = goog.require('google3.devtools.cider.extensionutils.workspace');
 const goog_proto_devtools_jetski_provisioning_ListDeploymentsRequest_1 = goog.require('proto.devtools_jetski_provisioning.ListDeploymentsRequest');
 const goog_proto_devtools_jetski_provisioning_ListDeploymentsResponse_1 = goog.require('proto.devtools_jetski_provisioning.ListDeploymentsResponse');
 const provisioning_proto_1 = {};
@@ -109,8 +111,8 @@ function validateHostInput(value) {
 exports.validateHostInput = validateHostInput;
 /**
  * Updates the description of the webview view with the current host.
- * @param {(undefined|!tsickle_vscode_4.WebviewView|!tsickle_vscode_4.WebviewPanel)} view
- * @param {!Promise<!tsickle_util_5.ServerInfo>} serverInfo
+ * @param {(undefined|!tsickle_vscode_5.WebviewView|!tsickle_vscode_5.WebviewPanel)} view
+ * @param {!Promise<!tsickle_util_6.ServerInfo>} serverInfo
  * @return {!Promise<void>}
  */
 async function updateTitle(view, serverInfo) {
@@ -118,7 +120,7 @@ async function updateTitle(view, serverInfo) {
         return;
     }
     try {
-        /** @type {!tsickle_util_5.ServerInfo} */
+        /** @type {!tsickle_util_6.ServerInfo} */
         const info = await serverInfo;
         /** @type {string} */
         const host = info.humanReadable;
@@ -130,24 +132,24 @@ async function updateTitle(view, serverInfo) {
             if ((0, util_1.isInCider)()) {
                 // Cider V might not support 'description' in the sidebar, and shows "ContainerName: ViewTitle".
                 // Setting view.title to host results in "Jetski: <host>" which is cleaner than "Jetski: Jetski (<host>)".
-                (/** @type {!tsickle_vscode_4.WebviewView} */ (view)).title = host;
-                (/** @type {!tsickle_vscode_4.WebviewView} */ (view)).description = undefined;
+                (/** @type {!tsickle_vscode_5.WebviewView} */ (view)).title = host;
+                (/** @type {!tsickle_vscode_5.WebviewView} */ (view)).description = undefined;
             }
             else {
                 // VS Code Desktop supports 'description' for WebviewView, allowing a cleaner title.
-                (/** @type {!tsickle_vscode_4.WebviewView} */ (view)).title = 'Jetski';
-                (/** @type {!tsickle_vscode_4.WebviewView} */ (view)).description = host;
+                (/** @type {!tsickle_vscode_5.WebviewView} */ (view)).title = 'Jetski';
+                (/** @type {!tsickle_vscode_5.WebviewView} */ (view)).description = host;
             }
         }
         else {
             // WebviewPanel (editor tab)
-            (/** @type {!tsickle_vscode_4.WebviewPanel} */ (view)).title = `Jetski (${host})`;
+            (/** @type {!tsickle_vscode_5.WebviewPanel} */ (view)).title = `Jetski (${host})`;
         }
     }
     catch (e) {
         view.title = 'Jetski (Error)';
         if ('onDidChangeVisibility' in view) {
-            (/** @type {!tsickle_vscode_4.WebviewView} */ (view)).description = undefined;
+            (/** @type {!tsickle_vscode_5.WebviewView} */ (view)).description = undefined;
         }
     }
 }
@@ -157,14 +159,14 @@ exports.updateTitle = updateTitle;
  * @return {!Array<string>}
  */
 function getConnectorHosts() {
-    /** @type {!tsickle_vscode_4.WorkspaceConfiguration} */
+    /** @type {!tsickle_vscode_5.WorkspaceConfiguration} */
     const connectorConfig = vscode.workspace.getConfiguration('connector');
     return connectorConfig.get('hosts') || [];
 }
 exports.getConnectorHosts = getConnectorHosts;
 /**
- * @param {!tsickle_vscode_4.WorkspaceConfiguration} config
- * @param {!tsickle_vscode_4.ConfigurationTarget} target
+ * @param {!tsickle_vscode_5.WorkspaceConfiguration} config
+ * @param {!tsickle_vscode_5.ConfigurationTarget} target
  * @return {void}
  */
 function clearSettings(config, target) {
@@ -174,11 +176,17 @@ function clearSettings(config, target) {
 }
 /**
  * Executes the server configuration flow.
- * @param {!tsickle_vscode_4.ExtensionContext} context
+ * @param {!tsickle_vscode_5.ExtensionContext} context
  * @return {!Promise<void>}
  */
 async function configureServer(context) {
-    /** @type {!tsickle_vscode_4.WorkspaceConfiguration} */
+    /** @type {(undefined|!tsickle_workspace_2.RemoteWorkspaceInfo)} */
+    const remoteInfo = (0, workspace_1.getRemoteWorkspaceInfo)();
+    if (remoteInfo) {
+        void vscode.window.showInformationMessage(`Jetski server is automatically managed for remote host "${remoteInfo.host}".`);
+        return;
+    }
+    /** @type {!tsickle_vscode_5.WorkspaceConfiguration} */
     const config = vscode.workspace.getConfiguration('jetski-web');
     /** @type {boolean} */
     let workspaceActive = isWorkspaceScopeActive();
@@ -228,7 +236,7 @@ async function configureServer(context) {
             break;
         }
     }
-    /** @type {!tsickle_vscode_4.ConfigurationTarget} */
+    /** @type {!tsickle_vscode_5.ConfigurationTarget} */
     const target = workspaceActive
         ? vscode.ConfigurationTarget.Workspace
         : vscode.ConfigurationTarget.Global;
@@ -334,7 +342,7 @@ async function promptForHost(currentHost, message) {
  * @return {boolean}
  */
 function isWorkspaceScopeActive() {
-    /** @type {!tsickle_vscode_4.WorkspaceConfiguration} */
+    /** @type {!tsickle_vscode_5.WorkspaceConfiguration} */
     const config = vscode.workspace.getConfiguration('jetski-web');
     /** @type {(undefined|{key: string, defaultValue: (undefined|string), globalValue: (undefined|string), workspaceValue: (undefined|string), workspaceFolderValue: (undefined|string), defaultLanguageValue: (undefined|string), globalLanguageValue: (undefined|string), workspaceLanguageValue: (undefined|string), workspaceFolderLanguageValue: (undefined|string), languageIds: (undefined|!Array<string>)})} */
     const inspectHost = config.inspect('host');
@@ -349,7 +357,7 @@ function isWorkspaceScopeActive() {
 exports.isWorkspaceScopeActive = isWorkspaceScopeActive;
 /**
  * Returns the configuration target based on whether workspace scope is active.
- * @return {!tsickle_vscode_4.ConfigurationTarget}
+ * @return {!tsickle_vscode_5.ConfigurationTarget}
  */
 function getConfigurationTarget() {
     return isWorkspaceScopeActive()
@@ -368,12 +376,15 @@ exports.getConfigurationTarget = getConfigurationTarget;
  * @return {string}
  */
 function getHostname() {
-    /** @type {!tsickle_vscode_4.WorkspaceConfiguration} */
+    /** @type {(undefined|!tsickle_workspace_2.RemoteWorkspaceInfo)} */
+    const remoteInfo = (0, workspace_1.getRemoteWorkspaceInfo)();
+    if (remoteInfo) {
+        return parseHost(remoteInfo.host).hostname;
+    }
+    /** @type {!tsickle_vscode_5.WorkspaceConfiguration} */
     const config = vscode.workspace.getConfiguration('jetski-web');
     /** @type {(undefined|string)} */
     const serverUrl = config.get('serverUrl');
-    /** @type {(undefined|string)} */
-    const hostConfig = config.get('host') || config.get('cloudtopHost');
     if (serverUrl) {
         /** @type {string} */
         const host = (0, util_1.extractHost)(serverUrl);
@@ -381,9 +392,10 @@ function getHostname() {
             return host;
         }
     }
-    if (hostConfig) {
+    /** @type {(undefined|string)} */
+    const hostConfig = config.get('host') || config.get('cloudtopHost');
+    if (hostConfig)
         return parseHost(hostConfig).hostname;
-    }
     return 'localhost';
 }
 exports.getHostname = getHostname;
@@ -445,9 +457,9 @@ async function getActiveDeployments() {
         return activeDeploymentsCache.val;
     }
     try {
-        /** @type {!tsickle_ListDeploymentsRequest_2} */
+        /** @type {!tsickle_ListDeploymentsRequest_3} */
         const req = new provisioning_proto_1.ListDeploymentsRequest();
-        /** @type {!tsickle_ListDeploymentsResponse_3} */
+        /** @type {!tsickle_ListDeploymentsResponse_4} */
         const resp = await cider_1.cider.fe.call('jetski/listDeployments', provisioning_proto_1.ListDeploymentsResponse, req);
         /** @type {string} */
         const currentUser = cider_1.cider.auth.username;

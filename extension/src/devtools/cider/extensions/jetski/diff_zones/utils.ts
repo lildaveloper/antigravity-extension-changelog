@@ -14,7 +14,9 @@
 goog.module('google3.devtools.cider.extensions.jetski.diff_zones.utils');
 var module = module || { id: 'devtools/cider/extensions/jetski/diff_zones/utils.closure.js' };
 goog.require('google3.third_party.javascript.tslib.tslib');
-const tsickle_vscode_1 = goog.requireType("vscode");
+const tsickle_workspace_1 = goog.requireType("google3.devtools.cider.extensionutils.workspace");
+const tsickle_vscode_2 = goog.requireType("vscode");
+const workspace_1 = goog.require('google3.devtools.cider.extensionutils.workspace');
 const vscode = goog.require('vscode'); // from //devtools/cider/extensions:vscode
 // from //devtools/cider/extensions:vscode
 /**
@@ -27,20 +29,21 @@ function normalizeLineEndings(str) {
 }
 exports.normalizeLineEndings = normalizeLineEndings;
 /**
- * Normalizes the URI string using vscode.Uri.
+ * Normalizes the URI string using vscode.Uri, converting to Cider URI if in a
+ * remote workspace.
  * @param {string} uriStr
  * @return {string}
  */
 function normalizeUri(uriStr) {
     try {
-        /** @type {!tsickle_vscode_1.Uri} */
-        const parsed = vscode.Uri.parse(uriStr);
+        /** @type {!tsickle_vscode_2.Uri} */
+        const ciderUri = (0, workspace_1.toCiderWebclientUri)(uriStr);
         /** @type {string} */
-        const lowerScheme = parsed.scheme.toLowerCase();
-        if (parsed.scheme !== lowerScheme) {
-            return parsed.with({ scheme: lowerScheme }).toString();
+        const lowerScheme = ciderUri.scheme.toLowerCase();
+        if (ciderUri.scheme !== lowerScheme) {
+            return ciderUri.with({ scheme: lowerScheme }).toString();
         }
-        return parsed.toString();
+        return ciderUri.toString();
     }
     catch {
         return uriStr;
@@ -62,7 +65,7 @@ exports.isNotebook = isNotebook;
  * Checks activeTextEditor first, and falls back to visibleTextEditors if focus
  * is currently in another pane (e.g., side panel webview).
  * @param {string} fileUri
- * @return {(undefined|!tsickle_vscode_1.TextEditor)}
+ * @return {(undefined|!tsickle_vscode_2.TextEditor)}
  */
 function findEditorForUri(fileUri) {
     /** @type {string} */
@@ -73,7 +76,7 @@ function findEditorForUri(fileUri) {
         ? vscode.window.activeTextEditor
         : undefined) ??
         vscode.window.visibleTextEditors.find((/**
-         * @param {!tsickle_vscode_1.TextEditor} editor
+         * @param {!tsickle_vscode_2.TextEditor} editor
          * @return {boolean}
          */
         (editor) => normalizeUri(editor.document.uri.toString()) === normalizedUri)));

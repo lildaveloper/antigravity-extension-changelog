@@ -15,20 +15,29 @@ goog.module('google3.devtools.cider.extensions.jetski.editor_state_watcher');
 var module = module || { id: 'devtools/cider/extensions/jetski/editor_state_watcher.closure.js' };
 goog.require('google3.third_party.javascript.tslib.tslib');
 const tsickle_protobuf_1 = goog.requireType("google3.third_party.javascript.bufbuild_protobuf.src.index");
-const tsickle_iframe_messages_pb_2 = goog.requireType("google3.third_party.gemini_coder.proto.iframe_messages_pb");
-const tsickle_editor_state_protocol_3 = goog.requireType("google3.third_party.gemini_coder.agent_ui_toolkit.dev.extension.editor_state_protocol");
-const tsickle_vscode_4 = goog.requireType("vscode");
-const tsickle_jetski_instance_5 = goog.requireType("google3.devtools.cider.extensions.jetski.jetski_instance");
-const tsickle_notebook_utils_interface_6 = goog.requireType("google3.devtools.cider.extensions.jetski.notebook_utils_interface");
+const tsickle_connect_2 = goog.requireType("google3.third_party.javascript.connectrpc_connect.src.index");
+const tsickle_iframe_messages_pb_3 = goog.requireType("google3.third_party.gemini_coder.proto.iframe_messages_pb");
+const tsickle_workspace_4 = goog.requireType("google3.devtools.cider.extensionutils.workspace");
+const tsickle_editor_state_protocol_5 = goog.requireType("google3.third_party.gemini_coder.agent_ui_toolkit.dev.extension.editor_state_protocol");
+const tsickle_vscode_6 = goog.requireType("vscode");
+const tsickle_jetski_instance_7 = goog.requireType("google3.devtools.cider.extensions.jetski.jetski_instance");
+const tsickle_notebook_utils_interface_8 = goog.requireType("google3.devtools.cider.extensions.jetski.notebook_utils_interface");
 const protobuf_1 = goog.require('google3.third_party.javascript.bufbuild_protobuf.src.index');
+const connect_1 = goog.require('google3.third_party.javascript.connectrpc_connect.src.index'); // from //third_party/javascript/connectrpc_connect
+// from //third_party/javascript/connectrpc_connect
 const iframe_messages_pb_1 = goog.require('google3.third_party.gemini_coder.proto.iframe_messages_pb');
+const workspace_1 = goog.require('google3.devtools.cider.extensionutils.workspace');
 const vscode = goog.require('vscode'); // from //devtools/cider/extensions:vscode
 // Match the exact 500ms debounce interval used by Jetski desktop
 // (see third_party/vscode_ext/jetski/src/contextRefresh/contextRefreshListeners.ts).
 /** @type {number} */
 const REFRESH_CONTEXT_DEBOUNCE_TIME_MS = 500;
 /** @type {!Set<string>} */
-const SUPPORTED_SCHEMES = new Set(['file', 'vscode-notebook-cell']);
+const SUPPORTED_SCHEMES = new Set([
+    'file',
+    'vscode-notebook-cell',
+    'vscode-remote',
+]);
 /**
  * Configuration for the EditorStateWatcher.
  * @record
@@ -38,12 +47,12 @@ exports.EditorStateWatcherConfig = EditorStateWatcherConfig;
 /* istanbul ignore if */
 if (false) {
     /**
-     * @type {(undefined|!tsickle_notebook_utils_interface_6.NotebookUtils)}
+     * @type {(undefined|!tsickle_notebook_utils_interface_8.NotebookUtils)}
      * @public
      */
     EditorStateWatcherConfig.prototype.notebookUtils;
     /**
-     * @type {function(): !Array<!tsickle_jetski_instance_5.JetskiInstance>}
+     * @type {function(): !Array<!tsickle_jetski_instance_7.JetskiInstance>}
      * @public
      */
     EditorStateWatcherConfig.prototype.views;
@@ -96,21 +105,23 @@ class EditorStateWatcher {
      */
     markActive(uri) {
         if (uri) {
-            this.tabRecency.set(uri, ++this.recencyCounter);
+            /** @type {string} */
+            const normalized = (0, workspace_1.toJetskiFileUri)(uri).toString();
+            this.tabRecency.set(normalized, ++this.recencyCounter);
         }
     }
     /**
      * Wires up event listeners to native VS Code window/workspace events
      * and returns a disposable to clean them up.
      * @public
-     * @return {!tsickle_vscode_4.Disposable}
+     * @return {!tsickle_vscode_6.Disposable}
      */
     watch() {
         // Record current active editor.
         this.markActive(this.window.activeTextEditor?.document.uri.toString());
         this.markActive(this.window.activeNotebookEditor?.notebook.uri.toString());
         return vscode.Disposable.from(this.window.onDidChangeActiveTextEditor((/**
-         * @param {(undefined|!tsickle_vscode_4.TextEditor)} e
+         * @param {(undefined|!tsickle_vscode_6.TextEditor)} e
          * @return {void}
          */
         (e) => {
@@ -119,7 +130,7 @@ class EditorStateWatcher {
             const activeDoc = this.buildTextDocument(e, e?.document);
             this.forward('ACTIVE_EDITOR_CHANGED', activeDoc);
         })), this.window.onDidChangeActiveNotebookEditor((/**
-         * @param {(undefined|!tsickle_vscode_4.NotebookEditor)} e
+         * @param {(undefined|!tsickle_vscode_6.NotebookEditor)} e
          * @return {void}
          */
         (e) => {
@@ -128,7 +139,7 @@ class EditorStateWatcher {
             const activeDoc = this.buildNotebookDocument(e);
             this.forward('ACTIVE_EDITOR_CHANGED', activeDoc);
         })), this.window.onDidChangeTextEditorSelection((/**
-         * @param {!tsickle_vscode_4.TextEditorSelectionChangeEvent} e
+         * @param {!tsickle_vscode_6.TextEditorSelectionChangeEvent} e
          * @return {void}
          */
         (e) => {
@@ -138,7 +149,7 @@ class EditorStateWatcher {
                 return;
             this.forward('SELECTION_CHANGED', activeDoc);
         })), this.window.onDidChangeTextEditorVisibleRanges((/**
-         * @param {!tsickle_vscode_4.TextEditorVisibleRangesChangeEvent} e
+         * @param {!tsickle_vscode_6.TextEditorVisibleRangesChangeEvent} e
          * @return {void}
          */
         (e) => {
@@ -148,7 +159,7 @@ class EditorStateWatcher {
                 return;
             this.forward('VISIBLE_RANGES_CHANGED', activeDoc);
         })), this.window.onDidChangeNotebookEditorVisibleRanges?.((/**
-         * @param {!tsickle_vscode_4.NotebookEditorVisibleRangesChangeEvent} e
+         * @param {!tsickle_vscode_6.NotebookEditorVisibleRangesChangeEvent} e
          * @return {void}
          */
         (e) => {
@@ -158,7 +169,7 @@ class EditorStateWatcher {
                 return;
             this.forward('VISIBLE_RANGES_CHANGED', activeDoc);
         })), this.workspace.onDidSaveTextDocument((/**
-         * @param {!tsickle_vscode_4.TextDocument} d
+         * @param {!tsickle_vscode_6.TextDocument} d
          * @return {void}
          */
         (d) => {
@@ -171,7 +182,7 @@ class EditorStateWatcher {
                 this.forward('SAVE', activeDoc);
             }
         })), this.workspace.onDidSaveNotebookDocument((/**
-         * @param {!tsickle_vscode_4.NotebookDocument} n
+         * @param {!tsickle_vscode_6.NotebookDocument} n
          * @return {void}
          */
         (n) => {
@@ -191,7 +202,7 @@ class EditorStateWatcher {
      * @return {void}
      */
     webviewFocused() {
-        /** @type {(undefined|!tsickle_vscode_4.TextEditor)} */
+        /** @type {(undefined|!tsickle_vscode_6.TextEditor)} */
         const activeEditor = this.window.activeTextEditor;
         /** @type {(undefined|?)} */
         let activeDoc;
@@ -199,7 +210,7 @@ class EditorStateWatcher {
             activeDoc = this.buildTextDocument(activeEditor, activeEditor.document);
         }
         else {
-            /** @type {(undefined|!tsickle_vscode_4.NotebookEditor)} */
+            /** @type {(undefined|!tsickle_vscode_6.NotebookEditor)} */
             const activeNotebook = this.window.activeNotebookEditor;
             if (activeNotebook) {
                 activeDoc = this.buildNotebookDocument(activeNotebook);
@@ -215,9 +226,9 @@ class EditorStateWatcher {
     getCurrentEditorState() {
         /** @type {(undefined|?)} */
         let activeDocument;
-        /** @type {(undefined|!tsickle_vscode_4.TextEditor)} */
+        /** @type {(undefined|!tsickle_vscode_6.TextEditor)} */
         const activeEditor = this.window.activeTextEditor;
-        /** @type {(undefined|!tsickle_vscode_4.NotebookEditor)} */
+        /** @type {(undefined|!tsickle_vscode_6.NotebookEditor)} */
         const activeNotebookEditor = this.window.activeNotebookEditor;
         if (activeEditor) {
             activeDocument = this.buildTextDocument(activeEditor, activeEditor.document);
@@ -239,39 +250,45 @@ class EditorStateWatcher {
      */
     getSortedOtherDocuments(activeUri) {
         /** @type {!Set<string>} */
-        const openTabUris = new Set(this.getOpenTabUris().filter((/**
+        const openTabUris = new Set(this.getOpenTabUris()
+            .map((/**
+         * @param {string} uri
+         * @return {string}
+         */
+        (uri) => (0, workspace_1.toJetskiFileUri)(uri).toString()))
+            .filter((/**
          * @param {string} uri
          * @return {boolean}
          */
         (uri) => uri !== activeUri)));
-        /** @type {!Map<string, !tsickle_vscode_4.TextDocument>} */
+        /** @type {!Map<string, !tsickle_vscode_6.TextDocument>} */
         const textDocsMap = new Map();
         for (const doc of this.workspace?.textDocuments ?? []) {
-            textDocsMap.set(doc.uri.toString(), doc);
+            textDocsMap.set((0, workspace_1.toJetskiFileUri)(doc.uri).toString(), doc);
         }
-        /** @type {!Map<string, !tsickle_vscode_4.NotebookDocument>} */
+        /** @type {!Map<string, !tsickle_vscode_6.NotebookDocument>} */
         const notebookDocsMap = new Map();
         for (const nb of this.workspace?.notebookDocuments ?? []) {
-            notebookDocsMap.set(nb.uri.toString(), nb);
+            notebookDocsMap.set((0, workspace_1.toJetskiFileUri)(nb.uri).toString(), nb);
         }
         /** @type {!Array<?>} */
         const otherDocuments = [];
         for (const uriStr of openTabUris) {
-            /** @type {(undefined|!tsickle_vscode_4.TextDocument)} */
+            /** @type {(undefined|!tsickle_vscode_6.TextDocument)} */
             const textDoc = textDocsMap.get(uriStr);
             if (textDoc) {
                 otherDocuments.push((0, protobuf_1.create)(iframe_messages_pb_1.EditorStateMessage_DocumentSchema, {
-                    uri: textDoc.uri.toString(),
+                    uri: (0, workspace_1.toJetskiFileUri)(textDoc.uri).toString(),
                     version: textDoc.version,
                     languageId: textDoc.languageId,
                 }));
                 continue;
             }
-            /** @type {(undefined|!tsickle_vscode_4.NotebookDocument)} */
+            /** @type {(undefined|!tsickle_vscode_6.NotebookDocument)} */
             const nbDoc = notebookDocsMap.get(uriStr);
             if (nbDoc) {
                 otherDocuments.push((0, protobuf_1.create)(iframe_messages_pb_1.EditorStateMessage_DocumentSchema, {
-                    uri: nbDoc.uri.toString(),
+                    uri: (0, workspace_1.toJetskiFileUri)(nbDoc.uri).toString(),
                     version: nbDoc.version,
                     languageId: nbDoc.notebookType,
                 }));
@@ -279,7 +296,7 @@ class EditorStateWatcher {
             }
             // Unloaded tab
             otherDocuments.push((0, protobuf_1.create)(iframe_messages_pb_1.EditorStateMessage_DocumentSchema, {
-                uri: uriStr,
+                uri: (0, workspace_1.toJetskiFileUri)(uriStr).toString(),
             }));
         }
         otherDocuments.sort((/**
@@ -310,7 +327,7 @@ class EditorStateWatcher {
     }
     /**
      * @private
-     * @param {!tsickle_vscode_4.Range} range
+     * @param {!tsickle_vscode_6.Range} range
      * @param {number=} lineOffset
      * @return {?}
      */
@@ -328,24 +345,24 @@ class EditorStateWatcher {
     }
     /**
      * @private
-     * @param {!tsickle_vscode_4.Tab} tab
-     * @return {(undefined|!tsickle_vscode_4.Uri)}
+     * @param {!tsickle_vscode_6.Tab} tab
+     * @return {(undefined|!tsickle_vscode_6.Uri)}
      */
     getTabUri(tab) {
         /** @type {*} */
         const input = tab.input;
         if (vscode.TabInputText && input instanceof vscode.TabInputText) {
-            return (/** @type {!tsickle_vscode_4.TabInputText} */ (input)).uri;
+            return (/** @type {!tsickle_vscode_6.TabInputText} */ (input)).uri;
         }
         if (vscode.TabInputNotebook && input instanceof vscode.TabInputNotebook) {
-            return (/** @type {!tsickle_vscode_4.TabInputNotebook} */ (input)).uri;
+            return (/** @type {!tsickle_vscode_6.TabInputNotebook} */ (input)).uri;
         }
         if (vscode.TabInputTextDiff && input instanceof vscode.TabInputTextDiff) {
-            return (/** @type {!tsickle_vscode_4.TabInputTextDiff} */ (input)).modified;
+            return (/** @type {!tsickle_vscode_6.TabInputTextDiff} */ (input)).modified;
         }
         if (vscode.TabInputNotebookDiff &&
             input instanceof vscode.TabInputNotebookDiff) {
-            return (/** @type {!tsickle_vscode_4.TabInputNotebookDiff} */ (input)).modified;
+            return (/** @type {!tsickle_vscode_6.TabInputNotebookDiff} */ (input)).modified;
         }
         return undefined;
     }
@@ -359,22 +376,22 @@ class EditorStateWatcher {
         // but not actively open in any tab group. We filter them to match the visible tabs.
         return (this.window?.tabGroups?.all ?? [])
             .flatMap((/**
-         * @param {!tsickle_vscode_4.TabGroup} tg
-         * @return {!ReadonlyArray<!tsickle_vscode_4.Tab>}
+         * @param {!tsickle_vscode_6.TabGroup} tg
+         * @return {!ReadonlyArray<!tsickle_vscode_6.Tab>}
          */
         (tg) => tg.tabs))
             .map((/**
-         * @param {!tsickle_vscode_4.Tab} tab
-         * @return {(undefined|!tsickle_vscode_4.Uri)}
+         * @param {!tsickle_vscode_6.Tab} tab
+         * @return {(undefined|!tsickle_vscode_6.Uri)}
          */
         (tab) => this.getTabUri(tab)))
             .filter((/**
-         * @param {(undefined|!tsickle_vscode_4.Uri)} uri
+         * @param {(undefined|!tsickle_vscode_6.Uri)} uri
          * @return {boolean}
          */
         (uri) => !!uri && SUPPORTED_SCHEMES.has(uri.scheme)))
             .map((/**
-         * @param {!tsickle_vscode_4.Uri} uri
+         * @param {!tsickle_vscode_6.Uri} uri
          * @return {string}
          */
         (uri) => uri.toString()));
@@ -395,15 +412,27 @@ class EditorStateWatcher {
             otherDocuments,
         });
         for (const view of this.views()) {
-            void view.api.setEditorState(msg);
+            void view.api.setEditorState(msg).catch((/**
+             * @param {*} e
+             * @return {void}
+             */
+            (e) => {
+                // Ignore NotFound: the webview may not have registered the handler yet
+                // during initial startup/focus, or the view does not support this RPC method
+                // (e.g. non-chat views or version skew). Once ready, the webview pulls state.
+                if (connect_1.ConnectError.from(e).code === connect_1.Code.NotFound) {
+                    return;
+                }
+                throw e;
+            }));
         }
     }
     /**
      * Builds an EditorStateMessage.Document from a vscode.TextDocument.
      * The document can be either a standard file text document or a notebook cell text document.
      * @public
-     * @param {(undefined|!tsickle_vscode_4.TextEditor)} editor
-     * @param {(undefined|!tsickle_vscode_4.TextDocument)} document
+     * @param {(undefined|!tsickle_vscode_6.TextEditor)} editor
+     * @param {(undefined|!tsickle_vscode_6.TextDocument)} document
      * @return {(undefined|?)}
      */
     buildTextDocument(editor, document) {
@@ -414,19 +443,19 @@ class EditorStateWatcher {
     }
     /**
      * @public
-     * @param {(undefined|!tsickle_vscode_4.NotebookEditor)} notebookEditor
+     * @param {(undefined|!tsickle_vscode_6.NotebookEditor)} notebookEditor
      * @return {(undefined|?)}
      */
     buildNotebookDocument(notebookEditor) {
         if (!notebookEditor) {
             return undefined;
         }
-        /** @type {!tsickle_vscode_4.NotebookDocument} */
+        /** @type {!tsickle_vscode_6.NotebookDocument} */
         const notebookDocument = notebookEditor.notebook;
         /** @type {string} */
         const text = this.notebookUtils?.flattenNotebook(notebookDocument) ?? '';
         return (0, protobuf_1.create)(iframe_messages_pb_1.EditorStateMessage_DocumentSchema, {
-            uri: notebookDocument.uri.toString(),
+            uri: (0, workspace_1.toJetskiFileUri)(notebookDocument.uri).toString(),
             version: notebookDocument.version,
             languageId: notebookDocument.notebookType,
             text,
@@ -434,17 +463,17 @@ class EditorStateWatcher {
     }
     /**
      * @private
-     * @param {!tsickle_vscode_4.TextDocument} document
-     * @return {(undefined|!tsickle_vscode_4.NotebookCell)}
+     * @param {!tsickle_vscode_6.TextDocument} document
+     * @return {(undefined|!tsickle_vscode_6.NotebookCell)}
      */
     getNotebookCellForDocument(document) {
         if (this.workspace?.notebookDocuments) {
             for (const nb of this.workspace.notebookDocuments) {
-                /** @type {(undefined|!tsickle_vscode_4.NotebookCell)} */
+                /** @type {(undefined|!tsickle_vscode_6.NotebookCell)} */
                 const targetCell = nb
                     .getCells()
                     .find((/**
-                 * @param {!tsickle_vscode_4.NotebookCell} c
+                 * @param {!tsickle_vscode_6.NotebookCell} c
                  * @return {boolean}
                  */
                 (c) => c.document.uri.toString() === document.uri.toString()));
@@ -457,8 +486,8 @@ class EditorStateWatcher {
     }
     /**
      * @private
-     * @param {(undefined|!tsickle_vscode_4.TextEditor)} editor
-     * @param {!tsickle_vscode_4.TextDocument} document
+     * @param {(undefined|!tsickle_vscode_6.TextEditor)} editor
+     * @param {!tsickle_vscode_6.TextDocument} document
      * @return {?}
      */
     buildFileTextDocument(editor, document) {
@@ -475,13 +504,16 @@ class EditorStateWatcher {
         /** @type {string} */
         let uriStr = document.uri.toString();
         if (document.uri.scheme === 'vscode-notebook-cell') {
-            /** @type {(undefined|!tsickle_vscode_4.NotebookCell)} */
+            /** @type {(undefined|!tsickle_vscode_6.NotebookCell)} */
             const cell = this.getNotebookCellForDocument(document);
             if (cell) {
                 uriStr = document.uri
                     .with({ fragment: this.notebookUtils?.getCellId(cell) ?? '' })
                     .toString();
             }
+        }
+        else {
+            uriStr = (0, workspace_1.toJetskiFileUri)(document.uri).toString();
         }
         return (0, protobuf_1.create)(iframe_messages_pb_1.EditorStateMessage_DocumentSchema, {
             uri: uriStr,
@@ -502,7 +534,7 @@ if (false) {
      */
     EditorStateWatcher.prototype.debounceTimer;
     /**
-     * @const {(undefined|!tsickle_notebook_utils_interface_6.NotebookUtils)}
+     * @const {(undefined|!tsickle_notebook_utils_interface_8.NotebookUtils)}
      * @private
      */
     EditorStateWatcher.prototype.notebookUtils;
@@ -517,7 +549,7 @@ if (false) {
      */
     EditorStateWatcher.prototype.tabRecency;
     /**
-     * @const {function(): !Array<!tsickle_jetski_instance_5.JetskiInstance>}
+     * @const {function(): !Array<!tsickle_jetski_instance_7.JetskiInstance>}
      * @private
      */
     EditorStateWatcher.prototype.views;

@@ -73,11 +73,6 @@ class SideBySideDiffZoneRenderer {
             }
             await vscode.workspace.applyEdit(edit);
         }
-        /** @type {!tsickle_vscode_1.Uri} */
-        const originalVirtualUri = vscode.Uri.parse(`${SideBySideDiffZoneRenderer.FALLBACK_SCHEME}://original/${encodeURIComponent(normalizedUri)}`);
-        /** @type {string} */
-        const fileName = normalizedUri.substring(normalizedUri.lastIndexOf('/') + 1);
-        await vscode.commands.executeCommand('vscode.diff', originalVirtualUri, uri, `${fileName} (Agent Edit)`, { preview: true });
         /** @type {{numLinesInserted: number, numLinesDeleted: number}} */
         const counts = (0, diff_zone_renderer_1.computeLineCounts)(originalContents, modifiedContents);
         return {
@@ -117,6 +112,23 @@ class SideBySideDiffZoneRenderer {
      * @return {void}
      */
     focusExistingZone(_fileUri) { }
+    /**
+     * @public
+     * @param {string} fileUri
+     * @param {boolean=} preview
+     * @return {!Promise<void>}
+     */
+    async revealDocument(fileUri, preview = true) {
+        /** @type {string} */
+        const normalizedUri = (0, utils_1.normalizeUri)(fileUri);
+        /** @type {!tsickle_vscode_1.Uri} */
+        const uri = vscode.Uri.parse(normalizedUri);
+        /** @type {!tsickle_vscode_1.Uri} */
+        const originalVirtualUri = vscode.Uri.parse(`${SideBySideDiffZoneRenderer.FALLBACK_SCHEME}://original/${encodeURIComponent(normalizedUri)}`);
+        /** @type {string} */
+        const fileName = normalizedUri.substring(normalizedUri.lastIndexOf('/') + 1);
+        await vscode.commands.executeCommand('vscode.diff', originalVirtualUri, uri, `${fileName} (Agent Edit)`, { preview });
+    }
     /**
      * @public
      * @param {string} fileUri

@@ -535,7 +535,12 @@ goog.net.XhrIo.prototype.getResponseUrl = function() {
 /**
  * Instance send that actually uses XMLHttpRequest to make a server call.
  * @param {string|goog.Uri} url Uri to make request to.
- * @param {string=} opt_method Send method, default: GET.
+ * @param {string|!RequestInit=} opt_methodOrRequestInit Either the send method
+ *     (default GET) or a RequestInit object. If a RequestInit object is
+ *     specified, the method/body/headers will be read from the RequestInit
+ *     object. If opt_content and opt_headers are also specified, they will
+ *     override the values in the RequestInit object. A RequestInit object will
+ *     be passed to the fetch request if using FetchXmlHttpFactory.
  * @param {ArrayBuffer|ArrayBufferView|Blob|Document|FormData|string=}
  *     opt_content Body data.
  * @param {(?Object|?goog.collections.maps.MapLike<string, string>)=}
@@ -545,7 +550,7 @@ goog.net.XhrIo.prototype.getResponseUrl = function() {
  * types of parameters for opt_headers.
  */
 goog.net.XhrIo.prototype.send = function(
-    url, opt_method, opt_content, opt_headers) {
+    url, opt_methodOrRequestInit, opt_content, opt_headers) {
   'use strict';
   if (this.xhr_) {
     throw new Error(
@@ -553,7 +558,17 @@ goog.net.XhrIo.prototype.send = function(
         this.lastUri_ + '; newUri=' + url);
   }
 
-  const method = opt_method ? opt_method.toUpperCase() : 'GET';
+  let method;
+  let requestInit;
+  if (typeof opt_methodOrRequestInit === 'string') {
+    method = opt_methodOrRequestInit;
+  } else if (opt_methodOrRequestInit) {
+    requestInit = opt_methodOrRequestInit;
+    method = requestInit.method;
+    opt_content ??= /** @type {?} */ (requestInit.body);
+    opt_headers ??= requestInit.headers;
+  }
+  method = method ? method.toUpperCase() : 'GET';
 
   this.lastUri_ = url;
   this.lastError_ = '';
@@ -563,7 +578,7 @@ goog.net.XhrIo.prototype.send = function(
   this.active_ = true;
 
   // Use the factory to create the XHR object and options
-  this.xhr_ = this.createXhr();
+  this.xhr_ = this.createXhr(requestInit);
 
   // Set up the onreadystatechange callback
   this.xhr_.onreadystatechange =
@@ -713,13 +728,15 @@ goog.net.XhrIo.prototype.send = function(
 
 /**
  * Creates a new XHR object.
+ * @param {!RequestInit=} requestInit A RequestInit object for this request.
  * @return {!goog.net.XhrLike.OrNative} The newly created XHR object.
  * @protected
  */
-goog.net.XhrIo.prototype.createXhr = function() {
+goog.net.XhrIo.prototype.createXhr = function(requestInit) {
   'use strict';
-  return this.xmlHttpFactory_ ? this.xmlHttpFactory_.createInstance() :
-                                goog.net.XmlHttp();
+  return this.xmlHttpFactory_ ?
+      this.xmlHttpFactory_.createInstance(requestInit) :
+      goog.net.XmlHttp();
 };
 
 

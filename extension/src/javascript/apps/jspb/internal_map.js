@@ -143,7 +143,7 @@ class DelegatingMapForPseudoEs6Systems {
    * Returns an iterator-iterable over [key, value] pairs in the map.
    *
    * @override
-   * @return {!IteratorIterable<!Array<K|V>>} The iterator-iterable.
+   * @return {!MapIterator<!Array<K|V>>} The iterator-iterable.
    */
   entries() {
     assert(this.size === this.map_.size);
@@ -153,7 +153,7 @@ class DelegatingMapForPseudoEs6Systems {
   /**
    * Returns an iterator-iterable over keys in the map.
    * @override
-   * @return {!IteratorIterable<K>} The iterator-iterable.
+   * @return {!MapIterator<K>} The iterator-iterable.
    */
   keys() {
     assert(this.size === this.map_.size);
@@ -163,7 +163,7 @@ class DelegatingMapForPseudoEs6Systems {
   /**
    * Returns an iterator-iterable over values in the map.
    * @override
-   * @return {!IteratorIterable<V>} The iterator-iterable.
+   * @return {!MapIterator<V>} The iterator-iterable.
    */
   values() {
     assert(this.size === this.map_.size);
@@ -185,7 +185,7 @@ class DelegatingMapForPseudoEs6Systems {
 
   /**
    * @override
-   * @return {!IteratorIterable<!Array<K|V>>} The iterator-iterable.
+   * @return {!MapIterator<!Array<K|V>>} The iterator-iterable.
    */
   [Symbol.iterator]() {
     assert(this.size === this.map_.size);
@@ -463,14 +463,14 @@ class JspbMap extends MapBase {
    * Returns an iterator-iterable over [key, value] pairs in the map.
    *
    * @override
-   * @return {!IteratorIterable<!Array<K|V>>} The iterator-iterable.
+   * @return {!MapIterator<!Array<K|V>>} The iterator-iterable.
    * @tsType (): MapIterator<[K, V]>
    */
   entries() {
     // We only need to call through the logic in `get` for message valued maps.
     if (this.valueCtor) {
-      return newTransformingIteratorIterable(
-          super.keys(), getEntryFromMap, this);
+      return /** @type {!MapIterator<!Array<K|V>>} */ (
+          newTransformingIteratorIterable(super.keys(), getEntryFromMap, this));
     }
     return super.entries();
   }
@@ -482,14 +482,14 @@ class JspbMap extends MapBase {
   /**
    * Returns an iterator-iterable over values in the map.
    * @override
-   * @return {!IteratorIterable<V>} The iterator-iterable.
+   * @return {!MapIterator<V>} The iterator-iterable.
    * @tsType (): MapIterator<V>
    */
   values() {
     // We only need to call through the logic in `get` for message valued maps.
     if (this.valueCtor) {
-      return newTransformingIteratorIterable(
-          super.keys(), JspbMap.prototype.get, this);
+      return /** @type {!MapIterator<V>} */ (newTransformingIteratorIterable(
+          super.keys(), JspbMap.prototype.get, this));
     }
     // TODO: b/398440852 - trick the compiler by indirectly accessing the
     // superclass's `values` method.
@@ -645,7 +645,7 @@ class JspbMap extends MapBase {
 
   /**
    * @override
-   * @return {!IteratorIterable<!Array<K|V>>} The iterator-iterable.
+   * @return {!MapIterator<!Array<K|V>>} The iterator-iterable.
    * @tsType (): MapIterator<[K, V]>
    */
   [Symbol.iterator]() {
@@ -654,7 +654,7 @@ class JspbMap extends MapBase {
 
   /**
    * @private
-   * @return {!IteratorIterable<!V>} The iterator-iterable.
+   * @return {!MapIterator<!V>} The iterator-iterable.
    */
   rawValuesInternal_() {
     return super.values();
@@ -723,7 +723,7 @@ class ImmutableMap {
   /**
    * Returns an iterator-iterable over [key, value] pairs in the map.
    * Closure compiler sadly doesn't support tuples, ie. Iterator<[K,V]>.
-   * @return {!IteratorIterable<!Array<K|V>>} The iterator-iterable.
+   * @return {!MapIterator<!Array<K|V>>} The iterator-iterable.
    * @override
    * @abstract
    * @tsType (): MapIterator<[K, V]>
@@ -732,7 +732,7 @@ class ImmutableMap {
 
   /**
    * Returns an iterator-iterable over keys in the map.
-   * @return {!IteratorIterable<K>} The iterator-iterable.
+   * @return {!MapIterator<K>} The iterator-iterable.
    * @override
    * @abstract
    * @tsType (): MapIterator<K>
@@ -741,7 +741,7 @@ class ImmutableMap {
 
   /**
    * Returns an iterator-iterable over values in the map.
-   * @return {!IteratorIterable<V>} The iterator-iterable.
+   * @return {!MapIterator<V>} The iterator-iterable.
    * @override
    * @abstract
    * @tsType (): MapIterator<V>
@@ -781,7 +781,7 @@ class ImmutableMap {
   /**
    * @abstract
    * @override
-   * @return {!IteratorIterable<!Array<K|V>>} The iterator-iterable.
+   * @return {!MapIterator<!Array<K|V>>} The iterator-iterable.
    * @tsType (): MapIterator<[K, V]>
    */
   [Symbol.iterator]() {};
