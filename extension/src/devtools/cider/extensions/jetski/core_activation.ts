@@ -61,6 +61,11 @@ if (false) {
      */
     JetskiCoreDependencies.prototype.connectionResolver;
     /**
+     * @type {(undefined|!tsickle_delegate_interfaces_3.HostDiagnosticsProvider)}
+     * @public
+     */
+    JetskiCoreDependencies.prototype.hostDiagnosticsProvider;
+    /**
      * @type {(undefined|!tsickle_delegate_interfaces_3.NotebookExecutor)}
      * @public
      */
@@ -107,6 +112,7 @@ function activateWithDependencies(context, deps, naming) {
         browserNotificationDelegate: deps.browserNotificationDelegate,
         connectionResolver: deps.connectionResolver,
         context,
+        hostDiagnosticsProvider: deps.hostDiagnosticsProvider,
         naming,
         notebookExecutor: deps.notebookExecutor,
         notebookUtils: deps.notebookUtils,

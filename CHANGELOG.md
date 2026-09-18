@@ -6,6 +6,113 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 ---
 
+## [1.4.0] - 2026-09-17
+
+### 🚀 Highlights
+- **In-IDE Feedback & Diagnostics Collection**: Added an integrated feedback command (`antigravity.feedback`) and a high-performance, ring-buffered logging subsystem (`BufferedOutputChannel`) enabling diagnostic bundles and host installation logs to be inspected and reported directly within the IDE.
+
+- **Fast-Path Startup & Startup Freeze Elimination**: Eliminated the ~94.5s cold-start freeze during offline or unreachable network states (b/559283462). When an existing valid backend binary is present, update discovery operates on a bounded 3-second budget, falling back immediately to the existing binary without delaying editor readiness.
+
+- **Offline & Network Fallback Resilience**: Implemented automatic fallback to existing valid binaries (`>= 1.1.11`) upon update download failure, ensuring full offline capability while safeguarding against corrupted payloads by strictly enforcing integrity and signature verification.
+
+- **Rate-Limiting & Backoff Intelligence**: Added `Retry-After` HTTP header support (parsing delta-seconds and HTTP-date timestamps) to respect upstream rate limiting (HTTP 429) across manifest discovery and asset downloads.
+
+- **Agent Lifecycle Hooks & Clickable Step Diff Badges**: Introduced foundational protobuf schemas for workspace agent lifecycle hooks (`HooksDiscoveryConfig`), step title diff badges (`StepRenderInfo.FileDiffRef`), and contextual link scope references (`LinkScopeItem`).
+
+### ✨ Improvements & Features
+- **Integrated Feedback Command**: Contributed `antigravity.feedback` ("Provide Feedback") to the command palette and status bar settings flow, connecting to in-webview feedback panels.
+
+- **Buffered Output Channel**: Implemented `BufferedOutputChannel` wrapping `vscode.OutputChannel` with an in-memory 1,000-line circular ring buffer and persistent append-only disk logging to `~/.gemini/logs/install.log`.
+
+- **Host Diagnostics RPC**: Added `GetHostDiagnosticsRequest` and `GetHostDiagnosticsResponse` protobuf IPC endpoints, exposing host-level installation logs, binary path, and version to the webview client.
+
+- **Fast-Path Binary Verification**: When a locally installed binary satisfies `MIN_AGY_VERSION` (`1.1.11`), the update check is bounded to a 3-second timeout budget (`updateCheckTimeoutMs: 3000`). If unreachable, the check is skipped and the existing binary boots immediately.
+
+- **Offline Binary Availability**: Network or HTTP errors during update download gracefully fall back to the existing installed binary meeting minimum version requirements, preserving offline development workflows.
+
+- **Retry-After Header Parsing**: Added `parseRetryAfterMs` to dynamically respect HTTP `Retry-After` headers during exponential backoff, preventing request flooding on rate-limited endpoints.
+
+- **Safe Staging & Atomic Binary Promotion**: Binary downloads now unpack into an isolated temporary extraction directory (`tempExtractDir`), verify the executable, and atomically promote it before guaranteed cleanup in `finally` blocks.
+
+- **Host Proxy Configuration**: Added `configureHostProxyEnvironment` to read VS Code's `http.proxy` and `http.noProxy` workspace configuration and configure `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` in the host process before binary acquisition.
+
+- **Old Binary Cleanup**: Added `cleanupStaleOldBinaries` to automatically sweep orphaned temporary binary artifacts from `~/.gemini/bin/`.
+
+- **Notebook AI Diff Alignment**: Migrated notebook diff hunk structures to `cider.ai.NotebookDiffHunk` and `cider.ai.NotebookDiffHunkType`, while refining Colab notebook cell metadata parsing to preserve cell ID mappings.
+
+- **Notebook File Sync**: Replaced `vscode.AntigravityFiles.forceResolveFromFile` with `cider.ai.forceResolveFromFile` to ensure modified notebook files on disk are flushed prior to rendering inline diff zones.
+
+- **Protocol & Schema Expansions**:
+  - `cortex_pb.ts`: Added `HooksDiscoveryConfig` for workspace hook discovery; added `StepRenderInfo.FileDiffRef` for clickable (+N/-M) hunk badges in step headers.
+  - `codeium_common_pb.ts`: Added `LinkScopeItem` for pasted external links (Critique CLs, issue trackers) with client-resolved metadata.
+  - `config_pb`: Added `sort_order` (int32) to `ConversationGroupConfig`.
+  - `cortex_pb` (JSPB): Added `version` (string) to `MarketplaceInstall`.
+  - `learning/gemini/.../deployment/config_jspb`: Added `retrieval_query` (string) to `AmbientInjectionConfig`.
+  - `semantic_annotations_pb.ts`: Added semantic types `ST_MODEL_TOOL_RESPONSE_URL` (1917) and `ST_YOUTUBE_EXTERNAL_VIDEO_TRACK_ID` (14203).
+  - `verbalization_options_pb.ts`: Added `CitationGranularityOptions` under citation chunking options.
+
+### 🐛 Fixes & Patches
+- **Network Startup Freeze (b/559283462)**: Fixed a critical bug where sequential probing of manifest candidate URLs hung for ~94.5s on unreachable networks. Candidate probing now sets a 5-second socket timeout with a single attempt per candidate, and aborts immediately upon encountering non-HTTP transport/socket failures.
+
+- **Legacy Cascade Listener Deprecation**: Removed obsolete `vscode.Cascade` event subscriptions (`onDidRequestAcceptAllInFile`, `onDidRequestRejectAllInFile`, `onDidRequestNextHunk`, `onDidRequestPreviousHunk`, and `onDidDragToCascade`), eliminating stale IPC listeners.
+
+- **License & Notice Alignment**: Updated `LICENSE.txt` to MIT License and refreshed `ThirdPartyNotices.txt` to reflect upstream package distribution metadata.
+
+---
+
+### ⚙️ Under the Hood (Technical & Internal Intelligence)
+*This section documents exact Google3 monorepo changes, schemas, and build revisions.*
+
+- **Core & Lifecycle (`extension/src/cloud/...`)**:
+  - `buffered_output_channel.ts`: [NEW] Created `BufferedOutputChannel` implementing `vscode.OutputChannel` with circular in-memory buffer (`DEFAULT_MAX_BUFFERED_LINES = 1000`) and best-effort disk logging to `~/.gemini/logs/install.log`.
+  - `server_manager.ts`: Implemented `HostDiagnosticsProvider` (`getHostDiagnostics()`, `getOrCreateOutputChannel()`, `getOutputChannelLogs()`); added `configureHostProxyEnvironment()` syncing VS Code `http.proxy` to `process.env`.
+  - `binary_downloader.ts`:
+    - Bumped `MIN_AGY_VERSION` from `1.1.3` to `1.1.11`.
+    - Added `parseRetryAfterMs()` and updated `HttpError.fromResponse()` to extract `retry-after` header values.
+    - Updated `withRetry()` to honor `retryAfterMs` delay.
+    - Added fast-path 3-second timeout race when existing binary meets `MIN_AGY_VERSION`.
+    - Added offline fallback: returns existing valid binary if network download fails (excluding checksum/integrity failures).
+    - Hardened `fetchReleaseManifest()` candidate probing with 5-second candidate timeouts and immediate transport error bailout (b/559283462).
+    - Unpacked archives into isolated `tempExtractDir` before atomic promotion via `promoteBinarySafely()`.
+    - Added `cleanupStaleOldBinaries()` for directory hygiene in `~/.gemini/bin/`.
+  - `status_bar.ts`: Registered `antigravity.feedback` command triggering `openAntigravitySettings('Provide Feedback')`.
+  - `extension.ts`: Initialized proxy configuration during `activate()`; passed `hostDiagnosticsProvider` to extension API activation dependencies.
+
+- **Jetski & Diff Zones (`extension/src/devtools/cider/...`)**:
+  - `extension_api.ts`:
+    - Added `getHostDiagnostics(request)` returning `GetHostDiagnosticsResponse` message.
+    - Updated `provideFeedback()` to route through `antigravity.feedback` in VS Code environments and `feedback.start` in Cider.
+    - Removed obsolete `vscode.Cascade` listeners and `vscode.AntigravityFiles.onDidDragToCascade`.
+  - `core_activation.ts`: Added `hostDiagnosticsProvider` to `JetskiCoreDependencies`.
+  - `diff_zones/diff_zone_renderer.ts`: Migrated notebook diff types to `cider.ai.NotebookDiffHunk` and `NotebookDiffHunkType`; improved cell metadata preservation in `parseNotebookCells()`.
+  - `diff_zones/agent_edit_manager.ts`: Replaced `vscode.AntigravityFiles.forceResolveFromFile` with `cider.ai.forceResolveFromFile`.
+  - `webclient/workspace/ids.ts`: Simplified `getWorkspaceQueryParams()` to query `window.location.search` directly; removed redundant `getPreservableParams()`.
+
+- **Protobuf & IPC Schemas (`extension/src/blaze-out/` & `extension/src/third_party/jetski/`)**:
+  - Reconstructed 912 Google3 Piper monorepo modules (519 Closure, 393 CJS), adding `buffered_output_channel.ts`.
+  - New Schemas & Messages:
+    - `HooksDiscoveryConfig` (schema index 193) in `third_party/jetski/cortex_pb/cortex_pb.ts`.
+    - `StepRenderInfo.FileDiffRef` in `third_party/jetski/cortex_pb/cortex_pb.ts`.
+    - `LinkScopeItem` (schema index 133) in `third_party/jetski/codeium_common_pb/codeium_common_pb.ts`.
+    - `GetHostDiagnosticsRequest` and `GetHostDiagnosticsResponse` in `third_party/gemini_coder/proto/iframe_messages_pb.ts`.
+    - `CitationGranularityOptions` in `google/ai/generativelanguage/v1main/verbalization_options_pb.ts`.
+  - Updated Fields:
+    - `AmbientInjectionConfig` (`config_jspb`): Added field 3 `retrieval_query` (string).
+    - `ConversationGroupConfig` (`config_jspb`): Added field 2 `sort_order` (int32).
+    - `MarketplaceInstall` (`cortex_jspb`): Added field 3 `version` (string).
+    - `SemanticType` (`semantic_annotations_pb.ts`): Added `ST_MODEL_TOOL_RESPONSE_URL = 1917` and `ST_YOUTUBE_EXTERNAL_VIDEO_TRACK_ID = 14203`.
+
+- **Webview Bridges (`extension/bridge.js`, `extension/loading_bridge.js`)**:
+  - `bridge.js`: Re-bundled with new protobuf descriptors (`GetHostDiagnosticsRequest`, `GetHostDiagnosticsResponse`, `HooksDiscoveryConfig`, `LinkScopeItem`, `FileDiffRef`).
+
+- **Build Metadata (`extension/package.json`)**:
+  - `BUILD_DEPOT_PATH`: `//depot/branches/antigravity_vscode_extension_release_branch/980964133.1/google3`
+  - `BUILD_BLAZE_RELEASE`: `release blaze-2026.09.02-1 (mainline @974746007)`
+  - `BUILD_EMBED_LABEL`: `antigravity_vscode_extension_1.4.0_RC01`
+  - `BUILD_HOSTNAME`: `oqbb8.prod.google.com`
+
+---
+
 ## [1.3.0] - 2026-09-10
 
 ### 🚀 Highlights

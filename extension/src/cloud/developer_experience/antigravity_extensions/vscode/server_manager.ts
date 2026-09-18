@@ -24,7 +24,8 @@ const tsickle_os_7 = goog.requireType("google3.third_party.javascript.typings.no
 const tsickle_readline_8 = goog.requireType("google3.third_party.javascript.typings.node.node.readline");
 const tsickle_vscode_9 = goog.requireType("vscode");
 const tsickle_binary_downloader_10 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.binary_downloader");
-const tsickle_telemetry_constants_11 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.telemetry_constants");
+const tsickle_buffered_output_channel_11 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.buffered_output_channel");
+const tsickle_telemetry_constants_12 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.telemetry_constants");
 const child_process_1 = goog.require('google3.third_party.javascript.typings.node.node.child_process');
 const fs = goog.require('google3.third_party.javascript.typings.node.node.fs');
 const http = goog.require('google3.third_party.javascript.typings.node.node.http');
@@ -34,6 +35,7 @@ const readline = goog.require('google3.third_party.javascript.typings.node.node.
 const vscode = goog.require('vscode'); // from //third_party/javascript/typings/vscode
 // from //third_party/javascript/typings/vscode
 const binary_downloader_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.binary_downloader');
+const buffered_output_channel_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.buffered_output_channel');
 const telemetry_constants_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.telemetry_constants');
 /**
  * Known system CA bundle paths by platform in order of priority.
@@ -97,6 +99,41 @@ function initializeHostSecurityEnvironment(platform = process.platform, fsExists
     }
 }
 exports.initializeHostSecurityEnvironment = initializeHostSecurityEnvironment;
+/**
+ * Configures the current extension host process environment with HTTP and HTTPS proxy settings
+ * derived from VS Code workspace configuration (`http.proxy` and `http.noProxy`).
+ * @param {(undefined|!tsickle_vscode_9.WorkspaceConfiguration)=} configOverride
+ * @return {void}
+ */
+function configureHostProxyEnvironment(configOverride) {
+    /** @type {!tsickle_vscode_9.WorkspaceConfiguration} */
+    const httpConfig = configOverride ?? vscode.workspace.getConfiguration('http');
+    /** @type {*} */
+    const rawProxy = httpConfig?.get('proxy');
+    /** @type {(undefined|string)} */
+    const proxySetting = typeof rawProxy === 'string' ? (/** @type {string} */ (rawProxy)).trim() : undefined;
+    if (proxySetting) {
+        if (!process.env['HTTP_PROXY'] && !process.env['http_proxy']) {
+            process.env['HTTP_PROXY'] = proxySetting;
+            process.env['http_proxy'] = proxySetting;
+        }
+        if (!process.env['HTTPS_PROXY'] && !process.env['https_proxy']) {
+            process.env['HTTPS_PROXY'] = proxySetting;
+            process.env['https_proxy'] = proxySetting;
+        }
+    }
+    /** @type {*} */
+    const rawNoProxy = httpConfig?.get('noProxy');
+    /** @type {(undefined|string)} */
+    const noProxySetting = typeof rawNoProxy === 'string' ? (/** @type {string} */ (rawNoProxy)).trim() : undefined;
+    if (noProxySetting) {
+        if (!process.env['NO_PROXY'] && !process.env['no_proxy']) {
+            process.env['NO_PROXY'] = noProxySetting;
+            process.env['no_proxy'] = noProxySetting;
+        }
+    }
+}
+exports.configureHostProxyEnvironment = configureHostProxyEnvironment;
 /**
  * Builds the process environment for launching the Antigravity backend language server,
  * propagating system proxy configurations and OS root CA certificates for corporate ZTNA/TLS inspection.
@@ -268,6 +305,7 @@ function categorizeServerStartError(err) {
  * Manages acquiring and running the Antigravity backend language server process (`agy --hub`).
  *
  * Implements the Dynamic Auto-Installation strategy (`~/.gemini/bin/agy`).
+ * @implements {tsickle_delegate_interfaces_3.HostDiagnosticsProvider}
  */
 class AntigravityServerManager {
     constructor() {
@@ -286,6 +324,56 @@ class AntigravityServerManager {
         }
         AntigravityServerManager.instance = new AntigravityServerManager();
         return AntigravityServerManager.instance;
+    }
+    /**
+     * Lazily initializes or returns the host-level BufferedOutputChannel.
+     * @public
+     * @return {!tsickle_buffered_output_channel_11.BufferedOutputChannel}
+     */
+    getOrCreateOutputChannel() {
+        if (!this.outputChannel) {
+            this.outputChannel = new buffered_output_channel_1.BufferedOutputChannel(vscode.window.createOutputChannel('Antigravity'));
+        }
+        return this.outputChannel;
+    }
+    /**
+     * Returns the underlying BufferedOutputChannel if initialized.
+     * @public
+     * @return {(undefined|!tsickle_buffered_output_channel_11.BufferedOutputChannel)}
+     */
+    getOutputChannel() {
+        return this.outputChannel;
+    }
+    /**
+     * Returns a snapshot of buffered installation and server lifecycle logs.
+     * @public
+     * @return {!Array<string>}
+     */
+    getOutputChannelLogs() {
+        return this.getOrCreateOutputChannel().getLines();
+    }
+    /**
+     * Gathers host-side operational logs and binary information for diagnostics collection.
+     * @public
+     * @return {!Promise<!tsickle_delegate_interfaces_3.HostDiagnostics>}
+     */
+    async getHostDiagnostics() {
+        /** @type {string} */
+        const binaryPath = this.getInstalledTargetPath();
+        /** @type {(undefined|string)} */
+        let binaryVersion;
+        try {
+            binaryVersion = await (0, binary_downloader_1.getBinaryVersionString)(binaryPath);
+        }
+        catch {
+            // Binary might not be installed or executable yet.
+        }
+        return {
+            installLogs: this.getOutputChannelLogs(),
+            extensionLogs: [],
+            binaryVersion: binaryVersion ?? '',
+            binaryPath,
+        };
     }
     /**
      * Resolves the local persistent installed binary (`~/.gemini/bin/agy`) path.
@@ -312,12 +400,13 @@ class AntigravityServerManager {
      * @return {!Promise<string>}
      */
     async acquireInstalledBinaryPath(context, progress, configOverride) {
-        if (!this.outputChannel) {
-            this.outputChannel = vscode.window.createOutputChannel('Antigravity');
-        }
+        initializeHostSecurityEnvironment();
+        configureHostProxyEnvironment(configOverride);
+        /** @type {!tsickle_buffered_output_channel_11.BufferedOutputChannel} */
+        const outputChannel = this.getOrCreateOutputChannel();
         return await (0, binary_downloader_1.acquireInstalledBinaryPath)({
             context,
-            outputChannel: this.outputChannel,
+            outputChannel,
             progress,
             configOverride,
             targetPathOverride: this.getInstalledTargetPath(),
@@ -418,9 +507,7 @@ class AntigravityServerManager {
             }
             : ((/** @type {!ServerStartOptions} */ (optionsOrContext)));
         const { context, telemetry: activeTelemetry } = options;
-        if (!this.outputChannel) {
-            this.outputChannel = vscode.window.createOutputChannel('Antigravity');
-        }
+        this.getOrCreateOutputChannel();
         if (this.startingPromise) {
             return this.startingPromise;
         }
@@ -693,7 +780,7 @@ if (false) {
      */
     AntigravityServerManager.prototype.serverUrl;
     /**
-     * @type {(undefined|!tsickle_vscode_9.OutputChannel)}
+     * @type {(undefined|!tsickle_buffered_output_channel_11.BufferedOutputChannel)}
      * @private
      */
     AntigravityServerManager.prototype.outputChannel;

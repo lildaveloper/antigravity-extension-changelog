@@ -88,6 +88,34 @@ jspb$exa$cortex_pb$MutableMarketplaceInstall = class extends jspb_internal_publi
   }
 
 
+  /**
+   * optional string version = 3;
+   * @override
+   * @return {string}
+   */
+  getVersion() {
+    return jspb_internal_adapters.getStringFieldWithDefault(this, 3);
+  }
+
+
+  /**
+   * @param {string|null|undefined} value
+   * @return {!jspb$exa$cortex_pb$MutableMarketplaceInstall} returns this
+   */
+  setVersion(value) {
+    return jspb_internal_adapters.setProto3StringField(this, 3, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$exa$cortex_pb$MutableMarketplaceInstall} returns this
+   */
+  clearVersion() {
+    return jspb_internal_adapters.clearField(this, 3);
+  }
+
+
 };
 
 /**
@@ -115,7 +143,8 @@ jspb$exa$cortex_pb$MutableMarketplaceInstall.hasInstance = /** @pureOrBreakMyCod
  * Object form of MarketplaceInstall as accepted by the `fromObject` method.
  * @typedef {{
  *  marketplace: (?string|undefined),
- *  id: (?string|undefined)
+ *  id: (?string|undefined),
+ *  version: (?string|undefined)
  * }}
  */
 jspb$exa$cortex_pb$MutableMarketplaceInstall.ObjectFormat;
@@ -175,7 +204,8 @@ if (goog.DEBUG && !COMPILED) {
  * Interface form of MarketplaceInstall as accepted by `fromFields` and produced by `getFields`.
  * @typedef {{
  *  marketplace: (string|undefined),
- *  id: (string|undefined)
+ *  id: (string|undefined),
+ *  version: (string|undefined)
  * }}
  */
 jspb$exa$cortex_pb$MutableMarketplaceInstall.FieldsInterface;

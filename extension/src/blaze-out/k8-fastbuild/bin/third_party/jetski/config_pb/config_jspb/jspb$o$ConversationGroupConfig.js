@@ -25,6 +25,7 @@ jspb$o$exa$config_pb$ConversationGroupConfig.internal_toObject = function(msg) {
   jspb_internal_public_for_gencode.checkCanCallToObject(msg);
   return /** @type {?} */ (/** @type {!jspb$exa$config_pb$MutableConversationGroupConfig.ObjectFormat} */ ({
     name: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getStringFieldLegacyNullable(msg, 1)),
+    sortOrder: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getInt32FieldLegacyNullable(msg, 2)),
   }));
 
 };
@@ -64,6 +65,7 @@ if (jspb_internal_public_for_gencode.GENERATE_FROM_OBJECT) {
 jspb$o$exa$config_pb$ConversationGroupConfig.fromObject = function(obj) {
   const msg = new jspb$exa$config_pb$MutableConversationGroupConfig();
   jspb_internal_adapters.setStringField(msg, 1, obj.name);
+  jspb_internal_adapters.setInt32Field(msg, 2, obj.sortOrder);
   return msg;
 };
 }

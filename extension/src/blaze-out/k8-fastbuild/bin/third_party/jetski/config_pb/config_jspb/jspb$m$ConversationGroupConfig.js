@@ -80,6 +80,54 @@ jspb$exa$config_pb$MutableConversationGroupConfig = class extends jspb_internal_
   }
 
 
+  /**
+   * optional int32 sort_order = 2;
+   * @override
+   * @return {number}
+   */
+  getSortOrder() {
+    return jspb_internal_adapters.getInt32FieldWithDefault(this, 2);
+  }
+
+
+  /**
+   * @param {number|null|undefined} value
+   * @return {!jspb$exa$config_pb$MutableConversationGroupConfig} returns this
+   */
+  setSortOrder(value) {
+    return jspb_internal_adapters.setInt32Field(this, 2, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$exa$config_pb$MutableConversationGroupConfig} returns this
+   */
+  clearSortOrder() {
+    return jspb_internal_adapters.clearField(this, 2);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasSortOrder() {
+    return jspb_internal_adapters.hasInt32Field(this, 2);
+  }
+
+
+  /**
+   * optional int32 sort_order = 2;
+   * @override
+   * @return {number|undefined}
+   */
+  getSortOrderOrUndefined() {
+    return jspb_internal_adapters.getInt32FieldOrUndefined(this, 2);
+  }
+
+
 };
 
 /**
@@ -106,7 +154,8 @@ jspb$exa$config_pb$MutableConversationGroupConfig.hasInstance = /** @pureOrBreak
 /**
  * Object form of ConversationGroupConfig as accepted by the `fromObject` method.
  * @typedef {{
- *  name: (?string|undefined)
+ *  name: (?string|undefined),
+ *  sortOrder: (?number|undefined)
  * }}
  */
 jspb$exa$config_pb$MutableConversationGroupConfig.ObjectFormat;
@@ -165,7 +214,8 @@ if (goog.DEBUG && !COMPILED) {
 /**
  * Interface form of ConversationGroupConfig as accepted by `fromFields` and produced by `getFields`.
  * @typedef {{
- *  name: (string|undefined)
+ *  name: (string|undefined),
+ *  sortOrder: (number|undefined)
  * }}
  */
 jspb$exa$config_pb$MutableConversationGroupConfig.FieldsInterface;

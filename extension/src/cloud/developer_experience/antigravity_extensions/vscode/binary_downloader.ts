@@ -55,7 +55,7 @@ async function pathExists(filePath) {
  * Minimum required Antigravity backend API version.
  * @type {string}
  */
-exports.MIN_AGY_VERSION = '1.1.3';
+exports.MIN_AGY_VERSION = '1.1.11';
 /**
  * Default base URL for downloading Antigravity release manifests and binaries (Production).
  * @type {string}
@@ -82,8 +82,35 @@ function getDefaultReleaseBaseUrl() {
 }
 exports.getDefaultReleaseBaseUrl = getDefaultReleaseBaseUrl;
 /**
+ * Parses a Retry-After HTTP header value (delta-seconds or HTTP-date string) into milliseconds.
+ * Returns undefined if the header is absent, empty, or unparseable.
+ * @param {(undefined|null|string)} headerValue
+ * @return {(undefined|number)}
+ */
+function parseRetryAfterMs(headerValue) {
+    if (!headerValue) {
+        return undefined;
+    }
+    /** @type {string} */
+    const trimmed = headerValue.trim();
+    /** @type {number} */
+    const seconds = Number(trimmed);
+    if (!isNaN(seconds) && seconds >= 0) {
+        return seconds * 1000;
+    }
+    /** @type {number} */
+    const dateMs = Date.parse(trimmed);
+    if (!isNaN(dateMs)) {
+        /** @type {number} */
+        const diffMs = dateMs - Date.now();
+        return diffMs > 0 ? diffMs : 0;
+    }
+    return undefined;
+}
+exports.parseRetryAfterMs = parseRetryAfterMs;
+/**
  * Error thrown when an HTTP request fails with a non-2xx status code.
- * Preserves the HTTP status code for structured error inspection and retry filtering.
+ * Preserves the HTTP status code and optional Retry-After duration for structured error inspection.
  * Uses Object.setPrototypeOf and a static type-guard to ensure reliable instanceof checks
  * across compilation targets and bundling environments.
  * @extends {Error}
@@ -93,13 +120,29 @@ class HttpError extends Error {
      * @public
      * @param {number} status
      * @param {(undefined|string)=} message
+     * @param {(undefined|number)=} retryAfterMs
      */
-    constructor(status, message) {
+    constructor(status, message, retryAfterMs) {
         super(message ?? `HTTP status ${status}`);
         this.status = status;
+        this.retryAfterMs = retryAfterMs;
         this.isHttpError = true;
         this.name = 'HttpError';
         Object.setPrototypeOf(this, HttpError.prototype);
+    }
+    /**
+     * Creates an HttpError from a fetch Response, extracting status and optional Retry-After header.
+     * @public
+     * @param {{status: number, headers: (undefined|{get: function(string): (null|string)})}} response
+     * @param {(undefined|string)=} message
+     * @return {!HttpError}
+     */
+    static fromResponse(response, message) {
+        /** @type {(undefined|null|string)} */
+        const retryAfterHeader = response.headers?.get('retry-after');
+        /** @type {(undefined|number)} */
+        const retryAfterMs = parseRetryAfterMs(retryAfterHeader);
+        return new HttpError(response.status, message ?? `HTTP status ${response.status}`, retryAfterMs);
     }
     /**
      * Checks whether an unknown error is an instance of HttpError.
@@ -128,7 +171,36 @@ if (false) {
      * @public
      */
     HttpError.prototype.status;
+    /**
+     * @const {(undefined|number)}
+     * @public
+     */
+    HttpError.prototype.retryAfterMs;
 }
+/**
+ * Determines whether an error is a non-retryable HTTP client error.
+ * HTTP 4xx errors are permanent client errors and should not be retried,
+ * except for HTTP 429 (Too Many Requests), which indicates transient rate limiting.
+ * @param {*} error
+ * @return {boolean}
+ */
+function isNonRetryableHttpError(error) {
+    return (HttpError.isHttpError(error) &&
+        (/** @type {!HttpError} */ (error)).status >= 400 &&
+        (/** @type {!HttpError} */ (error)).status < 500 &&
+        (/** @type {!HttpError} */ (error)).status !== 429);
+}
+exports.isNonRetryableHttpError = isNonRetryableHttpError;
+/**
+ * Standard retry predicate for network operations: retries all errors except
+ * non-retryable HTTP client errors (4xx other than 429).
+ * @param {*} error
+ * @return {boolean}
+ */
+function isRetryableError(error) {
+    return !isNonRetryableHttpError(error);
+}
+exports.isRetryableError = isRetryableError;
 /**
  * Options to configure exponential backoff retry behavior for network operations.
  * @record
@@ -161,6 +233,12 @@ if (false) {
      * @public
      */
     RetryOptions.prototype.maxDelayMs;
+    /**
+     * Timeout in milliseconds for each network attempt. Default: 120000ms (2 minutes)
+     * @const {(undefined|number)}
+     * @public
+     */
+    RetryOptions.prototype.timeoutMs;
 }
 /**
  * Default retry settings for network operations (3 attempts with 500ms initial delay).
@@ -171,6 +249,7 @@ exports.DEFAULT_RETRY_OPTIONS = {
     initialDelayMs: 500,
     backoffFactor: 2,
     maxDelayMs: 3000,
+    timeoutMs: 120000,
 };
 /**
  * Executes an asynchronous operation with exponential backoff retry logic.
@@ -183,10 +262,7 @@ exports.DEFAULT_RETRY_OPTIONS = {
  *                    If this returns false, retries abort immediately and the error is thrown.
  * @return {!Promise<T>} The resolved value of the operation upon success.
  */
-async function withRetry(operation, options, onRetry, shouldRetry = (/**
- * @return {boolean}
- */
-() => true)) {
+async function withRetry(operation, options, onRetry, shouldRetry = isRetryableError) {
     /** @type {number} */
     const maxAttempts = options?.maxAttempts ?? exports.DEFAULT_RETRY_OPTIONS.maxAttempts;
     /** @type {number} */
@@ -205,15 +281,21 @@ async function withRetry(operation, options, onRetry, shouldRetry = (/**
             if (attempt >= maxAttempts || !shouldRetry(error)) {
                 throw error;
             }
+            // If error specifies a Retry-After duration (e.g. HTTP 429 response),
+            // respect that duration up to maxDelayMs.
+            /** @type {number} */
+            const delay = HttpError.isHttpError(error) && (/** @type {!HttpError} */ (error)).retryAfterMs !== undefined
+                ? Math.min(Math.max((/** @type {!HttpError} */ (error)).retryAfterMs, 0), maxDelay)
+                : currentDelay;
             if (onRetry) {
-                onRetry(error, attempt, currentDelay);
+                onRetry(error, attempt, delay);
             }
             await new Promise((/**
              * @param {function((void|!PromiseLike<void>)): void} resolve
              * @return {void}
              */
             (resolve) => {
-                setTimeout(resolve, currentDelay);
+                setTimeout(resolve, delay);
             }));
             currentDelay = Math.min(currentDelay * factor, maxDelay);
         }
@@ -405,6 +487,8 @@ exports.verifyBinaryVersion = verifyBinaryVersion;
  * @return {!Promise<void>}
  */
 async function downloadFile(url, destPath, progressCallback, retryOptions, onRetry) {
+    /** @type {number} */
+    const timeoutMs = retryOptions?.timeoutMs ?? exports.DEFAULT_RETRY_OPTIONS.timeoutMs;
     /** @type {function(): !Promise<void>} */
     const singleAttempt = (/**
      * @return {!Promise<void>}
@@ -417,9 +501,11 @@ async function downloadFile(url, destPath, progressCallback, retryOptions, onRet
             () => { }));
         }
         /** @type {!Response} */
-        const response = await fetch(url);
+        const response = await fetch(url, {
+            signal: AbortSignal.timeout(timeoutMs),
+        });
         if (!response.ok) {
-            throw new HttpError(response.status, `Failed to download ${url}: HTTP status ${response.status}`);
+            throw HttpError.fromResponse(response, `Failed to download ${url}: HTTP status ${response.status}`);
         }
         /** @type {(null|string)} */
         const totalBytesStr = response.headers.get('content-length');
@@ -488,17 +574,7 @@ async function downloadFile(url, destPath, progressCallback, retryOptions, onRet
     await withRetry((/**
      * @return {!Promise<void>}
      */
-    () => singleAttempt()), retryOptions, onRetry, (/**
-     * @param {*} err
-     * @return {boolean}
-     */
-    (err) => {
-        // Non-retryable HTTP client errors (e.g. 400 Bad Request, 401/403 Auth, 404 Not Found)
-        if (HttpError.isHttpError(err) && (/** @type {!HttpError} */ (err)).status >= 400 && (/** @type {!HttpError} */ (err)).status < 500) {
-            return false;
-        }
-        return true;
-    }));
+    () => singleAttempt()), retryOptions, onRetry, isRetryableError);
 }
 exports.downloadFile = downloadFile;
 /**
@@ -535,18 +611,97 @@ function resolvePlatformBinaryInfo(manifest, platform, arch) {
 }
 exports.resolvePlatformBinaryInfo = resolvePlatformBinaryInfo;
 /**
+ * Fetches and parses a ReleaseManifest JSON directly from a URL with retry logic.
+ * @param {string} url
+ * @param {?} retryOptions
+ * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
+ * @return {!Promise<!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest>}
+ */
+async function fetchManifestFromUrl(url, retryOptions, outputChannel) {
+    return await withRetry((/**
+     * @return {!Promise<!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest>}
+     */
+    async () => {
+        /** @type {!Response} */
+        const response = await fetch(url, {
+            signal: AbortSignal.timeout(retryOptions.timeoutMs),
+        });
+        if (response.status !== 200) {
+            throw HttpError.fromResponse(response);
+        }
+        /** @type {*} */
+        const data = await response.json();
+        if (isValidReleaseManifestShape(data)) {
+            return data;
+        }
+        throw new Error(`Invalid manifest shape: ${JSON.stringify(data)}`);
+    }), retryOptions, (/**
+     * @param {*} err
+     * @param {number} attempt
+     * @param {number} delayMs
+     * @return {void}
+     */
+    (err, attempt, delayMs) => {
+        /** @type {string} */
+        const errMsg = err instanceof Error ? (/** @type {!Error} */ (err)).message : String(err);
+        outputChannel?.appendLine(`[INSTALL] Manifest fetch attempt ${attempt} from ${url} failed: ${errMsg}. Retrying in ${delayMs}ms...`);
+    }), isRetryableError);
+}
+exports.fetchManifestFromUrl = fetchManifestFromUrl;
+/**
+ * Probes the /latest text endpoint to discover a version string, then fetches
+ * the corresponding /{version}/manifest.json manifest.
+ * @param {string} baseUrlNoSlash
+ * @param {?} retryOptions
+ * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
+ * @return {!Promise<{manifest: (undefined|!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest), errorSnippet: (undefined|string)}>}
+ */
+async function fetchVersionedManifestCandidate(baseUrlNoSlash, retryOptions, outputChannel) {
+    /** @type {!Response} */
+    const latestResponse = await withRetry((/**
+     * @return {!Promise<!Response>}
+     */
+    async () => {
+        /** @type {!Response} */
+        const res = await fetch(`${baseUrlNoSlash}/latest`, {
+            signal: AbortSignal.timeout(retryOptions.timeoutMs),
+        });
+        if (res.status !== 200) {
+            throw HttpError.fromResponse(res);
+        }
+        return res;
+    }), retryOptions, undefined, isRetryableError);
+    /** @type {string} */
+    const latestText = await latestResponse.text();
+    /** @type {(null|!RegExpMatchArray)} */
+    const versionMatch = latestText.match(/(\d+\.\d+\.\d+[^ \t\n\r]*)/);
+    /** @type {string} */
+    const version = versionMatch ? versionMatch[1] : latestText.trim();
+    if (!version) {
+        return {
+            errorSnippet: `No version found in response text: "${latestText.substring(0, 100)}"`,
+        };
+    }
+    /** @type {!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest} */
+    const manifest = await fetchManifestFromUrl(`${baseUrlNoSlash}/${version}/manifest.json`, retryOptions, outputChannel);
+    return { manifest };
+}
+/**
  * Fetches and parses a ReleaseManifest from the release server.
  * Supports both direct .json manifest URLs and base service URLs (/manifests/{goos}_{goarch}.json).
  *
  * Candidate probing and retry strategy:
- * - Probes candidate endpoint formats sequentially:
+ * - Probes candidate endpoint formats sequentially for URL schema discovery:
  *     1. Production manifest: /manifests/{goos}_{goarch}.json
  *     2. Test / Custom build manifest: /latest -> /{version}/manifest.json
  *     3. Legacy manifest: /releases/latest/manifest.json
- * - 404 Not Found errors are deliberately NOT retried during candidate probing to avoid delaying
- *   fallback to subsequent candidate endpoints.
- * - Transient errors (e.g. 5xx server errors, connection resets, network drops) ARE retried with
- *   exponential backoff before abandoning each candidate endpoint.
+ * - 404 Not Found: Deliberately NOT retried during candidate probing to allow immediate
+ *   fallback to subsequent candidate endpoint formats across server version differences.
+ * - Non-HTTP errors vs HTTP status codes: Candidate probing exists solely for URL structure discovery.
+ *   If a candidate probe encounters a non-HTTP error (socket timeout, connection drop, DNS lookup failure),
+ *   the transport layer or host is unreachable. In that scenario, candidate probing aborts immediately without
+ *   attempting subsequent candidates on the same unreachable host, preventing the ~94.5s freeze (b/559283462).
+ * - Candidate timeout: Bounded to 1 attempt and a 5-second socket timeout per candidate by default.
  * @param {string} releaseBaseUrl
  * @param {(undefined|!RetryOptions)=} retryOptions
  * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
@@ -555,65 +710,16 @@ exports.resolvePlatformBinaryInfo = resolvePlatformBinaryInfo;
 async function fetchReleaseManifest(releaseBaseUrl, retryOptions, outputChannel) {
     /** @type {!Array<string>} */
     const errors = [];
-    /** @type {function(string): !Promise<!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest>} */
-    const fetchManifestCandidate = (/**
-     * @param {string} url
-     * @return {!Promise<!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest>}
-     */
-    async (url) => {
-        return await withRetry((/**
-         * @return {!Promise<!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest>}
-         */
-        async () => {
-            /** @type {!Response} */
-            const response = await fetch(url);
-            if (response.status !== 200) {
-                throw new HttpError(response.status);
-            }
-            /** @type {*} */
-            const data = await response.json();
-            if (isValidReleaseManifestShape(data)) {
-                return data;
-            }
-            throw new Error(`Invalid manifest shape: ${JSON.stringify(data)}`);
-        }), retryOptions, (/**
-         * @param {*} err
-         * @param {number} attempt
-         * @param {number} delayMs
-         * @return {void}
-         */
-        (err, attempt, delayMs) => {
-            /** @type {string} */
-            const errMsg = err instanceof Error ? (/** @type {!Error} */ (err)).message : String(err);
-            outputChannel?.appendLine(`[INSTALL] Manifest fetch attempt ${attempt} from ${url} failed: ${errMsg}. Retrying in ${delayMs}ms...`);
-        }), (/**
-         * @param {*} err
-         * @return {boolean}
-         */
-        (err) => {
-            // Do not retry 404 since it's normal during candidate endpoint probing
-            if (HttpError.isHttpError(err) && (/** @type {!HttpError} */ (err)).status === 404) {
-                return false;
-            }
-            return true;
-        }));
-    });
-    /** @type {function(string): !Promise<(undefined|!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest)>} */
-    const tryFetch = (/**
-     * @param {string} url
-     * @return {!Promise<(undefined|!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest)>}
-     */
-    async (url) => {
-        try {
-            return await fetchManifestCandidate(url);
-        }
-        catch (err) {
-            /** @type {string} */
-            const errMsg = err instanceof Error ? (/** @type {!Error} */ (err)).message : String(err);
-            errors.push(`- ${url}: ${errMsg}`);
-            return undefined;
-        }
-    });
+    // Default candidate probing to 1 attempt and a 5000ms timeout per candidate,
+    // unless explicitly configured by caller.
+    /** @type {?} */
+    const candidateRetryOptions = {
+        maxAttempts: retryOptions?.maxAttempts ?? 1,
+        initialDelayMs: retryOptions?.initialDelayMs ?? 500,
+        backoffFactor: retryOptions?.backoffFactor ?? 2,
+        maxDelayMs: retryOptions?.maxDelayMs ?? 3000,
+        timeoutMs: retryOptions?.timeoutMs ?? 5000,
+    };
     /** @type {boolean} */
     let isJsonManifest = false;
     try {
@@ -623,12 +729,14 @@ async function fetchReleaseManifest(releaseBaseUrl, retryOptions, outputChannel)
         isJsonManifest = releaseBaseUrl.endsWith('.json');
     }
     if (isJsonManifest) {
-        /** @type {(undefined|!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest)} */
-        const directManifest = await tryFetch(releaseBaseUrl);
-        if (directManifest) {
-            return directManifest;
+        try {
+            return await fetchManifestFromUrl(releaseBaseUrl, candidateRetryOptions, outputChannel);
         }
-        throw new Error(`Failed to fetch valid release manifest from direct JSON URL ${releaseBaseUrl}. Details:\n${errors.join('\n')}`);
+        catch (err) {
+            /** @type {string} */
+            const errMsg = err instanceof Error ? (/** @type {!Error} */ (err)).message : String(err);
+            throw new Error(`Failed to fetch valid release manifest from direct JSON URL ${releaseBaseUrl}. Details:\n- ${releaseBaseUrl}: ${errMsg}`);
+        }
     }
     /** @type {string} */
     const goos = process.platform === 'win32' ? 'windows' : process.platform;
@@ -639,60 +747,46 @@ async function fetchReleaseManifest(releaseBaseUrl, retryOptions, outputChannel)
     /** @type {string} */
     const platformManifestUrl = `${baseUrlNoSlash}/manifests/${goos}_${goarch}.json`;
     // Candidate 1 (Default / Production Version): try /manifests/{goos}_{goarch}.json
-    /** @type {(undefined|!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest)} */
-    const prodManifest = await tryFetch(platformManifestUrl);
-    if (prodManifest) {
-        return prodManifest;
+    try {
+        return await fetchManifestFromUrl(platformManifestUrl, candidateRetryOptions, outputChannel);
+    }
+    catch (err) {
+        /** @type {string} */
+        const errMsg = err instanceof Error ? (/** @type {!Error} */ (err)).message : String(err);
+        errors.push(`- ${platformManifestUrl}: ${errMsg}`);
+        if (!HttpError.isHttpError(err)) {
+            throw new Error(`Failed to fetch release manifest for ${releaseBaseUrl}. Details:\n${errors.join('\n')}`);
+        }
     }
     // Candidate 2 (Fallback / Test Build): try /latest -> /<version>/manifest.json based on data shape
     try {
-        /** @type {!Response} */
-        const latestResponse = await withRetry((/**
-         * @return {!Promise<!Response>}
-         */
-        async () => {
-            /** @type {!Response} */
-            const res = await fetch(`${baseUrlNoSlash}/latest`);
-            if (res.status !== 200) {
-                throw new HttpError(res.status);
-            }
-            return res;
-        }), retryOptions, undefined, (
-        // Do not retry 404 on /latest check to allow fallback to Candidate 3
-        /**
-         * @param {*} err
-         * @return {boolean}
-         */
-        (err) => !(HttpError.isHttpError(err) && (/** @type {!HttpError} */ (err)).status === 404)));
-        /** @type {string} */
-        const latestText = await latestResponse.text();
-        /** @type {(null|!RegExpMatchArray)} */
-        const versionMatch = latestText.match(/(\d+\.\d+\.\d+[^ \t\n\r]*)/);
-        /** @type {string} */
-        const version = versionMatch ? versionMatch[1] : latestText.trim();
-        if (version) {
-            /** @type {(undefined|!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest)} */
-            const testManifest = await tryFetch(`${baseUrlNoSlash}/${version}/manifest.json`);
-            if (testManifest) {
-                return testManifest;
-            }
+        /** @type {{manifest: (undefined|!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest), errorSnippet: (undefined|string)}} */
+        const candidate2Result = await fetchVersionedManifestCandidate(baseUrlNoSlash, candidateRetryOptions, outputChannel);
+        if (candidate2Result.manifest) {
+            return candidate2Result.manifest;
         }
-        else {
-            errors.push(`- ${baseUrlNoSlash}/latest: No version found in response text: "${latestText.substring(0, 100)}"`);
+        if (candidate2Result.errorSnippet) {
+            errors.push(`- ${baseUrlNoSlash}/latest: ${candidate2Result.errorSnippet}`);
         }
     }
     catch (err) {
         /** @type {string} */
         const errMsg = err instanceof Error ? (/** @type {!Error} */ (err)).message : String(err);
         errors.push(`- ${baseUrlNoSlash}/latest: ${errMsg}`);
+        if (!HttpError.isHttpError(err)) {
+            throw new Error(`Failed to fetch release manifest for ${releaseBaseUrl}. Details:\n${errors.join('\n')}`);
+        }
     }
     // Candidate 3 (Legacy Fallback): try /releases/latest/manifest.json
     /** @type {string} */
     const legacyUrl = `${baseUrlNoSlash}/releases/latest/manifest.json`;
-    /** @type {(undefined|!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest)} */
-    const legacyManifest = await tryFetch(legacyUrl);
-    if (legacyManifest) {
-        return legacyManifest;
+    try {
+        return await fetchManifestFromUrl(legacyUrl, candidateRetryOptions, outputChannel);
+    }
+    catch (err) {
+        /** @type {string} */
+        const errMsg = err instanceof Error ? (/** @type {!Error} */ (err)).message : String(err);
+        errors.push(`- ${legacyUrl}: ${errMsg}`);
     }
     throw new Error(`Failed to fetch release manifest from all candidate endpoints for ${releaseBaseUrl}. Details:\n${errors.join('\n')}`);
 }
@@ -812,6 +906,250 @@ async function verifyBinaryChecksum(filePath, binaryInfo, outputChannel, progres
     outputChannel.appendLine(`[INSTALL] ${(/** @type {string} */ (algorithm)).toUpperCase()} checksum verified successfully.`);
 }
 /**
+ * Options for safely promoting a binary to the destination installation path.
+ * @record
+ */
+function PromoteOptions() { }
+exports.PromoteOptions = PromoteOptions;
+/* istanbul ignore if */
+if (false) {
+    /**
+     * @const {(undefined|string)}
+     * @public
+     */
+    PromoteOptions.prototype.platform;
+    /**
+     * @const {(undefined|function(string, string): !Promise<void>)}
+     * @public
+     */
+    PromoteOptions.prototype.fsRename;
+    /**
+     * @const {(undefined|function(string): !Promise<void>)}
+     * @public
+     */
+    PromoteOptions.prototype.fsUnlink;
+    /**
+     * @const {(undefined|function(string): !Promise<boolean>)}
+     * @public
+     */
+    PromoteOptions.prototype.fsExists;
+    /**
+     * @const {(undefined|function(string): !Promise<!Array<string>>)}
+     * @public
+     */
+    PromoteOptions.prototype.fsReaddir;
+    /**
+     * @const {(undefined|number)}
+     * @public
+     */
+    PromoteOptions.prototype.maxAttempts;
+    /**
+     * @const {(undefined|number)}
+     * @public
+     */
+    PromoteOptions.prototype.initialDelayMs;
+}
+/** @type {?} */
+exports.DEFAULT_PROMOTE_OPTIONS = {
+    platform: process.platform,
+    fsRename: fs_1.promises.rename,
+    fsUnlink: fs_1.promises.unlink,
+    fsExists: pathExists,
+    fsReaddir: fs_1.promises.readdir,
+    maxAttempts: 5,
+    initialDelayMs: 100,
+};
+/**
+ * @param {(undefined|!PromoteOptions)=} options
+ * @return {?}
+ */
+function resolvePromoteOptions(options) {
+    return {
+        platform: options?.platform ?? exports.DEFAULT_PROMOTE_OPTIONS.platform,
+        fsRename: options?.fsRename ?? exports.DEFAULT_PROMOTE_OPTIONS.fsRename,
+        fsUnlink: options?.fsUnlink ?? exports.DEFAULT_PROMOTE_OPTIONS.fsUnlink,
+        fsExists: options?.fsExists ?? exports.DEFAULT_PROMOTE_OPTIONS.fsExists,
+        fsReaddir: options?.fsReaddir ?? exports.DEFAULT_PROMOTE_OPTIONS.fsReaddir,
+        maxAttempts: options?.maxAttempts ?? exports.DEFAULT_PROMOTE_OPTIONS.maxAttempts,
+        initialDelayMs: options?.initialDelayMs ?? exports.DEFAULT_PROMOTE_OPTIONS.initialDelayMs,
+    };
+}
+exports.resolvePromoteOptions = resolvePromoteOptions;
+/**
+ * Options for retryOnLock.
+ * @record
+ */
+function RetryOnLockOptions() { }
+exports.RetryOnLockOptions = RetryOnLockOptions;
+/* istanbul ignore if */
+if (false) {
+    /**
+     * @const {(undefined|number)}
+     * @public
+     */
+    RetryOnLockOptions.prototype.maxAttempts;
+    /**
+     * @const {(undefined|number)}
+     * @public
+     */
+    RetryOnLockOptions.prototype.initialDelayMs;
+    /**
+     * @const {(undefined|!tsickle_vscode_11.OutputChannel)}
+     * @public
+     */
+    RetryOnLockOptions.prototype.outputChannel;
+    /**
+     * @const {(undefined|function(number): !Promise<void>)}
+     * @public
+     */
+    RetryOnLockOptions.prototype.sleepFn;
+}
+/**
+ * Retries an asynchronous operation with exponential backoff if it fails with
+ * a transient Windows file lock error (EPERM, EBUSY, or EACCES).
+ * @template T
+ * @param {function(): !Promise<T>} fn
+ * @param {(undefined|!RetryOnLockOptions)=} options
+ * @return {!Promise<T>}
+ */
+async function retryOnLock(fn, options) {
+    /** @type {number} */
+    const maxAttempts = options?.maxAttempts ?? 5;
+    /** @type {number} */
+    let delay = options?.initialDelayMs ?? 100;
+    /** @type {(undefined|!tsickle_vscode_11.OutputChannel)} */
+    const outputChannel = options?.outputChannel;
+    /** @type {function(number): !Promise<void>} */
+    const sleep = options?.sleepFn ??
+        ((/**
+         * @param {number} ms
+         * @return {!Promise<void>}
+         */
+        (ms) => new Promise((/**
+         * @param {function((void|!PromiseLike<void>)): void} resolve
+         * @return {void}
+         */
+        (resolve) => {
+            setTimeout(resolve, ms);
+        }))));
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            return await fn();
+        }
+        catch (error) {
+            /** @type {(undefined|string)} */
+            const code = ((/** @type {{code: (undefined|string)}} */ (error)))?.code;
+            /** @type {boolean} */
+            const isLock = code === 'EPERM' || code === 'EBUSY' || code === 'EACCES';
+            if (attempt >= maxAttempts || !isLock) {
+                throw error;
+            }
+            outputChannel?.appendLine(`[INSTALL] Windows file lock encountered (${code ?? 'lock'}). Retrying in ${delay}ms (attempt ${attempt}/${maxAttempts})...`);
+            await sleep(delay);
+            delay *= 2;
+        }
+    }
+    throw new Error('Unreachable retryOnLock termination');
+}
+exports.retryOnLock = retryOnLock;
+/**
+ * Scans the binary installation directory and deletes any leftover `*.old.*` binary backups.
+ * Failures to delete specific files (e.g. if still locked by active processes) are non-fatal.
+ * @param {string} installDir
+ * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
+ * @param {(undefined|!PromoteOptions)=} options
+ * @return {!Promise<void>}
+ */
+async function cleanupStaleOldBinaries(installDir, outputChannel, options) {
+    const { fsReaddir, fsUnlink, fsExists } = resolvePromoteOptions(options);
+    try {
+        if (!(await fsExists(installDir))) {
+            return;
+        }
+        /** @type {!Array<string>} */
+        const entries = await fsReaddir(installDir);
+        /** @type {!RegExp} */
+        const oldBinaryPattern = /\.old\.[0-9a-fA-F]{8}$/;
+        for (const entry of entries) {
+            if (oldBinaryPattern.test(entry)) {
+                /** @type {string} */
+                const oldFilePath = (0, path_1.join)(installDir, entry);
+                try {
+                    await fsUnlink(oldFilePath);
+                    outputChannel?.appendLine(`[INSTALL] Cleaned up stale binary backup: ${oldFilePath}`);
+                }
+                catch (unlinkErr) {
+                    // File might still be locked by a running process, safe to ignore.
+                    outputChannel?.appendLine(`[INSTALL] Could not delete stale binary backup ${oldFilePath}: ${unlinkErr}`);
+                }
+            }
+        }
+    }
+    catch (err) {
+        outputChannel?.appendLine(`[INSTALL WARNING] Failed to clean up stale binaries in ${installDir}: ${err}`);
+    }
+}
+exports.cleanupStaleOldBinaries = cleanupStaleOldBinaries;
+/**
+ * Promotes a newly extracted or downloaded binary to the destination path safely across platforms.
+ *
+ * Windows File Locking Handling:
+ * - On Windows (NTFS), running executables cannot be deleted or overwritten in-place,
+ *   causing `fs.rename` to fail with `EPERM` or `EBUSY`.
+ * - However, Windows NTFS allows renaming an open executable if it was launched with
+ *   `FILE_SHARE_DELETE` (which the Windows PE loader sets).
+ * - Therefore, on Windows:
+ *   1. If destination (`installPath`) exists, rename it aside to `<installPath>.old.<id>`.
+ *   2. Move `sourcePath` to `installPath`.
+ *   3. Clean up the `.old` file and any leftover stale backups in the directory.
+ *   4. Wrap operations in an exponential backoff retry loop (default 5 attempts) to wait
+ *      out transient antivirus (e.g. Windows Defender) or indexing file locks.
+ * @param {string} sourcePath
+ * @param {string} installPath
+ * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
+ * @param {(undefined|!PromoteOptions)=} options
+ * @return {!Promise<void>}
+ */
+async function promoteBinarySafely(sourcePath, installPath, outputChannel, options) {
+    /** @type {?} */
+    const resolved = resolvePromoteOptions(options);
+    const { platform, fsRename, fsExists, maxAttempts, initialDelayMs } = resolved;
+    if (platform !== 'win32') {
+        await fs_1.promises.chmod(sourcePath, 0o755);
+        await fsRename(sourcePath, installPath);
+        return;
+    }
+    // If installPath exists on Windows, rename it aside first
+    /** @type {(undefined|string)} */
+    let stagedOldPath;
+    if (await fsExists(installPath)) {
+        stagedOldPath = `${installPath}.old.${(0, crypto_1.randomUUID)().slice(0, 8)}`;
+        try {
+            await retryOnLock((/**
+             * @return {!Promise<void>}
+             */
+            async () => {
+                await fsRename(installPath, (/** @type {string} */ (stagedOldPath)));
+            }), { maxAttempts, initialDelayMs, outputChannel });
+            outputChannel?.appendLine(`[INSTALL] Staged existing Windows binary aside to ${stagedOldPath}`);
+        }
+        catch (err) {
+            outputChannel?.appendLine(`[INSTALL WARNING] Failed to rename existing Windows binary aside: ${err}. Attempting direct replacement...`);
+            stagedOldPath = undefined;
+        }
+    }
+    // Promote the new binary to installPath with lock retry
+    await retryOnLock((/**
+     * @return {!Promise<void>}
+     */
+    async () => {
+        await fsRename(sourcePath, installPath);
+    }), { maxAttempts, initialDelayMs, outputChannel });
+    // Clean up the staged old binary and any leftover stale backups in the install directory.
+    await cleanupStaleOldBinaries((0, path_1.dirname)(installPath), outputChannel, resolved);
+}
+exports.promoteBinarySafely = promoteBinarySafely;
+/**
  * @record
  */
 function UnpackOptions() { }
@@ -852,67 +1190,68 @@ async function unpackAndPromote(options) {
     /** @type {string} */
     const installDir = (0, path_1.dirname)(installPath);
     if (!isTarGz) {
-        if (process.platform !== 'win32') {
-            await fs_1.promises.chmod(stagingPath, 0o755);
-        }
-        await fs_1.promises.rename(stagingPath, installPath);
+        await promoteBinarySafely(stagingPath, installPath, outputChannel);
         return;
     }
     progress?.report({ message: 'Unpacking Antigravity Backend archive...' });
-    outputChannel.appendLine(`[INSTALL] Unpacking tar.gz archive into ${installDir}...`);
-    try {
-        await execFileAsync('tar', ['-xzf', stagingPath, '-C', installDir]);
-    }
-    catch (error) {
-        /** @type {string} */
-        const errorText = `Failed to extract tar.gz archive ${stagingPath}: ${error}`;
-        outputChannel.appendLine(`[INSTALL ERROR] ${errorText}`);
-        throw new Error(errorText, { cause: error });
-    }
-    /** @type {boolean} */
-    const isWin = process.platform === 'win32';
     /** @type {string} */
-    const ext = isWin ? '.exe' : '';
-    /** @type {!Array<string>} */
-    const candidateNames = [
-        `antigravity${ext}`,
-        `agy${ext}`,
-        `cli${ext}`,
-        (0, path_1.join)('bin', `antigravity${ext}`),
-        (0, path_1.join)('bin', `agy${ext}`),
-        (0, path_1.join)('bin', `cli${ext}`),
-    ];
-    /** @type {boolean} */
-    let foundAndPromoted = false;
-    for (const candidate of candidateNames) {
+    const tempExtractDir = (0, path_1.join)(installDir, `.unpack_${(0, crypto_1.randomUUID)().slice(0, 8)}`);
+    outputChannel.appendLine(`[INSTALL] Unpacking tar.gz archive into temporary dir ${tempExtractDir}...`);
+    try {
+        await fs_1.promises.mkdir(tempExtractDir, { recursive: true });
+        try {
+            await execFileAsync('tar', ['-xzf', stagingPath, '-C', tempExtractDir]);
+        }
+        catch (error) {
+            /** @type {string} */
+            const errorText = `Failed to extract tar.gz archive ${stagingPath}: ${error}`;
+            outputChannel.appendLine(`[INSTALL ERROR] ${errorText}`);
+            throw new Error(errorText, { cause: error });
+        }
+        /** @type {boolean} */
+        const isWin = process.platform === 'win32';
         /** @type {string} */
-        const extractedPath = (0, path_1.join)(installDir, candidate);
-        if (await pathExists(extractedPath)) {
-            if (process.platform !== 'win32') {
-                await fs_1.promises.chmod(extractedPath, 0o755);
+        const ext = isWin ? '.exe' : '';
+        /** @type {!Array<string>} */
+        const candidateNames = [
+            `antigravity${ext}`,
+            `agy${ext}`,
+            `cli${ext}`,
+            (0, path_1.join)('bin', `antigravity${ext}`),
+            (0, path_1.join)('bin', `agy${ext}`),
+            (0, path_1.join)('bin', `cli${ext}`),
+        ];
+        /** @type {boolean} */
+        let foundAndPromoted = false;
+        for (const candidate of candidateNames) {
+            /** @type {string} */
+            const extractedPath = (0, path_1.join)(tempExtractDir, candidate);
+            if (await pathExists(extractedPath)) {
+                await promoteBinarySafely(extractedPath, installPath, outputChannel);
+                foundAndPromoted = true;
+                break;
             }
-            if (extractedPath !== installPath) {
-                await fs_1.promises.rename(extractedPath, installPath);
-            }
-            foundAndPromoted = true;
-            break;
+        }
+        if (!foundAndPromoted) {
+            /** @type {string} */
+            const errorText = `Could not find executable in unpacked archive at ${tempExtractDir} (checked ${candidateNames.join(', ')})`;
+            outputChannel.appendLine(`[INSTALL ERROR] ${errorText}`);
+            throw new Error(errorText);
         }
     }
-    if (!foundAndPromoted && (await pathExists(stagingPath))) {
-        await fs_1.promises.unlink(stagingPath).catch((/**
+    finally {
+        await fs_1.promises
+            .rm(tempExtractDir, { recursive: true, force: true })
+            .catch((/**
          * @return {void}
          */
         () => { }));
-        /** @type {string} */
-        const errorText = `Could not find executable in unpacked archive at ${installDir} (checked ${candidateNames.join(', ')})`;
-        outputChannel.appendLine(`[INSTALL ERROR] ${errorText}`);
-        throw new Error(errorText);
-    }
-    if (await pathExists(stagingPath)) {
-        await fs_1.promises.unlink(stagingPath).catch((/**
-         * @return {void}
-         */
-        () => { }));
+        if (await pathExists(stagingPath)) {
+            await fs_1.promises.unlink(stagingPath).catch((/**
+             * @return {void}
+             */
+            () => { }));
+        }
     }
 }
 /**
@@ -964,6 +1303,9 @@ async function acquireInstalledBinaryPath(options) {
     const { context, outputChannel, progress, configOverride, targetPathOverride, retryOptions, } = options;
     /** @type {string} */
     const installPath = targetPathOverride ?? getInstalledTargetPath();
+    /** @type {string} */
+    const installDir = (0, path_1.dirname)(installPath);
+    await cleanupStaleOldBinaries(installDir, outputChannel);
     /** @type {?} */
     const extVersion = context?.extension?.packageJSON?.version ?? 'unknown';
     outputChannel.appendLine(`[INSTALL] Initializing update check. Platform: ${process.platform}-${process.arch}, Extension Version: ${extVersion}`);
@@ -985,21 +1327,71 @@ async function acquireInstalledBinaryPath(options) {
         releaseBaseUrl === 'https://storage.googleapis.com/antigravity-releases') {
         releaseBaseUrl = getDefaultReleaseBaseUrl();
     }
-    outputChannel.appendLine(`[INSTALL] Checking for updates at releaseBaseUrl=${releaseBaseUrl}...`);
+    // Check whether a locally installed binary already exists and satisfies MIN_AGY_VERSION.
+    // If so, attempt to check for updates with a fast timeout (3000ms budget). If unreachable or offline,
+    // skip the update check and start the existing binary immediately to avoid blocking cold start.
+    /** @type {(undefined|string)} */
+    const existingValidVersion = await verifyBinaryVersion(installPath, exports.MIN_AGY_VERSION, outputChannel);
     /** @type {string} */
     let targetVersion = exports.MIN_AGY_VERSION;
     /** @type {boolean} */
     let manifestFetched = false;
-    try {
-        /** @type {!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest} */
-        const manifest = await fetchReleaseManifest(releaseBaseUrl, retryOptions, outputChannel);
-        if (manifest && manifest.version) {
-            targetVersion = manifest.version;
-            manifestFetched = true;
+    if (existingValidVersion) {
+        outputChannel.appendLine(`[INSTALL] Found existing valid binary v${existingValidVersion} (>= ${exports.MIN_AGY_VERSION}). Checking for updates with 3s budget...`);
+        /** @type {number} */
+        const updateCheckTimeoutMs = retryOptions?.timeoutMs ?? 3000;
+        /** @type {(undefined|?)} */
+        let timerId;
+        /** @type {!Promise<?>} */
+        const timeoutPromise = new Promise((/**
+         * @param {function(!PromiseLike<?>): void} _
+         * @param {function(?=): void} reject
+         * @return {void}
+         */
+        (_, reject) => {
+            timerId = setTimeout((/**
+             * @return {void}
+             */
+            () => {
+                reject(new Error(`Update check timed out after ${updateCheckTimeoutMs}ms`));
+            }), updateCheckTimeoutMs);
+            timerId.unref?.();
+        }));
+        try {
+            /** @type {!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest} */
+            const manifest = await Promise.race([
+                fetchReleaseManifest(releaseBaseUrl, { ...retryOptions, maxAttempts: 1, timeoutMs: updateCheckTimeoutMs }, outputChannel),
+                timeoutPromise,
+            ]);
+            if (manifest && manifest.version) {
+                targetVersion = manifest.version;
+                manifestFetched = true;
+            }
+        }
+        catch (err) {
+            outputChannel.appendLine(`[INSTALL] Could not fetch release manifest: ${err}. Falling back to validation target version ${exports.MIN_AGY_VERSION}.`);
+            outputChannel.appendLine(`[INSTALL] Fast-path update check skipped (${err}). Continuing with existing binary v${existingValidVersion}.`);
+            return installPath;
+        }
+        finally {
+            if (timerId) {
+                clearTimeout(timerId);
+            }
         }
     }
-    catch (err) {
-        outputChannel.appendLine(`[INSTALL] Could not fetch release manifest: ${err}. Falling back to validation target version ${exports.MIN_AGY_VERSION}.`);
+    else {
+        outputChannel.appendLine(`[INSTALL] Checking for updates at releaseBaseUrl=${releaseBaseUrl}...`);
+        try {
+            /** @type {!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest} */
+            const manifest = await fetchReleaseManifest(releaseBaseUrl, retryOptions, outputChannel);
+            if (manifest && manifest.version) {
+                targetVersion = manifest.version;
+                manifestFetched = true;
+            }
+        }
+        catch (err) {
+            outputChannel.appendLine(`[INSTALL] Could not fetch release manifest: ${err}. Falling back to validation target version ${exports.MIN_AGY_VERSION}.`);
+        }
     }
     /** @type {(undefined|string)} */
     const lastInstalledUrl = context.globalState.get('antigravity.lastInstalledReleaseBaseUrl');
@@ -1105,6 +1497,20 @@ async function acquireInstalledBinaryPath(options) {
             /** @type {string} */
             const errMsg = error instanceof Error ? (/** @type {!Error} */ (error)).message : String(error);
             outputChannel.appendLine(`[INSTALL ERROR] ${errMsg}`);
+            // Offline / network failure fallback: If downloading the update failed due to network/server issues,
+            // but an existing installed binary is present on disk and satisfies MIN_AGY_VERSION, fall back to
+            // using it so the extension remains operational offline.
+            // Do not fall back on cryptographic checksum, signature, or integrity verification errors.
+            /** @type {boolean} */
+            const isIntegrityError = /checksum.*failed|signature.*failed|integrity.*failed/i.test(errMsg);
+            if (!isIntegrityError) {
+                /** @type {(undefined|string)} */
+                const fallbackVersion = await verifyBinaryVersion(installPath, exports.MIN_AGY_VERSION, outputChannel);
+                if (fallbackVersion) {
+                    outputChannel.appendLine(`[INSTALL WARNING] Update download failed (${errMsg}), but existing installed binary v${fallbackVersion} meets minimum version requirement (>= ${exports.MIN_AGY_VERSION}). Falling back to existing binary to maintain offline availability.`);
+                    return installPath;
+                }
+            }
             throw error;
         }
     });

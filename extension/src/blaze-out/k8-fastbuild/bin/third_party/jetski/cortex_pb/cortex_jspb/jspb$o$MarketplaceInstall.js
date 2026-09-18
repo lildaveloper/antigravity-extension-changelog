@@ -26,6 +26,7 @@ jspb$o$exa$cortex_pb$MarketplaceInstall.internal_toObject = function(msg) {
   return /** @type {?} */ (/** @type {!jspb$exa$cortex_pb$MutableMarketplaceInstall.ObjectFormat} */ ({
     marketplace: jspb_internal_adapters.getStringFieldWithDefault(msg, 1),
     id: jspb_internal_adapters.getStringFieldWithDefault(msg, 2),
+    version: jspb_internal_adapters.getStringFieldWithDefault(msg, 3),
   }));
 
 };
@@ -66,6 +67,7 @@ jspb$o$exa$cortex_pb$MarketplaceInstall.fromObject = function(obj) {
   const msg = new jspb$exa$cortex_pb$MutableMarketplaceInstall();
   jspb_internal_adapters.setProto3StringField(msg, 1, obj.marketplace);
   jspb_internal_adapters.setProto3StringField(msg, 2, obj.id);
+  jspb_internal_adapters.setProto3StringField(msg, 3, obj.version);
   return msg;
 };
 }

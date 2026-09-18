@@ -107,13 +107,12 @@ fava.dom.getTextWidthInPixels = function(
  * @param {string=} opt_className Optional CSS class name.
  * @param {Object=} opt_styles Name-value map of styles to apply to the text.
  * @return {number} A length in pixels.
- * @suppress {strictMissingProperties} go/strict_warnings_migration
  */
 fava.dom.widthToPixels = function(
     width, opt_domHelper, opt_className, opt_styles) {
   const measuringDiv =
       new fava.dom.MeasuringDiv(opt_domHelper, opt_className, opt_styles);
-  const div = measuringDiv.getDiv();
+  const div = /** @type {!HTMLElement} */ (measuringDiv.getDiv());
   div.style.width = width;
   const newWidth = div.clientWidth || div.offsetWidth;
   measuringDiv.dispose();

@@ -58,6 +58,12 @@ function registerAntigravityStatusBar(context) {
     async (targetScreen) => {
         await openAntigravitySettings(targetScreen);
     })));
+    context.subscriptions.push(vscode.commands.registerCommand('antigravity.feedback', (/**
+     * @return {!Promise<void>}
+     */
+    async () => {
+        await openAntigravitySettings('Provide Feedback');
+    })));
     return statusBarItem;
 }
 exports.registerAntigravityStatusBar = registerAntigravityStatusBar;

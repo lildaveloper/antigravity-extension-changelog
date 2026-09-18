@@ -26,6 +26,7 @@ jspb$o$jetski_memory$AmbientInjectionConfig.internal_toObject = function(msg) {
   return /** @type {?} */ (/** @type {!jspb$jetski_memory$MutableAmbientInjectionConfig.ObjectFormat} */ ({
     disable: jspb_internal_adapters.getBooleanFieldWithDefault(msg, 1),
     bin: jspb_internal_adapters.getStringFieldWithDefault(msg, 2),
+    retrievalQuery: jspb_internal_adapters.getStringFieldWithDefault(msg, 3),
   }));
 
 };
@@ -66,6 +67,7 @@ jspb$o$jetski_memory$AmbientInjectionConfig.fromObject = function(obj) {
   const msg = new jspb$jetski_memory$MutableAmbientInjectionConfig();
   jspb_internal_adapters.setProto3BooleanField(msg, 1, obj.disable);
   jspb_internal_adapters.setProto3StringField(msg, 2, obj.bin);
+  jspb_internal_adapters.setProto3StringField(msg, 3, obj.retrievalQuery);
   return msg;
 };
 }

@@ -90,6 +90,11 @@ if (false) {
      */
     ExtensionApiConfig.prototype.context;
     /**
+     * @type {(undefined|!tsickle_delegate_interfaces_10.HostDiagnosticsProvider)}
+     * @public
+     */
+    ExtensionApiConfig.prototype.hostDiagnosticsProvider;
+    /**
      * @type {!tsickle_delegate_interfaces_10.HostAppConfig}
      * @public
      */
@@ -237,6 +242,15 @@ class ExtensionApiImpl {
      */
     get onDidRegisterView() {
         return this.onDidRegisterViewEmitter.event;
+    }
+    /**
+     * Registers the HostDiagnosticsProvider with this extension API instance.
+     * @public
+     * @param {!tsickle_delegate_interfaces_10.HostDiagnosticsProvider} provider
+     * @return {void}
+     */
+    setHostDiagnosticsProvider(provider) {
+        this.hostDiagnosticsProvider = provider;
     }
     /**
      * Registers the TerminalPanelProvider with this extension API instance.
@@ -513,6 +527,7 @@ class ExtensionApiImpl {
         this.browserNotificationDelegate = config.browserNotificationDelegate;
         this.connectionResolver = config.connectionResolver;
         this.context = config.context;
+        this.hostDiagnosticsProvider = config.hostDiagnosticsProvider;
         this.naming = config.naming;
         this.viewLocation = config.naming.viewLocation;
         this.telemetry = config.telemetry;
@@ -755,57 +770,6 @@ class ExtensionApiImpl {
                 },
             });
         })));
-        this.context.subscriptions.push(vscode.AntigravityFiles?.onDidDragToCascade((/**
-         * @param {!Array<!tsickle_vscode_8.AntigravityFiles.FileDragItem>} items
-         * @return {!Promise<void>}
-         */
-        async (items) => {
-            /** @type {!Array<(undefined|string|{value: ?, case: string}|{case: undefined, value: undefined}|{case: string, value: ?})>} */
-            const chunks = await Promise.all(items.map((/**
-             * @param {!tsickle_vscode_8.AntigravityFiles.FileDragItem} item
-             * @return {!Promise<(undefined|string|{value: ?, case: string}|{case: undefined, value: undefined}|{case: string, value: ?})>}
-             */
-            async (item) => {
-                if (item.range) {
-                    return {
-                        case: 'fileLineRange',
-                        value: {
-                            absoluteUri: item.uri.toString(),
-                            startLine: item.range.start.line,
-                            endLine: item.range.end.line,
-                        },
-                    };
-                }
-                /** @type {boolean} */
-                let isDirectory = false;
-                try {
-                    /** @type {!tsickle_vscode_8.FileStat} */
-                    const stat = await vscode.workspace.fs.stat(item.uri);
-                    isDirectory = (stat.type & vscode.FileType.Directory) !== 0;
-                }
-                catch {
-                    // Ignore stat error and default to file
-                }
-                if (isDirectory) {
-                    return {
-                        case: 'directory',
-                        value: {
-                            absoluteUri: item.uri.toString(),
-                        },
-                    };
-                }
-                return {
-                    case: 'file',
-                    value: {
-                        absoluteUri: item.uri.toString(),
-                    },
-                };
-            })));
-            await this.addContext(...chunks);
-        })) ?? { dispose: (/**
-             * @return {void}
-             */
-            () => { }) });
         this.context.subscriptions.push(vscode.commands.registerCommand('antigravity.triggerSend', (/**
          * @return {!Promise<void>}
          */
@@ -815,7 +779,6 @@ class ExtensionApiImpl {
             view.focus();
             await view.api.triggerSend({});
         })));
-        this.registerCascadeListeners();
         this.registerDiffZoneCommands();
         this.editorStateWatcher = new editor_state_watcher_1.EditorStateWatcher({
             views: (/**
@@ -982,42 +945,6 @@ class ExtensionApiImpl {
             return this.modifiedContentsMap.get(fileUri) ?? '';
         }
         return '';
-    }
-    /**
-     * @private
-     * @return {void}
-     */
-    registerCascadeListeners() {
-        if (typeof vscode.Cascade === 'undefined')
-            return;
-        this.context.subscriptions.push(vscode.Cascade.onDidRequestAcceptAllInFile((/**
-         * @param {{uri: !tsickle_vscode_8.Uri}} __0
-         * @return {!Promise<void>}
-         */
-        async ({ uri }) => {
-            await this.agentEditManager.handleResolveAllAgentEditsInFile(uri.toString(), true);
-        })));
-        this.context.subscriptions.push(vscode.Cascade.onDidRequestRejectAllInFile((/**
-         * @param {{uri: !tsickle_vscode_8.Uri}} __0
-         * @return {!Promise<void>}
-         */
-        async ({ uri }) => {
-            await this.agentEditManager.handleResolveAllAgentEditsInFile(uri.toString(), false);
-        })));
-        this.context.subscriptions.push(vscode.Cascade.onDidRequestNextHunk((/**
-         * @param {!tsickle_vscode_8.Uri} uri
-         * @return {void}
-         */
-        (uri) => {
-            this.agentEditManager.focusHunk(uri.toString(), 'next');
-        })));
-        this.context.subscriptions.push(vscode.Cascade.onDidRequestPreviousHunk((/**
-         * @param {!tsickle_vscode_8.Uri} uri
-         * @return {void}
-         */
-        (uri) => {
-            this.agentEditManager.focusHunk(uri.toString(), 'previous');
-        })));
     }
     /**
      * @private
@@ -1967,12 +1894,51 @@ class ExtensionApiImpl {
      * @return {!Promise<*>}
      */
     async provideFeedback(request) {
-        void vscode.commands.executeCommand('feedback.start', {
-            bucket: 'jetski-web',
-            title: request.title,
-            description: request.description,
-        });
+        if ((0, util_1.isInCider)()) {
+            void vscode.commands.executeCommand('feedback.start', {
+                bucket: 'jetski-web',
+                title: request.title,
+                description: request.description,
+            });
+        }
+        else {
+            try {
+                await vscode.commands.executeCommand('antigravity.feedback', {
+                    title: request.title,
+                    description: request.description,
+                });
+            }
+            catch {
+                void vscode.commands.executeCommand('antigravity.openSettings', 'Provide Feedback');
+            }
+        }
         return {};
+    }
+    /**
+     * @public
+     * @param {*} request
+     * @return {!Promise<?>}
+     */
+    async getHostDiagnostics(request) {
+        try {
+            /** @type {(undefined|!tsickle_delegate_interfaces_10.HostDiagnostics)} */
+            const hostDiagnostics = await this.hostDiagnosticsProvider?.getHostDiagnostics();
+            return (0, protobuf_1.create)(iframe_messages_pb_1.GetHostDiagnosticsResponseSchema, {
+                installLogs: hostDiagnostics?.installLogs ?? [],
+                extensionLogs: hostDiagnostics?.extensionLogs ?? [],
+                binaryVersion: hostDiagnostics?.binaryVersion ?? '',
+                binaryPath: hostDiagnostics?.binaryPath ?? '',
+            });
+        }
+        catch (error) {
+            console.error('[Jetski] Failed to get host diagnostics:', error);
+            return (0, protobuf_1.create)(iframe_messages_pb_1.GetHostDiagnosticsResponseSchema, {
+                installLogs: [],
+                extensionLogs: [],
+                binaryVersion: '',
+                binaryPath: '',
+            });
+        }
     }
     /**
      * @public
@@ -2282,6 +2248,11 @@ if (false) {
      * @private
      */
     ExtensionApiImpl.prototype.terminalPanelProvider;
+    /**
+     * @type {(undefined|!tsickle_delegate_interfaces_10.HostDiagnosticsProvider)}
+     * @private
+     */
+    ExtensionApiImpl.prototype.hostDiagnosticsProvider;
     /**
      * Reference to the SettingsEditorProvider instance.
      * Enables ExtensionApiImpl to:

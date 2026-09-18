@@ -88,6 +88,34 @@ jspb$jetski_memory$MutableAmbientInjectionConfig = class extends jspb_internal_p
   }
 
 
+  /**
+   * optional string retrieval_query = 3;
+   * @override
+   * @return {string}
+   */
+  getRetrievalQuery() {
+    return jspb_internal_adapters.getStringFieldWithDefault(this, 3);
+  }
+
+
+  /**
+   * @param {string|null|undefined} value
+   * @return {!jspb$jetski_memory$MutableAmbientInjectionConfig} returns this
+   */
+  setRetrievalQuery(value) {
+    return jspb_internal_adapters.setProto3StringField(this, 3, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$jetski_memory$MutableAmbientInjectionConfig} returns this
+   */
+  clearRetrievalQuery() {
+    return jspb_internal_adapters.clearField(this, 3);
+  }
+
+
 };
 
 /**
@@ -115,7 +143,8 @@ jspb$jetski_memory$MutableAmbientInjectionConfig.hasInstance = /** @pureOrBreakM
  * Object form of AmbientInjectionConfig as accepted by the `fromObject` method.
  * @typedef {{
  *  disable: (?boolean|undefined),
- *  bin: (?string|undefined)
+ *  bin: (?string|undefined),
+ *  retrievalQuery: (?string|undefined)
  * }}
  */
 jspb$jetski_memory$MutableAmbientInjectionConfig.ObjectFormat;
@@ -175,7 +204,8 @@ if (goog.DEBUG && !COMPILED) {
  * Interface form of AmbientInjectionConfig as accepted by `fromFields` and produced by `getFields`.
  * @typedef {{
  *  disable: (boolean|undefined),
- *  bin: (string|undefined)
+ *  bin: (string|undefined),
+ *  retrievalQuery: (string|undefined)
  * }}
  */
 jspb$jetski_memory$MutableAmbientInjectionConfig.FieldsInterface;

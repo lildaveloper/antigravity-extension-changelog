@@ -23,7 +23,8 @@ goog.require('jspb_internal_public_for_gencode');
 jspb$b$jetski_memory$AmbientInjectionConfig.fields = /** @pureOrBreakMyCode */([
   0,
   jspb_internal_binary.RBoolIgnoringDefaultWBool,
-  jspb_internal_binary.RStringRequireUtf8IgnoringDefaultWString
+  jspb_internal_binary.RStringRequireUtf8IgnoringDefaultWString,
+  -1
 ]);
 
 /**

@@ -141,6 +141,7 @@ async function desktopSetup(context, messageNotifier, telemetry) {
  */
 function activate(context) {
     (0, server_manager_1.initializeHostSecurityEnvironment)();
+    (0, server_manager_1.configureHostProxyEnvironment)();
     (0, status_bar_1.registerAntigravityStatusBar)(context);
     // Command to clear persistent conversation and diff state from workspaceState:
     // - 'lastConversationId': The conversation route to restore on reload. If pointing to a deleted
@@ -279,6 +280,7 @@ function activate(context) {
         telemetry,
         workspaceManager,
         webviewDelegate,
+        hostDiagnosticsProvider: server_manager_1.AntigravityServerManager.getInstance(),
         setupFn: (/**
          * @param {!tsickle_vscode_1.ExtensionContext} ctx
          * @param {!tsickle_loading_message_impl_8.MessageNotifierImpl} notifier

@@ -121,7 +121,7 @@ exports.getWorkspaceRoot = getWorkspaceRoot;
  */
 function getWorkspaceQueryParams(workspaceId, scmExtensionConfig) {
     /** @type {!URLSearchParams} */
-    const searchParams = getPreservableParams();
+    const searchParams = new URLSearchParams(window.location.search);
     searchParams.set('ws', `${workspaceId.getOwner()}/${workspaceId.getName()}`);
     if (workspaceId.getVcs() === workspace_id_proto_1.WorkspaceId.Vcs.COG) {
         searchParams.set('vcs', 'cog');
@@ -166,16 +166,6 @@ function stripCreationParams(search) {
     return params.toString();
 }
 exports.stripCreationParams = stripCreationParams;
-/**
- * Returns a new URLSearchParams with the query params from the current URL that
- * should be preserved when reloading the Cider window, for example when
- * creating or opening a new workspace.
- * @return {!URLSearchParams}
- */
-function getPreservableParams() {
-    return new URLSearchParams(window.location.search);
-}
-exports.getPreservableParams = getPreservableParams;
 /**
  * Returns where a given workspace should be mounted in the file system when
  * accessed by its citc ID (instead of its alias).

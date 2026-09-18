@@ -14,11 +14,13 @@
 goog.module('google3.devtools.cider.extensions.jetski.diff_zones.agent_edit_manager');
 var module = module || { id: 'devtools/cider/extensions/jetski/diff_zones/agent_edit_manager.closure.js' };
 goog.require('google3.third_party.javascript.tslib.tslib');
-const tsickle_workspace_1 = goog.requireType("google3.devtools.cider.extensionutils.workspace");
-const tsickle_vscode_2 = goog.requireType("vscode");
-const tsickle_diff_zone_renderer_3 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.diff_zone_renderer");
-const tsickle_hunk_storage_4 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.hunk_storage");
-const tsickle_utils_5 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.utils");
+const tsickle_cider_1 = goog.requireType("google3.devtools.cider.extensions.cider");
+const tsickle_workspace_2 = goog.requireType("google3.devtools.cider.extensionutils.workspace");
+const tsickle_vscode_3 = goog.requireType("vscode");
+const tsickle_diff_zone_renderer_4 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.diff_zone_renderer");
+const tsickle_hunk_storage_5 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.hunk_storage");
+const tsickle_utils_6 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.utils");
+const cider_1 = goog.require('google3.devtools.cider.extensions.cider');
 const workspace_1 = goog.require('google3.devtools.cider.extensionutils.workspace');
 const vscode = goog.require('vscode'); // from //devtools/cider/extensions:vscode
 const hunk_storage_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.hunk_storage');
@@ -143,14 +145,14 @@ if (false) {
 /**
  * Manages the lifecycle of interactive editor diff zones.
  * Tracks active diff zones, handles hunk resolution events, and manages cleaning them up.
- * @implements {tsickle_vscode_2.TextDocumentContentProvider}
- * @extends {tsickle_vscode_2.Disposable}
+ * @implements {tsickle_vscode_3.TextDocumentContentProvider}
+ * @extends {tsickle_vscode_3.Disposable}
  */
 class AgentEditManager {
     /**
      * @public
-     * @param {!tsickle_vscode_2.ExtensionContext} context Extension context for state persistence.
-     * @param {function(): (undefined|!tsickle_diff_zone_renderer_3.DiffZoneRenderer)} createDiffZoneRenderer Factory method returning the active DiffZoneRenderer strategy.
+     * @param {!tsickle_vscode_3.ExtensionContext} context Extension context for state persistence.
+     * @param {function(): (undefined|!tsickle_diff_zone_renderer_4.DiffZoneRenderer)} createDiffZoneRenderer Factory method returning the active DiffZoneRenderer strategy.
      * @param {(undefined|!AgentEditManagerOptions)=} options Options bucket for settings such as autoAcceptOnChat and ageOutThreshold.
      * @param {(undefined|function(string, string, string): !Promise<void>)=} openStandardDiff Optional callback for opening standard resolved diff views.
      */
@@ -217,7 +219,7 @@ class AgentEditManager {
      * @return {void}
      */
     updateDiffZoneRenderer() {
-        /** @type {(undefined|!tsickle_diff_zone_renderer_3.DiffZoneRenderer)} */
+        /** @type {(undefined|!tsickle_diff_zone_renderer_4.DiffZoneRenderer)} */
         const newRenderer = this.createDiffZoneRenderer();
         if (newRenderer?.type !== this.renderer?.type) {
             this.renderer?.dispose();
@@ -268,7 +270,7 @@ class AgentEditManager {
     /**
      * Provides original file contents for fallback diff views.
      * @public
-     * @param {!tsickle_vscode_2.Uri} uri
+     * @param {!tsickle_vscode_3.Uri} uri
      * @return {string}
      */
     provideTextDocumentContent(uri) {
@@ -277,7 +279,7 @@ class AgentEditManager {
     /**
      * Checks if the file's current content has diverged from both original and modified.
      * @private
-     * @param {!tsickle_vscode_2.TextDocument} doc
+     * @param {!tsickle_vscode_3.TextDocument} doc
      * @param {!AddAgentEditMessage} message
      * @return {boolean}
      */
@@ -353,23 +355,23 @@ class AgentEditManager {
                 if (this.activeDiffZoneDetails.has(normalizedUri)) {
                     await this.renderer.closeDiffZone(normalizedUri, true);
                 }
-                /** @type {!tsickle_vscode_2.Uri} */
+                /** @type {!tsickle_vscode_3.Uri} */
                 const uri = vscode.Uri.parse(normalizedUri);
-                /** @type {function(!tsickle_diff_zone_renderer_3.HunkResolutionEvent): !Promise<void>} */
+                /** @type {function(!tsickle_diff_zone_renderer_4.HunkResolutionEvent): !Promise<void>} */
                 const onHunkResolved = (/**
-                 * @param {!tsickle_diff_zone_renderer_3.HunkResolutionEvent} event
+                 * @param {!tsickle_diff_zone_renderer_4.HunkResolutionEvent} event
                  * @return {!Promise<void>}
                  */
                 async (event) => {
                     await this.handleHunkResolved(message, event);
                 });
-                /** @type {function(string): (undefined|!tsickle_hunk_storage_4.HunkResolutionAction)} */
+                /** @type {function(string): (undefined|!tsickle_hunk_storage_5.HunkResolutionAction)} */
                 const getStoredResolution = (/**
                  * @param {string} hash
-                 * @return {(undefined|!tsickle_hunk_storage_4.HunkResolutionAction)}
+                 * @return {(undefined|!tsickle_hunk_storage_5.HunkResolutionAction)}
                  */
                 (hash) => this.hunkStorage.getResolution(message, hash));
-                /** @type {!tsickle_diff_zone_renderer_3.RenderTextEditResult} */
+                /** @type {!tsickle_diff_zone_renderer_4.RenderTextEditResult} */
                 let result;
                 if ((0, utils_1.isNotebook)(normalizedUri)) {
                     // If the notebook is already open in an editor, force reload it from
@@ -377,13 +379,13 @@ class AgentEditManager {
                     // on-disk writes before creating the diff zone. If the document was
                     // dirty from concurrent edits, this reverts to disk so the DiffZone
                     // accurately presents the agent's proposed turn diff.
-                    await vscode.AntigravityFiles?.forceResolveFromFile?.(uri);
-                    /** @type {!tsickle_vscode_2.NotebookDocument} */
+                    await cider_1.cider.ai.forceResolveFromFile(uri);
+                    /** @type {!tsickle_vscode_3.NotebookDocument} */
                     const doc = await vscode.workspace.openNotebookDocument(uri);
                     result = await this.renderer.renderNotebookEdit(uri, doc, message, getStoredResolution, onHunkResolved);
                 }
                 else {
-                    /** @type {!tsickle_vscode_2.TextDocument} */
+                    /** @type {!tsickle_vscode_3.TextDocument} */
                     const doc = await vscode.workspace.openTextDocument(uri);
                     // Check if the file content has changed since the DiffZone was last
                     // disposed (e.g., on a previous conversation switch). If the content
@@ -478,7 +480,7 @@ class AgentEditManager {
     /**
      * @private
      * @param {!AddAgentEditMessage} message
-     * @param {!tsickle_diff_zone_renderer_3.HunkResolutionEvent} event
+     * @param {!tsickle_diff_zone_renderer_4.HunkResolutionEvent} event
      * @return {!Promise<void>}
      */
     async handleHunkResolved(message, event) {
@@ -864,7 +866,7 @@ class AgentEditManager {
      * @return {boolean}
      */
     isAutoOpenEnabled() {
-        /** @type {!tsickle_vscode_2.WorkspaceConfiguration} */
+        /** @type {!tsickle_vscode_3.WorkspaceConfiguration} */
         const antigravityConfig = vscode.workspace.getConfiguration('antigravity');
         /** @type {(undefined|{key: string, defaultValue: (undefined|boolean), globalValue: (undefined|boolean), workspaceValue: (undefined|boolean), workspaceFolderValue: (undefined|boolean), defaultLanguageValue: (undefined|boolean), globalLanguageValue: (undefined|boolean), workspaceLanguageValue: (undefined|boolean), workspaceFolderLanguageValue: (undefined|boolean), languageIds: (undefined|!Array<string>)})} */
         const inspected = antigravityConfig?.inspect?.('autoOpenFiles');
@@ -875,7 +877,7 @@ class AgentEditManager {
         if (antigravityExplicit !== undefined) {
             return antigravityExplicit;
         }
-        /** @type {!tsickle_vscode_2.WorkspaceConfiguration} */
+        /** @type {!tsickle_vscode_3.WorkspaceConfiguration} */
         const jetskiConfig = vscode.workspace.getConfiguration('jetski-web');
         return jetskiConfig?.get?.('autoOpenFiles', false) ?? false;
     }
@@ -911,15 +913,15 @@ class AgentEditManager {
                 await this.renderer.revealDocument(uriStr, preview);
                 return;
             }
-            /** @type {!tsickle_vscode_2.Uri} */
+            /** @type {!tsickle_vscode_3.Uri} */
             const uri = vscode.Uri.parse(uriStr);
             if ((0, utils_1.isNotebook)(uriStr)) {
-                /** @type {!tsickle_vscode_2.NotebookDocument} */
+                /** @type {!tsickle_vscode_3.NotebookDocument} */
                 const doc = await vscode.workspace.openNotebookDocument(uri);
                 await vscode.window.showNotebookDocument(doc, { preview });
             }
             else {
-                /** @type {!tsickle_vscode_2.TextDocument} */
+                /** @type {!tsickle_vscode_3.TextDocument} */
                 const doc = await vscode.workspace.openTextDocument(uri);
                 await vscode.window.showTextDocument(doc, { preview });
             }
@@ -933,7 +935,7 @@ exports.AgentEditManager = AgentEditManager;
 /* istanbul ignore if */
 if (false) {
     /**
-     * @type {(undefined|!tsickle_diff_zone_renderer_3.DiffZoneRenderer)}
+     * @type {(undefined|!tsickle_diff_zone_renderer_4.DiffZoneRenderer)}
      * @private
      */
     AgentEditManager.prototype.renderer;
@@ -949,12 +951,12 @@ if (false) {
      */
     AgentEditManager.prototype.fileDiffStats;
     /**
-     * @const {!tsickle_vscode_2.EventEmitter<!Array<!FileAgentEditState>>}
+     * @const {!tsickle_vscode_3.EventEmitter<!Array<!FileAgentEditState>>}
      * @private
      */
     AgentEditManager.prototype.onDidChangeDiffZonesEmitter;
     /**
-     * @const {!tsickle_vscode_2.Event<!Array<!FileAgentEditState>>}
+     * @const {!tsickle_vscode_3.Event<!Array<!FileAgentEditState>>}
      * @public
      */
     AgentEditManager.prototype.onDidChangeDiffZones;
@@ -967,7 +969,7 @@ if (false) {
      */
     AgentEditManager.prototype.processingFiles;
     /**
-     * @const {!tsickle_hunk_storage_4.HunkStorage}
+     * @const {!tsickle_hunk_storage_5.HunkStorage}
      * @private
      */
     AgentEditManager.prototype.hunkStorage;
@@ -982,7 +984,7 @@ if (false) {
      */
     AgentEditManager.prototype.ageOutThreshold;
     /**
-     * @const {function(): (undefined|!tsickle_diff_zone_renderer_3.DiffZoneRenderer)}
+     * @const {function(): (undefined|!tsickle_diff_zone_renderer_4.DiffZoneRenderer)}
      * @private
      */
     AgentEditManager.prototype.createDiffZoneRenderer;

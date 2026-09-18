@@ -14,13 +14,16 @@
 goog.module('google3.devtools.cider.extensions.jetski.diff_zones.diff_zone_renderer');
 var module = module || { id: 'devtools/cider/extensions/jetski/diff_zones/diff_zone_renderer.closure.js' };
 goog.require('google3.third_party.javascript.tslib.tslib');
-const tsickle_cell_1 = goog.requireType("google3.research.colab.frontend.common.nbformat.v4.cell");
-const tsickle_notebook_2 = goog.requireType("google3.research.colab.frontend.common.nbformat.v4.notebook");
-const tsickle_vscode_3 = goog.requireType("vscode");
-const tsickle_agent_edit_manager_4 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.agent_edit_manager");
-const tsickle_hunk_storage_5 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.hunk_storage");
+const tsickle_cider_1 = goog.requireType("google3.devtools.cider.extensions.cider");
+const tsickle_cell_2 = goog.requireType("google3.research.colab.frontend.common.nbformat.v4.cell");
+const tsickle_notebook_3 = goog.requireType("google3.research.colab.frontend.common.nbformat.v4.notebook");
+const tsickle_vscode_4 = goog.requireType("vscode");
+const tsickle_agent_edit_manager_5 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.agent_edit_manager");
+const tsickle_hunk_storage_6 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.hunk_storage");
+const tsickle_cell_7 = goog.requireType("google3.research.colab.frontend.common.nbformat.colab.cell");
+const cider_1 = goog.require('google3.devtools.cider.extensions.cider');
 const cell_1 = goog.require('google3.research.colab.frontend.common.nbformat.v4.cell');
-const vscode = goog.require('vscode');
+const vscode = goog.require('vscode'); // from //devtools/cider/extensions:vscode
 /**
  * Event payload emitted when a single diff hunk is resolved by the user in the UI.
  * @record
@@ -139,7 +142,7 @@ if (false) {
 }
 /**
  * Callback type for checking stored hunk resolutions.
- * @typedef {function(string): (undefined|!tsickle_hunk_storage_5.HunkResolutionAction)}
+ * @typedef {function(string): (undefined|!tsickle_hunk_storage_6.HunkResolutionAction)}
  */
 exports.StoredResolutionResolver;
 /**
@@ -161,10 +164,10 @@ if (false) {
      * Renders a proposed text edit in the editor.
      *
      * @public
-     * @param {!tsickle_vscode_3.Uri} uri Target file URI.
-     * @param {!tsickle_vscode_3.TextDocument} document The opened TextDocument.
-     * @param {!tsickle_agent_edit_manager_4.AddAgentEditMessage} message Edit message options.
-     * @param {function(string): (undefined|!tsickle_hunk_storage_5.HunkResolutionAction)} getStoredResolution Callback to query previously stored hunk resolutions.
+     * @param {!tsickle_vscode_4.Uri} uri Target file URI.
+     * @param {!tsickle_vscode_4.TextDocument} document The opened TextDocument.
+     * @param {!tsickle_agent_edit_manager_5.AddAgentEditMessage} message Edit message options.
+     * @param {function(string): (undefined|!tsickle_hunk_storage_6.HunkResolutionAction)} getStoredResolution Callback to query previously stored hunk resolutions.
      * @param {function(!HunkResolutionEvent): !Promise<void>} onHunkResolved Callback triggered when a hunk is resolved interactively in the UI.
      * @return {!Promise<!RenderTextEditResult>}
      */
@@ -173,10 +176,10 @@ if (false) {
      * Renders a proposed notebook edit in the editor.
      *
      * @public
-     * @param {!tsickle_vscode_3.Uri} uri Target notebook file URI.
-     * @param {!tsickle_vscode_3.NotebookDocument} document The opened NotebookDocument.
-     * @param {!tsickle_agent_edit_manager_4.AddAgentEditMessage} message Edit message options.
-     * @param {function(string): (undefined|!tsickle_hunk_storage_5.HunkResolutionAction)} getStoredResolution Callback to query previously stored hunk resolutions.
+     * @param {!tsickle_vscode_4.Uri} uri Target notebook file URI.
+     * @param {!tsickle_vscode_4.NotebookDocument} document The opened NotebookDocument.
+     * @param {!tsickle_agent_edit_manager_5.AddAgentEditMessage} message Edit message options.
+     * @param {function(string): (undefined|!tsickle_hunk_storage_6.HunkResolutionAction)} getStoredResolution Callback to query previously stored hunk resolutions.
      * @param {function(!HunkResolutionEvent): !Promise<void>} onHunkResolved Callback triggered when a hunk is resolved interactively in the UI.
      * @return {!Promise<!RenderNotebookEditResult>}
      */
@@ -227,7 +230,7 @@ if (false) {
     /**
      * Optional provider for original file contents in virtual document schemas (e.g. side-by-side diff view).
      * @public
-     * @param {!tsickle_vscode_3.Uri} uri
+     * @param {!tsickle_vscode_4.Uri} uri
      * @return {(undefined|string)}
      */
     DiffZoneRenderer.prototype.provideTextDocumentContent = function (uri) { };
@@ -267,7 +270,7 @@ function computeLineCounts(original, modified) {
 exports.computeLineCounts = computeLineCounts;
 /**
  * Counts inserted/deleted lines from notebook diff hunks.
- * @param {!Array<!tsickle_vscode_3.NotebookDiffHunk>} hunks
+ * @param {!Array<!google3$devtools$cider$webclient$cider.cider.ai.NotebookDiffHunk>} hunks
  * @return {{numLinesInserted: number, numLinesDeleted: number}}
  */
 function computeNotebookDiffStats(hunks) {
@@ -276,7 +279,7 @@ function computeNotebookDiffStats(hunks) {
     /** @type {number} */
     let numLinesDeleted = 0;
     for (const hunk of hunks) {
-        if (hunk.type === vscode.NotebookDiffHunkType.Modified) {
+        if (hunk.type === cider_1.cider.ai.NotebookDiffHunkType.Modified) {
             /** @type {string} */
             const originalText = hunk.deletions.join('\n');
             /** @type {string} */
@@ -307,19 +310,19 @@ exports.computeNotebookDiffStats = computeNotebookDiffStats;
 /**
  * Parses raw Colab notebook JSON content string into NotebookCellSnapshots. Returns undefined if parsing fails.
  * @param {string} originalContents
- * @return {(undefined|!Array<!tsickle_vscode_3.NotebookCellSnapshot>)}
+ * @return {(undefined|!Array<!google3$devtools$cider$webclient$cider.cider.ai.NotebookCellSnapshot>)}
  */
 function parseNotebookCells(originalContents) {
     if (!originalContents)
         return [];
     try {
-        /** @type {!tsickle_notebook_2.Notebook} */
-        const notebook = (/** @type {!tsickle_notebook_2.Notebook} */ (JSON.parse(originalContents)));
-        /** @type {!Array<!tsickle_cell_1.Cell>} */
+        /** @type {!tsickle_notebook_3.Notebook} */
+        const notebook = (/** @type {!tsickle_notebook_3.Notebook} */ (JSON.parse(originalContents)));
+        /** @type {!Array<!tsickle_cell_2.Cell>} */
         const cells = notebook.cells ?? [];
         return cells.map((/**
-         * @param {!tsickle_cell_1.Cell} cell
-         * @return {{cellKind: !tsickle_vscode_3.NotebookCellKind, language: string, value: string, metadata: (undefined|!tsickle_cell_1.Metadata)}}
+         * @param {!tsickle_cell_2.Cell} cell
+         * @return {{cellKind: !tsickle_vscode_4.NotebookCellKind, language: string, value: string, metadata: (undefined|{id: (undefined|string), name: (undefined|string), tags: (undefined|!Array<string>), colab: (undefined|!tsickle_cell_7.Metadata), imported_from: (undefined|!tsickle_cell_7.ImportedFrom), colab_type: (undefined|!tsickle_cell_7.CellType), nbgrader: (undefined|!NbGrader), editable: (undefined|boolean)})}}
          */
         (cell) => {
             /** @type {(undefined|string)} */
@@ -328,7 +331,7 @@ function parseNotebookCells(originalContents) {
             const value = typeof cell.source === 'string'
                 ? cell.source
                 : (cell.source ?? []).join('');
-            /** @type {!tsickle_vscode_3.NotebookCellKind} */
+            /** @type {!tsickle_vscode_4.NotebookCellKind} */
             const cellKind = cell.cell_type === cell_1.CellType.CODE
                 ? vscode.NotebookCellKind.Code
                 : vscode.NotebookCellKind.Markup;
@@ -338,9 +341,12 @@ function parseNotebookCells(originalContents) {
                 cellKind,
                 language,
                 value,
-                metadata: cellId !== undefined
-                    ? { ...cell.metadata, 'id': cellId }
-                    : cell.metadata,
+                metadata: cell.metadata != null || cellId != null
+                    ? {
+                        ...cell.metadata,
+                        ...(cellId != null ? { 'id': cellId } : {}),
+                    }
+                    : undefined,
             };
         }));
     }
@@ -352,11 +358,11 @@ function parseNotebookCells(originalContents) {
 exports.parseNotebookCells = parseNotebookCells;
 /**
  * Converts a NotebookCellSnapshot to NotebookCellData for workspace edits.
- * @param {!tsickle_vscode_3.NotebookCellSnapshot} snapshot
- * @return {!tsickle_vscode_3.NotebookCellData}
+ * @param {!google3$devtools$cider$webclient$cider.cider.ai.NotebookCellSnapshot} snapshot
+ * @return {!tsickle_vscode_4.NotebookCellData}
  */
 function snapshotToCellData(snapshot) {
-    /** @type {!tsickle_vscode_3.NotebookCellData} */
+    /** @type {!tsickle_vscode_4.NotebookCellData} */
     const cellData = new vscode.NotebookCellData(snapshot.cellKind, snapshot.value, snapshot.language);
     cellData.metadata = snapshot.metadata;
     return cellData;
@@ -365,16 +371,16 @@ exports.snapshotToCellData = snapshotToCellData;
 /**
  * Finds the active or visible notebook editor for the given file URI.
  * @param {string} fileUri
- * @return {(undefined|!tsickle_vscode_3.NotebookEditor)}
+ * @return {(undefined|!tsickle_vscode_4.NotebookEditor)}
  */
 function getNotebookEditor(fileUri) {
-    /** @type {(undefined|!tsickle_vscode_3.NotebookEditor)} */
+    /** @type {(undefined|!tsickle_vscode_4.NotebookEditor)} */
     const active = vscode.window.activeNotebookEditor;
     if (active && active.notebook.uri.toString() === fileUri) {
         return active;
     }
     return vscode.window.visibleNotebookEditors.find((/**
-     * @param {!tsickle_vscode_3.NotebookEditor} e
+     * @param {!tsickle_vscode_4.NotebookEditor} e
      * @return {boolean}
      */
     (e) => e.notebook.uri.toString() === fileUri));
