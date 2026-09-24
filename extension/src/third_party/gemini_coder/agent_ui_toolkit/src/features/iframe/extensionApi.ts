@@ -202,7 +202,7 @@ class AntigravityApiEmitters {
             /** @type {string} */
             const name = method.localName;
             if (name in this && isAntigravityEvent(name)) {
-                /** @type {(function(?, !tsickle_connect_2.HandlerContext): (*|?|!Promise<(*|?)>)|function(*, !tsickle_connect_2.HandlerContext): (*|?|!Promise<(*|?)>))} */
+                /** @type {(function(*, !tsickle_connect_2.HandlerContext): (*|!Promise<(*|?)>|?)|function(?, !tsickle_connect_2.HandlerContext): (*|!Promise<(*|?)>|?))} */
                 const eventFn = this[name];
                 if (typeof eventFn === 'function') {
                     impl[name] = eventFn.bind(this);

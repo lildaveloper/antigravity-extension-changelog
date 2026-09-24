@@ -41,7 +41,7 @@ const wire_1 = goog.require('google3.third_party.javascript.bufbuild_protobuf.sr
 const connect_error_js_1 = goog.require('google3.third_party.javascript.connectrpc_connect.src.connect$2derror');
 const code_js_1 = goog.require('google3.third_party.javascript.connectrpc_connect.src.code');
 /**
- * @param {(string|*|!ArrayBuffer|!Uint8Array)} value
+ * @param {(string|!ArrayBuffer|*|!Uint8Array)} value
  * @param {(undefined|!tsickle_protobuf_1.DescMessage)=} desc
  * @return {string}
  */

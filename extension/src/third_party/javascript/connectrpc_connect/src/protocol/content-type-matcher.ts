@@ -54,7 +54,7 @@ const contentTypeMatcherCacheSize = 1024;
  * Create a function that returns true if the given mime type is supported.
  * A mime type is supported when one of the regular expressions match.
  *
- * @param {...(!RegExp|?)} supported
+ * @param {...(?|!RegExp)} supported
  * @return {!ContentTypeMatcher}
  */
 function contentTypeMatcher(...supported) {
@@ -63,7 +63,7 @@ function contentTypeMatcher(...supported) {
     /** @type {!Array<!RegExp>} */
     const source = supported.reduce((/**
      * @param {!Array<!RegExp>} previousValue
-     * @param {(!RegExp|?)} currentValue
+     * @param {(?|!RegExp)} currentValue
      * @return {!Array<!RegExp>}
      */
     (previousValue, currentValue) => previousValue.concat("supported" in currentValue ? currentValue.supported : currentValue)), []);

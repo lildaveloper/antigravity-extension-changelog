@@ -25,7 +25,7 @@ const errors_1 = goog.require('google3.third_party.antigravity.src.vs.base.commo
 const lifecycle_1 = goog.require('google3.third_party.antigravity.src.vs.base.common.lifecycle');
 /**
  * The payload that flows in readable stream events.
- * @typedef {(?|!Error|string)}
+ * @typedef {(string|?|!Error)}
  */
 exports.ReadableStreamEventPayload;
 /**
@@ -857,7 +857,7 @@ exports.listenStream = listenStream;
  */
 function peekStream(stream, maxChunks) {
     return new Promise((/**
-     * @param {function((!ReadableBufferedStream<T>|!PromiseLike<!ReadableBufferedStream<T>>)): void} resolve
+     * @param {function((!PromiseLike<!ReadableBufferedStream<T>>|!ReadableBufferedStream<T>)): void} resolve
      * @param {function(?=): void} reject
      * @return {void}
      */

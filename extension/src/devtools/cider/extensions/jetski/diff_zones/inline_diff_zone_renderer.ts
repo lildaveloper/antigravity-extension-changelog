@@ -102,7 +102,11 @@ class InlineDiffZoneRenderer {
          * @return {!Promise<void>}
          */
         async (event) => {
-            if (event.uri.toString() === uri.toString()) {
+            /** @type {string} */
+            const normalizedEventUri = (0, utils_1.normalizeUri)(event.uri.toString());
+            /** @type {string} */
+            const normalizedTargetUri = (0, utils_1.normalizeUri)(uri.toString());
+            if (normalizedEventUri === normalizedTargetUri) {
                 await onHunkResolved({
                     fileUri: event.uri.toString(),
                     hunkIndex: event.hunkIndex,
@@ -119,10 +123,13 @@ class InlineDiffZoneRenderer {
          * @return {!Promise<void>}
          */
         async (event) => {
-            if (event.uri.toString() === uri.toString()) {
+            /** @type {string} */
+            const normalizedEventUri = (0, utils_1.normalizeUri)(event.uri.toString());
+            /** @type {string} */
+            const normalizedTargetUri = (0, utils_1.normalizeUri)(uri.toString());
+            if (normalizedEventUri === normalizedTargetUri) {
                 await onHunkResolved({
                     fileUri: event.uri.toString(),
-                    hunkIndex: 0,
                     accept: event.accepted,
                     final: true,
                 });

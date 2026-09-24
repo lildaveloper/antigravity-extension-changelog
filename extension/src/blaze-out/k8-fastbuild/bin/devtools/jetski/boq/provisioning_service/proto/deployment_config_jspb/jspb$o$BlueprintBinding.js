@@ -28,7 +28,7 @@ jspb$o$devtools_jetski_provisioning$BlueprintBinding.internal_toObject = functio
   return /** @type {?} */ (/** @type {!jspb$devtools_jetski_provisioning$MutableBlueprintBinding.ObjectFormat} */ ({
     blueprintId: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getStringFieldLegacyNullable(msg, 1)),
     paramsMap: jspb_internal_public_for_gencode.mapToObject(msg.getParamsMap()),
-    fullVersion: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getStringFieldLegacyNullable(msg, 3)),
+    versionName: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getStringFieldLegacyNullable(msg, 3)),
     userConfig: jspb$o$google$protobuf$Any.internal_toObject(msg.getUserConfig()),
   }));
 
@@ -70,7 +70,7 @@ jspb$o$devtools_jetski_provisioning$BlueprintBinding.fromObject = function(obj) 
   const msg = new jspb$devtools_jetski_provisioning$MutableBlueprintBinding();
   jspb_internal_adapters.setStringField(msg, 1, obj.blueprintId);
   obj.paramsMap && jspb_internal_public_for_gencode.mapFromObject(msg.getParamsMap(), obj.paramsMap);
-  jspb_internal_adapters.setStringField(msg, 3, obj.fullVersion);
+  jspb_internal_adapters.setStringField(msg, 3, obj.versionName);
   jspb_internal_adapters.setWrapperField(msg,
       jspb$google$protobuf$MutableAny,
       4, jspb_internal_public_for_gencode.fromObjectNullable(obj.userConfig, jspb$o$google$protobuf$Any.fromObject));

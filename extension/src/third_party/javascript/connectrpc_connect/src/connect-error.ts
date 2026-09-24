@@ -62,7 +62,7 @@ class ConnectError extends Error {
      * @public
      * @param {string} message
      * @param {!tsickle_code_1.Code=} code
-     * @param {(undefined|!Array<!Array<?>>|?|!Headers)=} metadata
+     * @param {(undefined|!Array<!Array<?>>|!Headers|?)=} metadata
      * @param {(undefined|!Array<{desc: !tsickle_protobuf_2.DescMessage, value: ?}>)=} outgoingDetails
      * @param {*=} cause
      */
@@ -155,10 +155,10 @@ class ConnectError extends Error {
                 continue;
             }
             /** @type {(undefined|!tsickle_protobuf_2.DescMessage)} */
-            const desc = registry.getMessage((/** @type {{type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>)}} */ (data)).type);
+            const desc = registry.getMessage((/** @type {{type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)}} */ (data)).type);
             if (desc) {
                 try {
-                    details.push((0, protobuf_1.fromBinary)(desc, (/** @type {{type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>)}} */ (data)).value));
+                    details.push((0, protobuf_1.fromBinary)(desc, (/** @type {{type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)}} */ (data)).value));
                 }
                 catch (_) {
                     // We silently give up if we are unable to parse the detail, because
@@ -193,7 +193,7 @@ if (false) {
      *
      * When an error is constructed to be sent over the wire, outgoing error
      * details are stored in this property as well.
-     * @type {!Array<({desc: !tsickle_protobuf_2.DescMessage, value: ?}|{type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>)})>}
+     * @type {!Array<({type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)}|{desc: !tsickle_protobuf_2.DescMessage, value: ?})>}
      * @public
      */
     ConnectError.prototype.details;
@@ -224,7 +224,7 @@ if (false) {
  * An incoming detail is basically a google.protobuf.Any, but it includes an
  * optional JSON representation in the "debug" key, and stores a type name
  * instead of a type URL.
- * @typedef {{type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>)}}
+ * @typedef {{type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)}}
  */
 var IncomingDetail;
 /**

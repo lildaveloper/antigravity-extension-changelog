@@ -140,7 +140,7 @@ if (false) {
      * application/json automatically. We accept a JSON value as an
      * alternative to a byte stream here so that this situation can be
      * handled efficiently.
-     * @type {(null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>|!AsyncIterable<!Uint8Array, ?, ?>)}
+     * @type {(null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!AsyncIterable<!Uint8Array, ?, ?>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)}
      * @public
      */
     UniversalServerRequest.prototype.body;

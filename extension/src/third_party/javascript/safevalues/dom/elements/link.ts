@@ -63,7 +63,7 @@ exports.SafeUrlRelTypes;
 exports.TrustedResourecUrlRelTypes;
 /**
  * @param {!HTMLLinkElement} link
- * @param {(string|!tsickle_resource_url_impl_2.TrustedResourceUrl|!tsickle_url_impl_3.SafeUrl)} url
+ * @param {(string|!tsickle_url_impl_3.SafeUrl|!tsickle_resource_url_impl_2.TrustedResourceUrl)} url
  * @param {string} rel
  * @return {void}
  */

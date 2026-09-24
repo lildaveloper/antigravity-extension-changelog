@@ -79,7 +79,7 @@ if (false) {
 function endStreamFromJson(data) {
     /** @type {!tsickle_connect_error_4.ConnectError} */
     const parseErr = new connect_error_js_1.ConnectError("invalid end stream", code_js_1.Code.Unknown);
-    /** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */
+    /** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */
     let jsonValue;
     try {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -96,17 +96,17 @@ function endStreamFromJson(data) {
     /** @type {!Headers} */
     const metadata = new Headers();
     if ("metadata" in jsonValue) {
-        if (typeof (/** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */ ((/** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */ (jsonValue)).metadata)) != "object" ||
-            (/** @type {(null|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>)} */ ((/** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */ (jsonValue)).metadata)) == null ||
-            Array.isArray((/** @type {(!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>)} */ ((/** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */ (jsonValue)).metadata)))) {
+        if (typeof (/** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */ ((/** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */ (jsonValue)).metadata)) != "object" ||
+            (/** @type {(null|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)} */ ((/** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */ (jsonValue)).metadata)) == null ||
+            Array.isArray((/** @type {(!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)} */ ((/** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */ (jsonValue)).metadata)))) {
             throw parseErr;
         }
-        for (const [key__tsickle_destructured_1, values__tsickle_destructured_2] of Object.entries((/** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */ ((/** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */ (jsonValue)).metadata)))) {
+        for (const [key__tsickle_destructured_1, values__tsickle_destructured_2] of Object.entries((/** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */ ((/** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */ (jsonValue)).metadata)))) {
             const key = /** @type {string} */ (key__tsickle_destructured_1);
-            const values = /** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */ (values__tsickle_destructured_2);
+            const values = /** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */ (values__tsickle_destructured_2);
             if (!Array.isArray(values) ||
-                (/** @type {!Array<(null|string|number|boolean|!Object<string,?>|?)>} */ (values)).some((/**
-                 * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} value
+                (/** @type {!Array<(null|string|number|boolean|?|!Object<string,?>)>} */ (values)).some((/**
+                 * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} value
                  * @return {boolean}
                  */
                 (value) => typeof value != "string"))) {
@@ -118,8 +118,8 @@ function endStreamFromJson(data) {
         }
     }
     /** @type {(undefined|!tsickle_connect_error_4.ConnectError)} */
-    const error = "error" in jsonValue && (/** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */ ((/** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */ (jsonValue)).error)) != null
-        ? (0, error_json_js_1.errorFromJson)((/** @type {(string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>)} */ ((/** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */ (jsonValue)).error)), metadata, parseErr)
+    const error = "error" in jsonValue && (/** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */ ((/** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */ (jsonValue)).error)) != null
+        ? (0, error_json_js_1.errorFromJson)((/** @type {(string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)} */ ((/** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */ (jsonValue)).error)), metadata, parseErr)
         : undefined;
     return { metadata, error };
 }
@@ -136,10 +136,10 @@ exports.endStreamFromJson = endStreamFromJson;
  * @param {!Headers} metadata
  * @param {(undefined|!tsickle_connect_error_4.ConnectError)} error
  * @param {(undefined|?)} jsonWriteOptions
- * @return {!Object<string,(null|string|number|boolean|?|!Array<?>)>}
+ * @return {!Object<string,(null|string|number|boolean|!Array<?>|?)>}
  */
 function endStreamToJson(metadata, error, jsonWriteOptions) {
-    /** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */
+    /** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */
     const es = {};
     if (error !== undefined) {
         es.error = (0, error_json_js_1.errorToJson)(error, jsonWriteOptions);
@@ -147,7 +147,7 @@ function endStreamToJson(metadata, error, jsonWriteOptions) {
     }
     /** @type {boolean} */
     let hasMetadata = false;
-    /** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */
+    /** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */
     const md = {};
     metadata.forEach((/**
      * @param {string} value
@@ -182,7 +182,7 @@ function createEndStreamSerialization(options) {
          */
         serialize(data) {
             try {
-                /** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */
+                /** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */
                 const jsonObject = endStreamToJson(data.metadata, data.error, options);
                 /** @type {string} */
                 const jsonString = JSON.stringify(jsonObject);

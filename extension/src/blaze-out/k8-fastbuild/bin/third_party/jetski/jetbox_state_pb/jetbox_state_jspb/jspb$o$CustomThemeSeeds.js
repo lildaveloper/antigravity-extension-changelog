@@ -74,7 +74,7 @@ jspb$o$jetbox_state_pb$CustomThemeSeeds.fromObject = function(obj) {
 };
 }
 
-var jspb$o$jetbox_state_pb$GoogleSpecificConfig;
-Object.defineProperty(this, 'jspb$o$jetbox_state_pb$GoogleSpecificConfig', {
-  get() { return jspb$o$jetbox_state_pb$GoogleSpecificConfig; },
-  set(v) { jspb$o$jetbox_state_pb$GoogleSpecificConfig = v; },
+var jspb$o$jetbox_state_pb$CogWorkspaceConfig;
+Object.defineProperty(this, 'jspb$o$jetbox_state_pb$CogWorkspaceConfig', {
+  get() { return jspb$o$jetbox_state_pb$CogWorkspaceConfig; },
+  set(v) { jspb$o$jetbox_state_pb$CogWorkspaceConfig = v; },

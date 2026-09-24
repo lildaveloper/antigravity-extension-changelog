@@ -353,7 +353,7 @@ jspb$jetbox_state_pb$MutableCustomThemeSeeds.fromFields = /** @pureOrBreakMyCode
  */
 jspb$jetbox_state_pb$MutableCustomThemeSeeds.getFields = /** @pureOrBreakMyCode */ (jspb_internal_public_for_gencode.makeGetFieldsForTesting());
 
-var jspb$jetbox_state_pb$MutableGoogleSpecificConfig;
-Object.defineProperty(this, 'jspb$jetbox_state_pb$MutableGoogleSpecificConfig', {
-  get() { return jspb$jetbox_state_pb$MutableGoogleSpecificConfig; },
-  set(v) { jspb$jetbox_state_pb$MutableGoogleSpecificConfig = v; },
+var jspb$jetbox_state_pb$MutableCogWorkspaceConfig;
+Object.defineProperty(this, 'jspb$jetbox_state_pb$MutableCogWorkspaceConfig', {
+  get() { return jspb$jetbox_state_pb$MutableCogWorkspaceConfig; },
+  set(v) { jspb$jetbox_state_pb$MutableCogWorkspaceConfig = v; },

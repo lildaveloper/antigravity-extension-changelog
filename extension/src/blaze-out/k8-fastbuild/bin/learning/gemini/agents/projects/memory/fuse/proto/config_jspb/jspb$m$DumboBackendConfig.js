@@ -379,7 +379,7 @@ jspb$jetski_memory$MutableDumboBackendConfig.fromFields = /** @pureOrBreakMyCode
  */
 jspb$jetski_memory$MutableDumboBackendConfig.getFields = /** @pureOrBreakMyCode */ (jspb_internal_public_for_gencode.makeGetFieldsForTesting());
 
-var jspb$jetski_memory$MutableSkillsBackendConfig;
-Object.defineProperty(this, 'jspb$jetski_memory$MutableSkillsBackendConfig', {
-  get() { return jspb$jetski_memory$MutableSkillsBackendConfig; },
-  set(v) { jspb$jetski_memory$MutableSkillsBackendConfig = v; },
+var jspb$jetski_memory$MutableMemoryBankBackendConfig;
+Object.defineProperty(this, 'jspb$jetski_memory$MutableMemoryBankBackendConfig', {
+  get() { return jspb$jetski_memory$MutableMemoryBankBackendConfig; },
+  set(v) { jspb$jetski_memory$MutableMemoryBankBackendConfig = v; },

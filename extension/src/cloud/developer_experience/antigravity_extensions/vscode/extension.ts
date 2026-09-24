@@ -39,6 +39,27 @@ const desktop_webview_delegate_1 = goog.require('google3.cloud.developer_experie
 const server_manager_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.server_manager');
 const status_bar_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.status_bar');
 const telemetry_service_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.telemetry_service');
+/**
+ * Public API exposed by the Antigravity extension upon activation.
+ * @record
+ */
+function AntigravityExtensionApi() { }
+exports.AntigravityExtensionApi = AntigravityExtensionApi;
+/* istanbul ignore if */
+if (false) {
+    /**
+     * The random CSRF token passed to the Antigravity backend language server.
+     * @type {string}
+     * @public
+     */
+    AntigravityExtensionApi.prototype.csrfToken;
+    /**
+     * The active server port if started locally.
+     * @const {(undefined|number)}
+     * @public
+     */
+    AntigravityExtensionApi.prototype.port;
+}
 class DesktopWorkspaceManager {
     /**
      * @public
@@ -69,6 +90,13 @@ if (false) {
     DesktopWorkspaceManager.prototype.context;
 }
 /**
+ * @return {(undefined|string)}
+ */
+function getConfiguredServerUrl() {
+    return (process?.env['ANTIGRAVITY_SERVER_URL'] ||
+        vscode.workspace.getConfiguration('antigravity').get('serverUrl'));
+}
+/**
  * Resolves or boots the Antigravity backend server process for desktop VS Code.
  *
  * @param {!tsickle_vscode_1.ExtensionContext} context The active VS Code extension context.
@@ -77,10 +105,8 @@ if (false) {
  * @return {!Promise<{effectiveUrl: string, humanReadable: string}>}
  */
 async function desktopSetup(context, messageNotifier, telemetry) {
-    /** @type {!tsickle_vscode_1.WorkspaceConfiguration} */
-    const config = vscode.workspace.getConfiguration('antigravity');
     /** @type {(undefined|string)} */
-    let serverUrl = process?.env['ANTIGRAVITY_SERVER_URL'] || config.get('serverUrl');
+    let serverUrl = getConfiguredServerUrl();
     /** @type {string} */
     let humanReadable;
     if (serverUrl) {
@@ -137,9 +163,9 @@ async function desktopSetup(context, messageNotifier, telemetry) {
 /**
  * Activates the Antigravity desktop extension.
  * @param {!tsickle_vscode_1.ExtensionContext} context
- * @return {void}
+ * @return {!Promise<!AntigravityExtensionApi>}
  */
-function activate(context) {
+async function activate(context) {
     (0, server_manager_1.initializeHostSecurityEnvironment)();
     (0, server_manager_1.configureHostProxyEnvironment)();
     (0, status_bar_1.registerAntigravityStatusBar)(context);
@@ -188,19 +214,19 @@ function activate(context) {
     // rather than restoring a project-specific conversation.
     if (!vscode.workspace.workspaceFolders ||
         vscode.workspace.workspaceFolders.length === 0) {
-        context.workspaceState.update('lastConversationId', undefined);
+        void context.workspaceState.update('lastConversationId', undefined);
     }
     // Restore pending conversation ID across window reloads/workspace switches.
     /** @type {(undefined|string)} */
     const pendingConvoId = context.globalState.get('antigravity.pendingConversationId');
     if (pendingConvoId) {
         if (pendingConvoId === 'new') {
-            context.workspaceState.update('lastConversationId', undefined);
+            void context.workspaceState.update('lastConversationId', undefined);
         }
         else {
-            context.workspaceState.update('lastConversationId', pendingConvoId);
+            void context.workspaceState.update('lastConversationId', pendingConvoId);
         }
-        context.globalState.update('antigravity.pendingConversationId', undefined);
+        void context.globalState.update('antigravity.pendingConversationId', undefined);
     }
     const { telemetry } = (0, telemetry_service_1.initTelemetry)(context);
     /** @type {!DesktopWorkspaceManager} */
@@ -225,12 +251,14 @@ function activate(context) {
             }
         },
     }));
+    /** @type {!tsickle_server_manager_11.AntigravityServerManager} */
+    const serverManager = server_manager_1.AntigravityServerManager.getInstance();
     context.subscriptions.push({
         dispose: (/**
          * @return {void}
          */
         () => {
-            server_manager_1.AntigravityServerManager.getInstance().stop();
+            serverManager.stop();
         }),
     });
     // The viewLocation must match the default container location configured in package.json.
@@ -288,6 +316,25 @@ function activate(context) {
          */
         (ctx, notifier) => desktopSetup(ctx, notifier, telemetry)),
     }, desktopNaming);
+    if (!getConfiguredServerUrl()) {
+        try {
+            await serverManager.start({ context, telemetry });
+        }
+        catch {
+            // Errors during initial background server start are handled and retried
+            // via desktopSetup when the webview opens.
+        }
+    }
+    return {
+        csrfToken: serverManager.csrfToken,
+        /**
+         * @public
+         * @return {(undefined|number)}
+         */
+        get port() {
+            return serverManager.port;
+        },
+    };
 }
 exports.activate = activate;
 /**

@@ -1,29 +1,3 @@
-<svg xmlns="http://www.w3.org/2000/svg"
-     viewBox="13 18 85 78"
-     fill="none">
-  <defs>
-    <!-- Combined Filter: Covers the entire SVG area to avoid clipping -->
-    <filter id="shared_blur_heavy" x="-50%" y="-50%" width="200%" height="200%" filterUnits="objectBoundingBox">
-      <feGaussianBlur stdDeviation="15" />
-    </filter>
-    <filter id="shared_blur_light" x="-50%" y="-50%" width="200%" height="200%" filterUnits="objectBoundingBox">
-      <feGaussianBlur stdDeviation="4" />
-    </filter>
-    <mask id="mask0_6001_463" maskUnits="userSpaceOnUse" x="13" y="18" width="85" height="78">
-      <path d="M89.6992 93.695C94.3659 97.195 101.366 94.8617 94.9492 88.445C75.6992 69.7783 79.7825 18.445 55.8659 18.445C31.9492 18.445 36.0325 69.7783 16.7825 88.445C9.78251 95.445 17.3658 97.195 22.0325 93.695C40.1159 81.445 38.9492 59.8617 55.8659 59.8617C72.7825 59.8617 71.6159 81.445 89.6992 93.695Z" fill="white"/>
-    </mask>
-  </defs>
-  <g mask="url(#mask0_6001_463)">
-    <g filter="url(#shared_blur_light)"><ellipse cx="22.787" cy="26.81" rx="22.787" ry="26.81" transform="matrix(-0.112 0.993 -0.993 -0.112 66.247 -15.534)" fill="#FFE432"/></g>
-    <g filter="url(#shared_blur_heavy)"><ellipse cx="96.491" cy="35.123" rx="29.501" ry="30.149" transform="rotate(76.924 96.491 35.123)" fill="#FC413D"/></g>
-    <g filter="url(#shared_blur_heavy)"><ellipse cx="9.03" cy="41.665" rx="30.832" ry="39.942" transform="rotate(74.126 9.03 41.665)" fill="#00B95C"/></g>
-    <g filter="url(#shared_blur_heavy)"><ellipse cx="9.03" cy="41.665" rx="30.832" ry="39.942" transform="rotate(74.126 9.03 41.665)" fill="#00B95C"/></g>
-    <g filter="url(#shared_blur_heavy)"><ellipse cx="11.221" cy="42.892" rx="30.22" ry="33.27" transform="rotate(45.607 11.221 42.892)" fill="#00B95C"/></g>
-    <g filter="url(#shared_blur_heavy)"><ellipse cx="75.755" cy="104.822" rx="29.018" ry="27.943" transform="rotate(76.924 75.755 104.822)" fill="#3186FF"/></g>
-    <g filter="url(#shared_blur_heavy)"><ellipse cx="33.566" cy="35.404" rx="33.566" ry="35.404" transform="matrix(-0.409 0.912 -0.912 -0.409 101.25 -15.167)" fill="#FBBC04"/></g>
-    <g filter="url(#shared_blur_heavy)"><path d="M2.568 149.695C-15.812 142.48 15.599 83.116 23.409 63.22C31.22 43.324 52.451 33.045 70.831 40.26C89.211 47.475 110.996 87.216 103.185 107.112C95.374 127.008 20.948 156.91 2.568 149.695Z" fill="#3186FF"/></g>
-    <g filter="url(#shared_blur_heavy)"><path d="M113.934 75.808C109.013 81.551 96.172 78.622 85.253 69.267C74.334 59.911 69.47 47.671 74.391 41.928C79.312 36.185 92.153 39.114 103.072 48.469C113.991 57.825 118.855 70.065 113.934 75.808Z" fill="#749BFF"/></g>
-    <g filter="url(#shared_blur_heavy)"><ellipse cx="92.611" cy="23.796" rx="44.241" ry="27.502" transform="rotate(34.076 92.611 23.796)" fill="#FC413D"/></g>
-    <g filter="url(#shared_blur_heavy)"><ellipse cx="23.495" cy="29.589" rx="23.707" ry="13.787" transform="rotate(112.516 23.495 29.589)" fill="#FFEE48"/></g>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 113 113" width="24" height="24" fill="currentColor">
+  <path d="M89.6992 93.695C94.3659 97.195 101.366 94.8617 94.9492 88.445C75.6992 69.7783 79.7825 18.445 55.8659 18.445C31.9492 18.445 36.0325 69.7783 16.7825 88.445C9.78251 95.445 17.3658 97.195 22.0325 93.695C40.1159 81.445 38.9492 59.8617 55.8659 59.8617C72.7825 59.8617 71.6159 81.445 89.6992 93.695Z"/>
 </svg>

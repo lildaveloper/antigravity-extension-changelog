@@ -45,7 +45,7 @@ const errorNames = [
 class FieldError extends Error {
     /**
      * @public
-     * @param {(?|!tsickle_descriptors_1.DescOneof)} fieldOrOneof
+     * @param {(!tsickle_descriptors_1.DescOneof|?)} fieldOrOneof
      * @param {string} message
      * @param {string=} name
      */
@@ -53,7 +53,7 @@ class FieldError extends Error {
         super(message);
         this.name = name;
         this.field = (/**
-         * @return {(?|!tsickle_descriptors_1.DescOneof)}
+         * @return {(!tsickle_descriptors_1.DescOneof|?)}
          */
         () => fieldOrOneof);
     }
@@ -62,7 +62,7 @@ exports.FieldError = FieldError;
 /* istanbul ignore if */
 if (false) {
     /**
-     * @const {function(): (?|!tsickle_descriptors_1.DescOneof)}
+     * @const {function(): (!tsickle_descriptors_1.DescOneof|?)}
      * @public
      */
     FieldError.prototype.field;

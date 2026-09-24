@@ -172,7 +172,7 @@ exports.hasExtension = hasExtension;
  */
 function hasOption(element, option) {
     /** @type {(undefined|?)} */
-    const message = (/** @type {(undefined|?)} */ ((/** @type {(!tsickle_descriptors_1.DescFile|!tsickle_descriptors_1.DescMessage|?|!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescEnumValue|!tsickle_descriptors_1.DescMethod|!tsickle_descriptors_1.DescService|!tsickle_descriptors_1.DescOneof)} */ (element)).proto.options));
+    const message = (/** @type {(undefined|?)} */ ((/** @type {(!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescEnumValue|!tsickle_descriptors_1.DescFile|!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescMethod|!tsickle_descriptors_1.DescOneof|!tsickle_descriptors_1.DescService|?)} */ (element)).proto.options));
     if (!message) {
         return false;
     }
@@ -193,7 +193,7 @@ exports.hasOption = hasOption;
  */
 function getOption(element, option) {
     /** @type {(undefined|?)} */
-    const message = (/** @type {(undefined|?)} */ ((/** @type {(!tsickle_descriptors_1.DescFile|!tsickle_descriptors_1.DescMessage|?|!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescEnumValue|!tsickle_descriptors_1.DescMethod|!tsickle_descriptors_1.DescService|!tsickle_descriptors_1.DescOneof)} */ (element)).proto.options));
+    const message = (/** @type {(undefined|?)} */ ((/** @type {(!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescEnumValue|!tsickle_descriptors_1.DescFile|!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescMethod|!tsickle_descriptors_1.DescOneof|!tsickle_descriptors_1.DescService|?)} */ (element)).proto.options));
     if (!message) {
         const [, , get__tsickle_destructured_8] = createExtensionContainer(option);
         const get = /** @type {function(): ?} */ (get__tsickle_destructured_8);
@@ -243,7 +243,7 @@ function createExtensionContainer(extension, value) {
         parent: extension.extendee,
         localName,
     }));
-    /** @type {{fields: !Array<?>, members: !Array<?>, oneofs: !Array<?>, kind: string, typeName: string, name: string, file: !tsickle_descriptors_1.DescFile, parent: (undefined|!tsickle_descriptors_1.DescMessage), field: ?, nestedEnums: !Array<!tsickle_descriptors_1.DescEnum>, nestedMessages: !Array<!tsickle_descriptors_1.DescMessage>, nestedExtensions: !Array<?>, deprecated: boolean, proto: ?, toString: function(): string}} */
+    /** @type {{kind: string, typeName: string, name: string, file: !tsickle_descriptors_1.DescFile, parent: (undefined|!tsickle_descriptors_1.DescMessage), field: ?, nestedEnums: !Array<!tsickle_descriptors_1.DescEnum>, nestedMessages: !Array<!tsickle_descriptors_1.DescMessage>, nestedExtensions: !Array<?>, deprecated: boolean, proto: ?, toString: function(): string, fields: !Array<?>, members: !Array<?>, oneofs: !Array<?>}} */
     const desc = {
         ...extension.extendee,
         fields: [field],

@@ -61,14 +61,14 @@ const tsickle_context_values_2 = goog.requireType("google3.third_party.javascrip
  * To implement that layering, Interceptors are functions that wrap a call
  * invocation. In an array of interceptors, the interceptor at the end of
  * the array is applied first.
- * @typedef {function(function((!UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>): function((!UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>}
+ * @typedef {function(function((!StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>): function((!StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>}
  */
 exports.Interceptor;
 /**
  * AnyFn represents the client-side invocation of an RPC. Interceptors can wrap
  * this invocation, add request headers, and wrap parts of the request or
  * response to inspect and log.
- * @typedef {function((!UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>}
+ * @typedef {function((!StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>}
  */
 var AnyFn;
 /**
@@ -275,7 +275,7 @@ if (false) {
  * ServerStreamingFn.
  * @template T
  * @param {T} next
- * @param {(undefined|!Array<function(function((!UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>): function((!UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>>)} interceptors
+ * @param {(undefined|!Array<function(function((!StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>): function((!StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>>)} interceptors
  * @return {T}
  */
 function applyInterceptors(next, interceptors) {
@@ -283,7 +283,7 @@ function applyInterceptors(next, interceptors) {
         return next;
     }
     for (const i of interceptors.concat().reverse()) {
-        next = (/** @type {T} */ (i((/** @type {function((!UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>} */ (next)))));
+        next = (/** @type {T} */ (i((/** @type {function((!StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>} */ (next)))));
     }
     return next;
 }

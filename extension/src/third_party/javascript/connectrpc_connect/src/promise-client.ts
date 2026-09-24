@@ -62,7 +62,7 @@ exports.Client;
 function createClient(service, transport) {
     return (/** @type {?} */ ((0, any_client_js_1.makeAnyClient)(service, (/**
      * @param {?} method
-     * @return {(null|function(?, (undefined|!tsickle_call_options_4.CallOptions)=): !Promise<*>|function(?, (undefined|!tsickle_call_options_4.CallOptions)=): !AsyncIterable<*, ?, ?>|function(!AsyncIterable<?, ?, ?>, (undefined|!tsickle_call_options_4.CallOptions)=): !Promise<*>|function(!AsyncIterable<?, ?, ?>, (undefined|!tsickle_call_options_4.CallOptions)=): !AsyncIterable<*, ?, ?>)}
+     * @return {(null|function(!AsyncIterable<?, ?, ?>, (undefined|!tsickle_call_options_4.CallOptions)=): !AsyncIterable<*, ?, ?>|function(!AsyncIterable<?, ?, ?>, (undefined|!tsickle_call_options_4.CallOptions)=): !Promise<*>|function(?, (undefined|!tsickle_call_options_4.CallOptions)=): !AsyncIterable<*, ?, ?>|function(?, (undefined|!tsickle_call_options_4.CallOptions)=): !Promise<*>)}
      */
     (method) => {
         switch (method.methodKind) {

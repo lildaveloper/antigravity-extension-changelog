@@ -21,7 +21,7 @@ var module = module || { id: 'third_party/javascript/safevalues/builders/html_sa
 goog.require('google3.third_party.javascript.tslib.tslib');
 /**
  * A policy that can be used to process URLs for navigation or resource URL sinks.
- * @typedef {function(!URL, (!StyleElementOrAttributeUrlPolicyHints|!HtmlAttributeUrlPolicyHints)): (null|!URL)}
+ * @typedef {function(!URL, (!HtmlAttributeUrlPolicyHints|!StyleElementOrAttributeUrlPolicyHints)): (null|!URL)}
  */
 exports.UrlPolicy;
 /**
@@ -85,7 +85,7 @@ if (false) {
 /**
  * Hints that can be passed to a UrlPolicy to make the check more
  * informed.
- * @typedef {(!StyleElementOrAttributeUrlPolicyHints|!HtmlAttributeUrlPolicyHints)}
+ * @typedef {(!HtmlAttributeUrlPolicyHints|!StyleElementOrAttributeUrlPolicyHints)}
  */
 exports.UrlPolicyHints;
 /**

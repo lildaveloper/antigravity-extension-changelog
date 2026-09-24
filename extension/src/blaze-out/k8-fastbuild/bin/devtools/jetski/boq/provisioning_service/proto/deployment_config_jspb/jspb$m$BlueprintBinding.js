@@ -145,11 +145,11 @@ jspb$devtools_jetski_provisioning$MutableBlueprintBinding = class extends jspb_i
 
 
   /**
-   * optional string full_version = 3;
+   * optional string version_name = 3;
    * @override
    * @return {string}
    */
-  getFullVersion() {
+  getVersionName() {
     return jspb_internal_adapters.getStringFieldWithDefault(this, 3);
   }
 
@@ -158,7 +158,7 @@ jspb$devtools_jetski_provisioning$MutableBlueprintBinding = class extends jspb_i
    * @param {string|null|undefined} value
    * @return {!jspb$devtools_jetski_provisioning$MutableBlueprintBinding} returns this
    */
-  setFullVersion(value) {
+  setVersionName(value) {
     return jspb_internal_adapters.setStringField(this, 3, value);
   }
 
@@ -167,7 +167,7 @@ jspb$devtools_jetski_provisioning$MutableBlueprintBinding = class extends jspb_i
    * Clears the field.
    * @return {!jspb$devtools_jetski_provisioning$MutableBlueprintBinding} returns this
    */
-  clearFullVersion() {
+  clearVersionName() {
     return jspb_internal_adapters.clearField(this, 3);
   }
 
@@ -177,17 +177,17 @@ jspb$devtools_jetski_provisioning$MutableBlueprintBinding = class extends jspb_i
    * @override
    * @return {boolean}
    */
-  hasFullVersion() {
+  hasVersionName() {
     return jspb_internal_adapters.hasStringField(this, 3);
   }
 
 
   /**
-   * optional string full_version = 3;
+   * optional string version_name = 3;
    * @override
    * @return {string|undefined}
    */
-  getFullVersionOrUndefined() {
+  getVersionNameOrUndefined() {
     return jspb_internal_adapters.getStringFieldOrUndefined(this, 3);
   }
 
@@ -292,7 +292,7 @@ jspb$devtools_jetski_provisioning$MutableBlueprintBinding.hasInstance = /** @pur
  * @typedef {{
  *  blueprintId: (?string|undefined),
  *  paramsMap: (?Array<!Array<string>>|undefined),
- *  fullVersion: (?string|undefined),
+ *  versionName: (?string|undefined),
  *  userConfig: (?jspb$google$protobuf$MutableAny.ObjectFormat|undefined)
  * }}
  */
@@ -354,7 +354,7 @@ if (goog.DEBUG && !COMPILED) {
  * @typedef {{
  *  blueprintId: (string|undefined),
  *  paramsMap: (!ReadonlyMap<string,string>|undefined),
- *  fullVersion: (string|undefined),
+ *  versionName: (string|undefined),
  *  userConfig: (!jspb$ro.google$protobuf$ReadonlyAny|undefined)
  * }}
  */

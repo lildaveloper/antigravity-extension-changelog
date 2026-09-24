@@ -82,6 +82,84 @@ function getDefaultReleaseBaseUrl() {
 }
 exports.getDefaultReleaseBaseUrl = getDefaultReleaseBaseUrl;
 /**
+ * @param {string} rawUrl
+ * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
+ * @param {string=} sourceDescription
+ * @return {string}
+ */
+function validateAndNormalizeReleaseBaseUrl(rawUrl, outputChannel, sourceDescription = 'configuration') {
+    // Strip leading/trailing whitespace and any trailing slashes first so comparisons
+    // and parsing operate on a canonical base URL.
+    /** @type {string} */
+    const normalizedUrl = rawUrl.trim().replace(/\/+$/, '');
+    // Redirect legacy release bucket endpoint to the current default URL,
+    // matching both with and without trailing slashes.
+    if (normalizedUrl === 'https://storage.googleapis.com/antigravity-releases') {
+        return getDefaultReleaseBaseUrl();
+    }
+    try {
+        /** @type {!URL} */
+        const parsed = new URL(normalizedUrl);
+        // Enforce TLS (https:) for all remote network endpoints to prevent MITM tampering.
+        // Plain http: is strictly permitted only for loopback development (localhost, 127.0.0.1).
+        // All other protocols (e.g. ftp:, ws:) are rejected regardless of hostname.
+        /** @type {boolean} */
+        const isHttps = parsed.protocol === 'https:';
+        /** @type {boolean} */
+        const isLocalHttp = parsed.protocol === 'http:' &&
+            (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1');
+        if (!isHttps && !isLocalHttp) {
+            outputChannel?.appendLine(`[INSTALL WARNING] Insecure protocol '${parsed.protocol}' in ${sourceDescription} '${rawUrl}' is rejected. Falling back to default URL.`);
+            return getDefaultReleaseBaseUrl();
+        }
+        return normalizedUrl;
+    }
+    catch (error) {
+        outputChannel?.appendLine(`[INSTALL WARNING] Invalid URL in ${sourceDescription} '${rawUrl}': ${error}. Falling back to default URL.`);
+        return getDefaultReleaseBaseUrl();
+    }
+}
+/**
+ * Resolves and validates the release base URL for Antigravity binary downloads.
+ *
+ * Precedence and Validation:
+ * 1. AGY_RELEASE_BASE_URL environment variable (highest precedence).
+ * 2. antigravity.releaseBaseUrl configuration setting (user or workspace).
+ * 3. Default fallback URL.
+ *
+ * Security controls and their limits:
+ * - Untrusted workspace protection: Handled at the VS Code extension host level;
+ *   Antigravity does not support untrusted workspaces and is not loaded in untrusted mode.
+ *   Workspace trust is therefore the control that governs which origin is trusted here.
+ * - Protocol enforcement: The URL must use HTTPS (or loopback http://localhost / http://127.0.0.1
+ *   for development). This prevents an HTTP downgrade but does NOT restrict which HTTPS host may
+ *   be used; there is deliberately no origin allowlist at this time.
+ * - Checksum verification: Downloaded binaries must pass a mandatory SHA-512 (or SHA-256) check.
+ *   Note that the expected digest is read from the same manifest as the binary URL, so this
+ *   protects against transport corruption and tampering in transit, not against a hostile origin.
+ * - Signature verification: NOT enforced. `verifyBinarySignature` exists as an unwired primitive;
+ *   see its documentation for what must be true before it can be enabled.
+ * @param {(undefined|!tsickle_vscode_11.WorkspaceConfiguration)=} config
+ * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
+ * @return {string}
+ */
+function resolveReleaseBaseUrl(config, outputChannel) {
+    /** @type {(undefined|string)} */
+    const envUrl = process.env['AGY_RELEASE_BASE_URL'];
+    if (envUrl && envUrl.trim()) {
+        return validateAndNormalizeReleaseBaseUrl(envUrl.trim(), outputChannel, 'environment variable AGY_RELEASE_BASE_URL');
+    }
+    /** @type {!tsickle_vscode_11.WorkspaceConfiguration} */
+    const activeConfig = config ?? vscode.workspace.getConfiguration('antigravity');
+    /** @type {(undefined|string)} */
+    const configured = activeConfig.get('releaseBaseUrl');
+    if (configured && configured.trim()) {
+        return validateAndNormalizeReleaseBaseUrl(configured.trim(), outputChannel, 'configuration');
+    }
+    return getDefaultReleaseBaseUrl();
+}
+exports.resolveReleaseBaseUrl = resolveReleaseBaseUrl;
+/**
  * Parses a Retry-After HTTP header value (delta-seconds or HTTP-date string) into milliseconds.
  * Returns undefined if the header is absent, empty, or unparseable.
  * @param {(undefined|null|string)} headerValue
@@ -388,13 +466,41 @@ function isVersionAtLeast(actualVersion, minVersion) {
 }
 exports.isVersionAtLeast = isVersionAtLeast;
 /**
- * In-memory cache mapping binary SHA256 checksums to their resolved version strings.
- * Keying by checksum ensures that the cached version corresponds directly to the binary's
- * actual content on disk, avoiding redundant `agy --version` child processes while automatically
- * invalidating if the file on disk is modified or replaced.
+ * In-memory cache mapping a binary's filesystem identity to its resolved
+ * version string. This exists to avoid redundant `agy --version` child
+ * process spawns.
+ *
+ * The key is derived from a single `stat()` (path, size, mtime, ctime, inode)
+ * rather than from the file's contents. Content hashing was the original
+ * approach and was a serious performance bug: the agy binary is ~200 MiB, so
+ * every lookup streamed and hashed the entire file. That costs roughly a
+ * second on a warm page cache and considerably more on Windows, where most of
+ * our startup latency lives. Because the version is resolved twice per
+ * startup, a cache introduced to save a ~50ms subprocess spawn was instead
+ * spending seconds. See b/561981286.
+ *
+ * A stat tuple is a weaker identity than a content hash: it cannot detect an
+ * edit that preserves size, mtime, ctime and inode simultaneously. That is an
+ * acceptable trade here. The binary is only ever replaced by this module's
+ * atomic write-to-temp-then-rename, which necessarily produces a new inode and
+ * mtime. Integrity of a freshly downloaded binary is a separate concern and
+ * remains enforced by `verifyChecksum` against the signed release manifest,
+ * which is the one place a real hash is warranted.
  * @type {!Map<string, string>}
  */
 const binaryVersionCache = new Map();
+/**
+ * Builds a cheap cache key identifying the file currently at `binaryPath`.
+ *
+ * `ino` is 0 on Windows, so the key degrades to (path, size, mtime, ctime)
+ * there. That remains sufficient to detect the downloader's replace-on-update.
+ * @param {string} binaryPath
+ * @return {!Promise<string>}
+ */
+async function getBinaryIdentityKey(binaryPath) {
+    const stats = await fs_1.promises.stat(binaryPath);
+    return [binaryPath, stats.size, stats.mtimeMs, stats.ctimeMs, stats.ino].join(':');
+}
 /**
  * Clears the in-memory binary version cache (primarily used in tests).
  * @return {void}
@@ -404,8 +510,9 @@ function clearBinaryVersionCache() {
 }
 exports.clearBinaryVersionCache = clearBinaryVersionCache;
 /**
- * Returns the version string reported by the binary, or undefined if unavailable.
- * Reuses in-memory cached version keyed by the binary's SHA256 checksum.
+ * Returns the version string reported by the binary, or undefined if
+ * unavailable. Reuses the in-memory version cached against the binary's
+ * filesystem identity.
  * @param {string} binaryPath
  * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
  * @return {!Promise<(undefined|string)>}
@@ -416,16 +523,16 @@ async function getBinaryVersionString(binaryPath, outputChannel) {
         return undefined;
     }
     /** @type {string} */
-    let checksum;
+    let identityKey;
     try {
-        checksum = await computeFileSha256(binaryPath);
+        identityKey = await getBinaryIdentityKey(binaryPath);
     }
     catch (error) {
-        outputChannel?.appendLine(`[INSTALL] Failed to compute checksum for binary ${binaryPath}: ${error}`);
+        outputChannel?.appendLine(`[INSTALL] Failed to stat binary ${binaryPath}: ${error}`);
         return undefined;
     }
     /** @type {(undefined|string)} */
-    const cachedVersion = binaryVersionCache.get(checksum);
+    const cachedVersion = binaryVersionCache.get(identityKey);
     if (cachedVersion !== undefined) {
         return cachedVersion;
     }
@@ -439,7 +546,7 @@ async function getBinaryVersionString(binaryPath, outputChannel) {
         const match = combinedOutput.match(/(\d+\.\d+\.\d+[^ \t\n\r]*)/);
         /** @type {string} */
         const resolvedVersion = match ? match[1] : combinedOutput;
-        binaryVersionCache.set(checksum, resolvedVersion);
+        binaryVersionCache.set(identityKey, resolvedVersion);
         return resolvedVersion;
     }
     catch (error) {
@@ -449,8 +556,9 @@ async function getBinaryVersionString(binaryPath, outputChannel) {
 }
 exports.getBinaryVersionString = getBinaryVersionString;
 /**
- * Verifies whether the specified binary exists and reports a version >= minVersion.
- * Reuses getBinaryVersionString (and its checksum-based in-memory cache) to avoid redundant subprocess spawns.
+ * Verifies whether the specified binary exists and reports a version >=
+ * minVersion. Reuses getBinaryVersionString (and its stat-keyed in-memory
+ * cache) to avoid redundant subprocess spawns.
  * @param {string} binaryPath
  * @param {string} minVersion
  * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
@@ -871,17 +979,31 @@ async function downloadWithProgress(url, destPath, outputChannel, progress, retr
     }));
 }
 /**
- * @param {string} filePath
- * @param {!PlatformBinaryInfo} binaryInfo
- * @param {!tsickle_vscode_11.OutputChannel} outputChannel
- * @param {(undefined|!tsickle_vscode_11.Progress<{message: (undefined|string), increment: (undefined|number)}>)=} progress
+ * Verifies the SHA-512 or SHA-256 cryptographic checksum of a downloaded binary.
+ * Rejects manifest entries without checksums, safely unlinks the file on mismatch,
+ * and logs validation progress and status to the provided output channel.
+ *
+ * @throws Error if checksum verification fails or if no checksum is provided in manifest.
+ * @param {string} filePath The local filesystem path to the downloaded binary file.
+ * @param {!PlatformBinaryInfo} binaryInfo Platform release metadata containing expected sha512/sha256 digests.
+ * @param {!tsickle_vscode_11.OutputChannel} outputChannel VS Code output channel for logging verification diagnostics.
+ * @param {(undefined|!tsickle_vscode_11.Progress<{message: (undefined|string), increment: (undefined|number)}>)=} progress Optional progress reporter to update verification status.
  * @return {!Promise<void>}
  */
 async function verifyBinaryChecksum(filePath, binaryInfo, outputChannel, progress) {
     /** @type {(undefined|string)} */
     const expectedHash = binaryInfo.sha512 ?? binaryInfo.sha256;
     if (!expectedHash) {
-        return;
+        if (await pathExists(filePath)) {
+            await fs_1.promises.unlink(filePath).catch((/**
+             * @return {void}
+             */
+            () => { }));
+        }
+        /** @type {string} */
+        const errorText = 'Integrity verification failed: release manifest does not contain a sha512 or sha256 checksum.';
+        outputChannel.appendLine(`[INSTALL ERROR] ${errorText}`);
+        throw new Error(errorText);
     }
     /** @type {string} */
     const algorithm = binaryInfo.sha512 ? 'sha512' : 'sha256';
@@ -905,6 +1027,7 @@ async function verifyBinaryChecksum(filePath, binaryInfo, outputChannel, progres
     }
     outputChannel.appendLine(`[INSTALL] ${(/** @type {string} */ (algorithm)).toUpperCase()} checksum verified successfully.`);
 }
+exports.verifyBinaryChecksum = verifyBinaryChecksum;
 /**
  * Options for safely promoting a binary to the destination installation path.
  * @record
@@ -1150,6 +1273,67 @@ async function promoteBinarySafely(sourcePath, installPath, outputChannel, optio
 }
 exports.promoteBinarySafely = promoteBinarySafely;
 /**
+ * Verifies the Ed25519 cryptographic signature of a downloaded binary against a trusted public key.
+ * Throws an error and unlinks the downloaded file if the signature is invalid or corrupt.
+ *
+ * NOT YET WIRED INTO THE INSTALL PATH. Release manifests do not currently carry a `signature`
+ * field and there is no producer-side signer for the `agy` CLI binary, so this is deliberately
+ * kept as a standalone, unit-tested primitive rather than being called from
+ * `acquireInstalledBinaryPath`.
+ *
+ * Before enabling it, `publicKey` must be sourced from a hardcoded, compiled-in trust anchor.
+ * Reading the key from a mutable environment variable would be self-defeating: an attacker able
+ * to set that variable can also point `AGY_RELEASE_BASE_URL` at a hostile origin and supply a
+ * matching manifest, binary, and signature. See the follow-up bug tracking whether to adopt BCID
+ * provenance for `lorry_path:///antigravity/` instead of a bespoke signing scheme.
+ * @param {string} filePath
+ * @param {string} signatureBase64
+ * @param {(string|?)} publicKey
+ * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
+ * @param {(undefined|!tsickle_vscode_11.Progress<{message: (undefined|string), increment: (undefined|number)}>)=} progress
+ * @return {!Promise<void>}
+ */
+async function verifyBinarySignature(filePath, signatureBase64, publicKey, outputChannel, progress) {
+    progress?.report({ message: 'Verifying Ed25519 signature...' });
+    outputChannel?.appendLine('[INSTALL] Verifying Ed25519 cryptographic signature...');
+    const fileBuffer = await fs_1.promises.readFile(filePath);
+    const signatureBuffer = Buffer.from(signatureBase64, 'base64');
+    /** @type {boolean} */
+    let isValid = false;
+    try {
+        // Pass Buffer instances directly to cryptoVerify without wrapping in new Uint8Array(fileBuffer).
+        // In Node.js, Buffer is already an ArrayBufferView at runtime; casting avoids TS type definition
+        // incompatibilities while preventing an unnecessary 50MB+ heap buffer copy during verification.
+        isValid = (0, crypto_1.verify)(null, (/** @type {(!BigInt64Array|!BigUint64Array|!DataView|!Float32Array|!Float64Array|!Int16Array|!Int32Array|!Int8Array|!Uint16Array|!Uint32Array|!Uint8Array|!Uint8ClampedArray)} */ ((/** @type {*} */ (fileBuffer)))), publicKey, (/** @type {(!BigInt64Array|!BigUint64Array|!DataView|!Float32Array|!Float64Array|!Int16Array|!Int32Array|!Int8Array|!Uint16Array|!Uint32Array|!Uint8Array|!Uint8ClampedArray)} */ ((/** @type {*} */ (signatureBuffer)))));
+    }
+    catch (error) {
+        if (await pathExists(filePath)) {
+            await fs_1.promises.unlink(filePath).catch((/**
+             * @return {void}
+             */
+            () => { }));
+        }
+        /** @type {string} */
+        const errorText = `Ed25519 signature verification encountered an error: ${error}`;
+        outputChannel?.appendLine(`[INSTALL ERROR] ${errorText}`);
+        throw new Error(errorText, { cause: error });
+    }
+    if (!isValid) {
+        if (await pathExists(filePath)) {
+            await fs_1.promises.unlink(filePath).catch((/**
+             * @return {void}
+             */
+            () => { }));
+        }
+        /** @type {string} */
+        const errorText = 'Ed25519 cryptographic signature verification failed: signature does not match downloaded binary.';
+        outputChannel?.appendLine(`[INSTALL ERROR] ${errorText}`);
+        throw new Error(errorText);
+    }
+    outputChannel?.appendLine('[INSTALL] Ed25519 cryptographic signature verified successfully.');
+}
+exports.verifyBinarySignature = verifyBinarySignature;
+/**
  * @record
  */
 function UnpackOptions() { }
@@ -1311,22 +1495,14 @@ async function acquireInstalledBinaryPath(options) {
     outputChannel.appendLine(`[INSTALL] Initializing update check. Platform: ${process.platform}-${process.arch}, Extension Version: ${extVersion}`);
     /** @type {!tsickle_vscode_11.WorkspaceConfiguration} */
     const config = configOverride ?? vscode.workspace.getConfiguration('antigravity');
-    /** @type {(undefined|string)} */
-    const userConfiguredUrl = config.get('releaseBaseUrl');
-    if (userConfiguredUrl) {
-        outputChannel.appendLine(`[INSTALL] Using custom releaseBaseUrl override: ${userConfiguredUrl} (Default: ${getDefaultReleaseBaseUrl()})`);
-    }
+    /** @type {string} */
+    const releaseBaseUrl = resolveReleaseBaseUrl(config, outputChannel);
     /** @type {(undefined|string)} */
     const userConfiguredChannel = config.get('channel');
     if (userConfiguredChannel) {
         outputChannel.appendLine(`[INSTALL] Using custom channel override: ${userConfiguredChannel}`);
     }
-    /** @type {string} */
-    let releaseBaseUrl = config.get('releaseBaseUrl') ?? getDefaultReleaseBaseUrl();
-    if (!releaseBaseUrl ||
-        releaseBaseUrl === 'https://storage.googleapis.com/antigravity-releases') {
-        releaseBaseUrl = getDefaultReleaseBaseUrl();
-    }
+    outputChannel.appendLine(`[INSTALL] Checking for updates at releaseBaseUrl=${releaseBaseUrl}...`);
     // Check whether a locally installed binary already exists and satisfies MIN_AGY_VERSION.
     // If so, attempt to check for updates with a fast timeout (3000ms budget). If unreachable or offline,
     // skip the update check and start the existing binary immediately to avoid blocking cold start.
@@ -1420,11 +1596,7 @@ async function acquireInstalledBinaryPath(options) {
             /** @type {!tsickle_vscode_11.WorkspaceConfiguration} */
             const config = configOverride ?? vscode.workspace.getConfiguration('antigravity');
             /** @type {string} */
-            let releaseBaseUrl = config.get('releaseBaseUrl') ?? getDefaultReleaseBaseUrl();
-            if (!releaseBaseUrl ||
-                releaseBaseUrl === 'https://storage.googleapis.com/antigravity-releases') {
-                releaseBaseUrl = getDefaultReleaseBaseUrl();
-            }
+            const releaseBaseUrl = resolveReleaseBaseUrl(config, outputChannel);
             outputChannel.appendLine(`[INSTALL] Fetching manifest from releaseBaseUrl=${releaseBaseUrl}...`);
             /** @type {!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest} */
             const manifest = await fetchReleaseManifest(releaseBaseUrl, retryOptions, outputChannel);
@@ -1437,6 +1609,18 @@ async function acquireInstalledBinaryPath(options) {
                 throw new Error(errorText);
             }
             outputChannel.appendLine(`[INSTALL] Found release v${manifest.version} (${process.platform}-${process.arch}): ${binaryInfo.url}`);
+            // Fail fast when the manifest carries no checksum. This is a manifest defect rather than a
+            // transient fault, so re-downloading the binary cannot resolve it. Checking here (instead of
+            // only inside verifyBinaryChecksum, which runs within withRetry) avoids repeatedly
+            // re-downloading a multi-hundred-megabyte archive to rediscover the same missing metadata.
+            // A checksum *mismatch* is still verified inside the retry loop, since that can be transient
+            // corruption which a retry legitimately repairs.
+            if (!binaryInfo.sha512 && !binaryInfo.sha256) {
+                /** @type {string} */
+                const errorText = 'Integrity verification failed: release manifest does not contain a sha512 or sha256 checksum.';
+                outputChannel.appendLine(`[INSTALL ERROR] ${errorText}`);
+                throw new Error(errorText);
+            }
             /** @type {string} */
             const installDir = (0, path_1.dirname)(installPath);
             await fs_1.promises.mkdir(installDir, { recursive: true });
@@ -1450,9 +1634,9 @@ async function acquireInstalledBinaryPath(options) {
                 message: `Downloading Antigravity Backend (${process.platform}-${process.arch})...`,
             });
             outputChannel.appendLine(`[INSTALL] Downloading Antigravity Backend to temporary path ${stagingPath}...`);
-            // Download the platform binary and verify its cryptographic hash.
-            // Both download and checksum verification are wrapped in withRetry: if a network dropout or corruption
-            // causes a checksum mismatch, the invalid staging file is unlinked and the download is cleanly retried.
+            // Download the platform binary and verify its cryptographic hash and signature.
+            // Both download and verification are wrapped in withRetry: if a network dropout or corruption
+            // causes verification to fail, the invalid staging file is unlinked and the download is cleanly retried.
             await withRetry((/**
              * @param {number} attempt
              * @return {!Promise<void>}
@@ -1485,11 +1669,11 @@ async function acquireInstalledBinaryPath(options) {
             await context.globalState.update('antigravity.lastInstalledReleaseBaseUrl', releaseBaseUrl);
             try {
                 /** @type {string} */
-                const checksum = await computeFileSha256(installPath);
-                binaryVersionCache.set(checksum, targetVersion);
+                const identityKey = await getBinaryIdentityKey(installPath);
+                binaryVersionCache.set(identityKey, targetVersion);
             }
             catch {
-                // Non-fatal if checksum cannot be computed here.
+                // Non-fatal if identity key cannot be computed here.
             }
             return installPath;
         }

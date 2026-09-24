@@ -218,7 +218,7 @@ class VSBuffer {
     }
     /**
      * @public
-     * @param {(!ArrayBuffer|!Uint8Array|!VSBuffer|!ArrayBufferView)} array
+     * @param {(!ArrayBuffer|!ArrayBufferView|!Uint8Array|!VSBuffer)} array
      * @param {(undefined|number)=} offset
      * @return {void}
      */

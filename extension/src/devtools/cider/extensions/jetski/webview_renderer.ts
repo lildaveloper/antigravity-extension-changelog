@@ -112,7 +112,7 @@ class WebviewRenderer {
     /**
      * Updates the title/description of the view.
      * @public
-     * @param {(undefined|!tsickle_vscode_1.WebviewView|!tsickle_vscode_1.WebviewPanel)} view
+     * @param {(undefined|!tsickle_vscode_1.WebviewPanel|!tsickle_vscode_1.WebviewView)} view
      * @return {!Promise<void>}
      */
     async updateTitle(view) {
@@ -122,7 +122,7 @@ class WebviewRenderer {
      * Full webview lifecycle: shows a loading indicator, resolves the server
      * URL, renders the Jetski iframe, and registers the view with the API.
      * @public
-     * @param {(!tsickle_vscode_1.WebviewView|!tsickle_vscode_1.WebviewPanel)} view
+     * @param {(!tsickle_vscode_1.WebviewPanel|!tsickle_vscode_1.WebviewView)} view
      * @param {!tsickle_delegate_interfaces_2.RenderIframeOptions} options
      * @return {!Promise<void>}
      */

@@ -11,8 +11,10 @@ goog.provide('jspb$b$jetski_memory$MemoryMountConfig');
 goog.require('jspb$b$google$protobuf$Duration');
 goog.require('jspb$b$jetski_memory$DumboBackendConfig');
 goog.require('jspb$b$jetski_memory$FakeMemoryBackendConfig');
+goog.require('jspb$b$jetski_memory$MemoryBankBackendConfig');
 goog.require('jspb$b$jetski_memory$SkillsBackendConfig');
 goog.require('jspb$b$jetski_memory$SmithBackendConfig');
+goog.require('jspb$b$jetski_memory$SojoBackendConfig');
 goog.require('jspb$jetski_memory$MutableMemoryMountConfig');
 goog.require('jspb_internal_binary');
 goog.require('jspb_internal_public_for_gencode');
@@ -37,7 +39,11 @@ jspb$b$jetski_memory$MemoryMountConfig.fields = /** @pureOrBreakMyCode */([
   jspb_internal_binary.RWBool,
   jspb_internal_binary.RMessageOneofWMessage,
   jspb$b$jetski_memory$SkillsBackendConfig.fields,
-  jspb$b$google$protobuf$Duration.fields
+  jspb$b$google$protobuf$Duration.fields,
+  jspb_internal_binary.RMessageOneofWMessage,
+  jspb$b$jetski_memory$SojoBackendConfig.fields,
+  jspb_internal_binary.RMessageOneofWMessage,
+  jspb$b$jetski_memory$MemoryBankBackendConfig.fields
 ]);
 
 /**

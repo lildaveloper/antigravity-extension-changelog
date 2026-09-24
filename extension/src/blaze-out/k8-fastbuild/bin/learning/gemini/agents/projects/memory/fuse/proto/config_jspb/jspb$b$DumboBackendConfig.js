@@ -37,7 +37,7 @@ jspb$b$jetski_memory$DumboBackendConfig.fields = /** @pureOrBreakMyCode */([
 jspb$jetski_memory$MutableDumboBackendConfig.prototype.serializeBinary = /** @pureOrBreakMyCode */(jspb_internal_public_for_gencode.makePrototypeSerializeBinaryFunction(jspb$b$jetski_memory$DumboBackendConfig.fields));
 
 
-var jspb$b$jetski_memory$SkillsBackendConfig;
-Object.defineProperty(this, 'jspb$b$jetski_memory$SkillsBackendConfig', {
-  get() { return jspb$b$jetski_memory$SkillsBackendConfig; },
-  set(v) { jspb$b$jetski_memory$SkillsBackendConfig = v; },
+var jspb$b$jetski_memory$MemoryBankBackendConfig;
+Object.defineProperty(this, 'jspb$b$jetski_memory$MemoryBankBackendConfig', {
+  get() { return jspb$b$jetski_memory$MemoryBankBackendConfig; },
+  set(v) { jspb$b$jetski_memory$MemoryBankBackendConfig = v; },

@@ -1413,8 +1413,12 @@ function clearMessage(msg) {
  * proto implementations (C++, Python), and the signature is meant to match that
  * of core web methods like `Object.assign`.
  *
- * You probably don't need this and are better off just cloning and
- * constructing a new message.
+ * This is only needed **if it is important that the receiving message
+ * identity be preserved**, e.g. if it is used as a key for a `Map` or
+ * `WeakMap`. Otherwise, for mutable messages, prefer a simple `.clone()`. For
+ * immutable messages, prefer `.toImmutable()`. These methods are simpler and
+ * can take advantage of some optimizations (in the former case, CoW; and in
+ * the latter, sharing the underlying instance when it is already immutable).
  *
  * @param {MESSAGE} toMessage Message which will receive a copy of fromMessage
  * @param {MESSAGE} fromMessage Message that will be copied into toMessage.

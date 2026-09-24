@@ -53,7 +53,7 @@ class CssSanitizer {
      * @public
      * @param {!ReadonlySet<string>} propertyAllowlist
      * @param {!ReadonlySet<string>} functionAllowlist
-     * @param {(undefined|function(!URL, (!StyleElementOrAttributeUrlPolicyHints|!HtmlAttributeUrlPolicyHints)): (null|!URL))} resourceUrlPolicy
+     * @param {(undefined|function(!URL, (!HtmlAttributeUrlPolicyHints|!StyleElementOrAttributeUrlPolicyHints)): (null|!URL))} resourceUrlPolicy
      * @param {boolean} allowKeyframes
      * @param {!Array<function(string): boolean>} propertyDiscarders
      */
@@ -380,7 +380,7 @@ if (false) {
      */
     CssSanitizer.prototype.functionAllowlist;
     /**
-     * @const {(undefined|function(!URL, (!StyleElementOrAttributeUrlPolicyHints|!HtmlAttributeUrlPolicyHints)): (null|!URL))}
+     * @const {(undefined|function(!URL, (!HtmlAttributeUrlPolicyHints|!StyleElementOrAttributeUrlPolicyHints)): (null|!URL))}
      * @private
      */
     CssSanitizer.prototype.resourceUrlPolicy;
@@ -401,7 +401,7 @@ if (false) {
  * @param {string} cssText The CSS string to sanitize.
  * @param {!ReadonlySet<string>} propertyAllowlist
  * @param {!ReadonlySet<string>} functionAllowlist
- * @param {(undefined|function(!URL, (!StyleElementOrAttributeUrlPolicyHints|!HtmlAttributeUrlPolicyHints)): (null|!URL))} resourceUrlPolicy
+ * @param {(undefined|function(!URL, (!HtmlAttributeUrlPolicyHints|!StyleElementOrAttributeUrlPolicyHints)): (null|!URL))} resourceUrlPolicy
  * @param {boolean} allowKeyframes
  * @param {!Array<function(string): boolean>} propertyDiscarders
  * @return {string} The sanitized CSS string.
@@ -416,7 +416,7 @@ exports.sanitizeStyleElement = sanitizeStyleElement;
  * @param {string} cssText The CSS string to sanitize.
  * @param {!ReadonlySet<string>} propertyAllowlist
  * @param {!ReadonlySet<string>} functionAllowlist
- * @param {(undefined|function(!URL, (!StyleElementOrAttributeUrlPolicyHints|!HtmlAttributeUrlPolicyHints)): (null|!URL))} resourceUrlPolicy
+ * @param {(undefined|function(!URL, (!HtmlAttributeUrlPolicyHints|!StyleElementOrAttributeUrlPolicyHints)): (null|!URL))} resourceUrlPolicy
  * @param {!Array<function(string): boolean>} propertyDiscarders
  * @return {string} The sanitized CSS string.
  */

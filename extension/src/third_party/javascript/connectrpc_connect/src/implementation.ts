@@ -184,17 +184,17 @@ if (false) {
      */
     HandlerContextInit.prototype.requestSignal;
     /**
-     * @type {(undefined|!Array<!Array<?>>|?|!Headers)}
+     * @type {(undefined|!Array<!Array<?>>|!Headers|?)}
      * @public
      */
     HandlerContextInit.prototype.requestHeader;
     /**
-     * @type {(undefined|!Array<!Array<?>>|?|!Headers)}
+     * @type {(undefined|!Array<!Array<?>>|!Headers|?)}
      * @public
      */
     HandlerContextInit.prototype.responseHeader;
     /**
-     * @type {(undefined|!Array<!Array<?>>|?|!Headers)}
+     * @type {(undefined|!Array<!Array<?>>|!Headers|?)}
      * @public
      */
     HandlerContextInit.prototype.responseTrailer;
@@ -270,7 +270,7 @@ function createHandlerContext(init) {
 exports.createHandlerContext = createHandlerContext;
 /**
  * UnaryImpl is the signature of the implementation of a unary RPC.
- * @typedef {function(?, !HandlerContext): (?|!Promise<?>)}
+ * @typedef {function(?, !HandlerContext): (!Promise<?>|?)}
  */
 exports.UnaryImpl;
 /**
@@ -294,12 +294,12 @@ exports.BiDiStreamingImpl;
 /**
  * Wraps a user-provided implementation along with service and method
  * metadata in a discriminated union type.
- * @typedef {({kind: string, impl: function(?, !HandlerContext): (?|!Promise<?>), method: ?}|{kind: string, impl: function(?, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<?, ?, ?>, !HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<?, ?, ?>, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})}
+ * @typedef {({kind: string, impl: function(?, !HandlerContext): (!Promise<?>|?), method: ?}|{kind: string, impl: function(?, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<?, ?, ?>, !HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<?, ?, ?>, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})}
  */
 exports.MethodImplSpec;
 /**
  * Wraps a user-provided service implementation and provides metadata.
- * @typedef {{service: !tsickle_protobuf_1.DescService, methods: !Object<string,({kind: string, impl: function(*, !HandlerContext): (?|!Promise<?>), method: ?}|{kind: string, impl: function(*, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})>}}
+ * @typedef {{service: !tsickle_protobuf_1.DescService, methods: !Object<string,({kind: string, impl: function(*, !HandlerContext): (!Promise<?>|?), method: ?}|{kind: string, impl: function(*, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})>}}
  */
 exports.ServiceImplSpec;
 /**
@@ -308,10 +308,10 @@ exports.ServiceImplSpec;
  * @template M
  * @param {M} method
  * @param {?} impl
- * @return {({kind: string, impl: function(*, !HandlerContext): (?|!Promise<?>), method: ?}|{kind: string, impl: function(*, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})}
+ * @return {({kind: string, impl: function(*, !HandlerContext): (!Promise<?>|?), method: ?}|{kind: string, impl: function(*, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})}
  */
 function createMethodImplSpec(method, impl) {
-    return (/** @type {({kind: string, impl: function(*, !HandlerContext): (?|!Promise<?>), method: ?}|{kind: string, impl: function(*, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})} */ ({
+    return (/** @type {({kind: string, impl: function(*, !HandlerContext): (!Promise<?>|?), method: ?}|{kind: string, impl: function(*, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})} */ ({
         kind: method.methodKind,
         method,
         impl,
@@ -324,13 +324,13 @@ exports.createMethodImplSpec = createMethodImplSpec;
  * @template Desc
  * @param {!tsickle_protobuf_1.DescService} service
  * @param {?} impl
- * @return {{service: !tsickle_protobuf_1.DescService, methods: !Object<string,({kind: string, impl: function(*, !HandlerContext): (?|!Promise<?>), method: ?}|{kind: string, impl: function(*, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})>}}
+ * @return {{service: !tsickle_protobuf_1.DescService, methods: !Object<string,({kind: string, impl: function(*, !HandlerContext): (!Promise<?>|?), method: ?}|{kind: string, impl: function(*, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})>}}
  */
 function createServiceImplSpec(service, impl) {
-    /** @type {{service: !tsickle_protobuf_1.DescService, methods: !Object<string,({kind: string, impl: function(*, !HandlerContext): (?|!Promise<?>), method: ?}|{kind: string, impl: function(*, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})>}} */
+    /** @type {{service: !tsickle_protobuf_1.DescService, methods: !Object<string,({kind: string, impl: function(*, !HandlerContext): (!Promise<?>|?), method: ?}|{kind: string, impl: function(*, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})>}} */
     const s = { service, methods: {} };
     for (const method of service.methods) {
-        /** @type {(undefined|function(*, !HandlerContext): (?|!Promise<?>)|function(*, !HandlerContext): !AsyncIterable<?, ?, ?>|function(!AsyncIterable<*, ?, ?>, !HandlerContext): !Promise<?>|function(!AsyncIterable<*, ?, ?>, !HandlerContext): !AsyncIterable<?, ?, ?>)} */
+        /** @type {(undefined|function(!AsyncIterable<*, ?, ?>, !HandlerContext): !AsyncIterable<?, ?, ?>|function(!AsyncIterable<*, ?, ?>, !HandlerContext): !Promise<?>|function(*, !HandlerContext): !AsyncIterable<?, ?, ?>|function(*, !HandlerContext): (!Promise<?>|?))} */
         let fn = impl[method.localName];
         if (typeof fn == "function") {
             fn = fn.bind(impl);

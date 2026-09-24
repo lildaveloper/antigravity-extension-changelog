@@ -79,21 +79,21 @@ function normalizeIterable(desc, input) {
             /** @type {!AsyncIterator<?, ?, ?>} */
             const res = {
                 next: (/**
-                 * @return {!Promise<(!IteratorReturnResult<?>|{done: (undefined|boolean), value: ?}|!IteratorYieldResult<?>)>}
+                 * @return {!Promise<(!IteratorReturnResult<?>|!IteratorYieldResult<?>|{done: (undefined|boolean), value: ?})>}
                  */
                 () => it.next().then(transform)),
             };
             if (it.throw !== undefined) {
                 res.throw = (/**
                  * @param {*} e
-                 * @return {!Promise<(!IteratorReturnResult<?>|{done: (undefined|boolean), value: ?}|!IteratorYieldResult<?>)>}
+                 * @return {!Promise<(!IteratorReturnResult<?>|!IteratorYieldResult<?>|{done: (undefined|boolean), value: ?})>}
                  */
                 (e) => ((/** @type {?} */ (it))).throw(e).then(transform));
             }
             if (it.return !== undefined) {
                 res.return = (/**
                  * @param {*} v
-                 * @return {!Promise<(!IteratorReturnResult<?>|{done: (undefined|boolean), value: ?}|!IteratorYieldResult<?>)>}
+                 * @return {!Promise<(!IteratorReturnResult<?>|!IteratorYieldResult<?>|{done: (undefined|boolean), value: ?})>}
                  */
                 (v) => ((/** @type {?} */ (it))).return(v).then(transform));
             }

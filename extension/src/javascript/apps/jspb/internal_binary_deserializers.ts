@@ -228,8 +228,8 @@ function reviveUnknownFields(messageArray, fieldNumber, options, unrevivedFieldC
          */
         (n, valueUntyped) => {
             // tslint:disable-next-line:gbigint-usage
-            /** @type {(undefined|null|string|number|boolean|?|!gbigint|!tsickle_bytestring_3.ByteString|!tsickle_internal_map_11.JspbMap<?, ?>|!tsickle_goog_jspb_12.Message)} */
-            const value = (/** @type {(undefined|null|string|number|boolean|?|!gbigint|!tsickle_bytestring_3.ByteString|!tsickle_internal_map_11.JspbMap<?, ?>|!tsickle_goog_jspb_12.Message)} */ (valueUntyped));
+            /** @type {(undefined|null|string|number|boolean|!tsickle_bytestring_3.ByteString|!tsickle_internal_map_11.JspbMap<?, ?>|!tsickle_goog_jspb_12.Message|!gbigint|?)} */
+            const value = (/** @type {(undefined|null|string|number|boolean|!tsickle_bytestring_3.ByteString|!tsickle_internal_map_11.JspbMap<?, ?>|!tsickle_goog_jspb_12.Message|!gbigint|?)} */ (valueUntyped));
             // If there was a value already in our array, we should've already
             // emitted some finding.
             //
@@ -305,7 +305,7 @@ function deserializeBinaryMessageSet(messageArray, reader, deserializers) {
                     /** @type {(function(!tsickle_reader_2.BinaryReader, !Array<*>, ?): boolean|function(!tsickle_reader_2.BinaryReader, !Array<*>, ?, !Array<?>, function(!Array<*>, !tsickle_reader_2.BinaryReader): boolean, (undefined|!Array<?>)=): boolean)} */
                     let deserializer = deserializers[n];
                     if (deserializer == null) {
-                        /** @type {(undefined|!tsickle_internal_binary_fields_6.ReaderWriterPair|?|function(): ?|!Array<?>)} */
+                        /** @type {(undefined|function(): ?|!tsickle_internal_binary_fields_6.ReaderWriterPair|!Array<?>|?)} */
                         const binaryFieldInfo = extensions?.[n];
                         if (binaryFieldInfo &&
                             !(0, internal_options_1.getDisableExtensionRegistryInBinaryDeserializationForTesting)()) {
@@ -390,7 +390,7 @@ function deserializeBinaryFromReaderGenericImpl(messageArray, reader, fieldDeser
                 const extensions = fieldDeserializers.extensions;
                 if (extensions &&
                     !(0, internal_options_1.getDisableExtensionRegistryInBinaryDeserializationForTesting)()) {
-                    /** @type {(!tsickle_internal_binary_fields_6.ReaderWriterPair|?|function(): ?|!Array<?>)} */
+                    /** @type {(function(): ?|!tsickle_internal_binary_fields_6.ReaderWriterPair|!Array<?>|?)} */
                     const binaryFieldInfo = extensions[fieldNumber];
                     if (binaryFieldInfo) {
                         // Store back in fieldParsers to save the result for a later
@@ -431,7 +431,7 @@ exports.deserializeBinaryFromReaderGenericImpl = deserializeBinaryFromReaderGene
  *
  * Callers must cache the result of this function and call it at most once per
  * ExtensionFieldBinaryInfo object.
- * @param {(!tsickle_internal_binary_fields_6.ReaderWriterPair|?|function(): ?|!Array<?>)} binaryFieldInfo
+ * @param {(function(): ?|!tsickle_internal_binary_fields_6.ReaderWriterPair|!Array<?>|?)} binaryFieldInfo
  * @return {(function(!tsickle_reader_2.BinaryReader, !Array<*>, ?): boolean|function(!tsickle_reader_2.BinaryReader, !Array<*>, ?, !Array<?>, function(!Array<*>, !tsickle_reader_2.BinaryReader): boolean, (undefined|!Array<?>)=): boolean)}
  */
 function makeParserFromBinaryExtension(binaryFieldInfo) {
@@ -439,9 +439,9 @@ function makeParserFromBinaryExtension(binaryFieldInfo) {
     const tuple = (0, internal_binary_fields_1.getBinaryExtensionTuple)(binaryFieldInfo);
     /** @type {!tsickle_internal_binary_fields_6.ReaderWriterPair} */
     const readerWriterPair = (0, assert_1.assertInstanceof)(tuple[0], internal_binary_fields_1.ReaderWriterPair);
-    /** @type {(function(!tsickle_reader_2.BinaryReader, !Array<*>, ?): boolean|function(!tsickle_reader_2.BinaryReader, !Array<*>, ?, !Array<?>, function(!Array<*>, !tsickle_reader_2.BinaryReader): boolean, (undefined|!Array<?>)=): boolean|function(!tsickle_reader_2.BinaryReader, !Array<*>, ?, (undefined|!Array<?>)=): boolean)} */
+    /** @type {(function(!tsickle_reader_2.BinaryReader, !Array<*>, ?): boolean|function(!tsickle_reader_2.BinaryReader, !Array<*>, ?, (undefined|!Array<?>)=): boolean|function(!tsickle_reader_2.BinaryReader, !Array<*>, ?, !Array<?>, function(!Array<*>, !tsickle_reader_2.BinaryReader): boolean, (undefined|!Array<?>)=): boolean)} */
     const readerFn = readerWriterPair.$$binaryReaderFn;
-    /** @type {(undefined|?|function(): ?)} */
+    /** @type {(undefined|function(): ?|?)} */
     const binaryFields = tuple[1];
     if (binaryFields) {
         /** @type {function(!Array<*>, !tsickle_reader_2.BinaryReader): boolean} */
@@ -465,7 +465,7 @@ function makeParserFromBinaryExtension(binaryFieldInfo) {
  * MessageSet extensions always use the BinaryFields form of BinaryFieldInfo and
  * so we can optimize for that.  This function should optimize to just
  * `fieldinfo`
- * @param {(!tsickle_internal_binary_fields_6.ReaderWriterPair|?|function(): ?|!Array<?>)} fieldInfo
+ * @param {(function(): ?|!tsickle_internal_binary_fields_6.ReaderWriterPair|!Array<?>|?)} fieldInfo
  * @return {?}
  */
 function getBinaryFieldsFromMessageSetExtension(fieldInfo) {

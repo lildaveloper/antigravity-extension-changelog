@@ -54,7 +54,7 @@ const proto_int64_js_1 = goog.require('google3.third_party.javascript.bufbuild_p
  * @return {(undefined|!tsickle_error_3.FieldError)}
  */
 function checkField(field, value) {
-    /** @type {(boolean|string)} */
+    /** @type {(string|boolean)} */
     const check = field.fieldKind == "list"
         ? (0, guard_js_1.isReflectList)(value, field)
         : field.fieldKind == "map"
@@ -87,7 +87,7 @@ exports.checkField = checkField;
  * @return {(undefined|!tsickle_error_3.FieldError)}
  */
 function checkListItem(field, index, value) {
-    /** @type {(boolean|string)} */
+    /** @type {(string|boolean)} */
     const check = checkSingular(field, value);
     if (check !== true) {
         return new error_js_1.FieldError(field, `list item #${index + 1}: ${reasonSingular(field, value, check)}`);
@@ -103,12 +103,12 @@ exports.checkListItem = checkListItem;
  * @return {(undefined|!tsickle_error_3.FieldError)}
  */
 function checkMapEntry(field, key, value) {
-    /** @type {(boolean|string)} */
+    /** @type {(string|boolean)} */
     const checkKey = checkScalarValue(key, field.mapKey);
     if (checkKey !== true) {
         return new error_js_1.FieldError(field, `invalid map key: ${reasonSingular({ scalar: field.mapKey }, key, checkKey)}`);
     }
-    /** @type {(boolean|string)} */
+    /** @type {(string|boolean)} */
     const checkVal = checkSingular(field, value);
     if (checkVal !== true) {
         return new error_js_1.FieldError(field, `map entry ${formatVal(key)}: ${reasonSingular(field, value, checkVal)}`);
@@ -119,7 +119,7 @@ exports.checkMapEntry = checkMapEntry;
 /**
  * @param {?} field
  * @param {*} value
- * @return {(boolean|string)}
+ * @return {(string|boolean)}
  */
 function checkSingular(field, value) {
     if (field.scalar !== undefined) {
@@ -137,12 +137,12 @@ function checkSingular(field, value) {
     }
     return (0, guard_js_1.isReflectMessage)(value, field.message);
 }
-/** @typedef {(boolean|string)} */
+/** @typedef {(string|boolean)} */
 var InvalidScalarValueErr;
 /**
  * @param {*} value
  * @param {!tsickle_descriptors_1.ScalarType} scalar
- * @return {(boolean|string)}
+ * @return {(string|boolean)}
  */
 function checkScalarValue(value, scalar) {
     switch (scalar) {

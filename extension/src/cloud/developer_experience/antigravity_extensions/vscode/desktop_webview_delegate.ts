@@ -514,11 +514,10 @@ class DesktopWebviewDelegate {
                     });
                 }
             }));
-            // tslint:disable-next-line:no-any
-            /** @type {?} */
-            const onDidDispose = ((/** @type {?} */ (webview)))['onDidDispose'];
-            if (typeof onDidDispose === 'function') {
-                onDidDispose.call(webview, (/**
+            /** @type {!DisposableWebview} */
+            const disposableWebview = webview;
+            if (typeof disposableWebview.onDidDispose === 'function') {
+                disposableWebview.onDidDispose((/**
                  * @return {void}
                  */
                 () => {
@@ -550,7 +549,7 @@ class DesktopWebviewDelegate {
     }
     /**
      * @public
-     * @param {(undefined|!tsickle_vscode_4.WebviewView|!tsickle_vscode_4.WebviewPanel)} view
+     * @param {(undefined|!tsickle_vscode_4.WebviewPanel|!tsickle_vscode_4.WebviewView)} view
      * @param {!Promise<!tsickle_util_2.ServerInfo>} _serverInfo
      * @return {!Promise<void>}
      */
@@ -573,6 +572,21 @@ if (false) {
     DesktopWebviewDelegate.prototype.context;
 }
 /**
+ * @record
+ * @extends {tsickle_vscode_4.Webview}
+ */
+function DisposableWebview() { }
+/* istanbul ignore if */
+if (false) {
+    /**
+     * @const {(undefined|function(function(): void): *)}
+     * @public
+     */
+    DisposableWebview.prototype.onDidDispose;
+}
+/** @type {!WeakSet<!tsickle_vscode_4.Webview>} */
+const patchedWebviews = new WeakSet();
+/**
  * @return {string}
  */
 function getHostThemeString() {
@@ -590,40 +604,32 @@ function getHostThemeString() {
 function patchWebviewPostMessage(webview) {
     // Only patch the specific Antigravity webview instance to avoid corrupting
     // third-party extension webviews (such as GitLens) sharing the global prototype.
-    // tslint:disable-next-line:no-any
-    /** @type {?} */
-    const extendedWebview = (/** @type {?} */ (webview));
-    if (extendedWebview._patchedForBigInt) {
+    if (patchedWebviews.has(webview) ||
+        typeof webview.postMessage !== 'function') {
         return;
     }
-    if (typeof webview.postMessage !== 'function') {
-        return;
-    }
-    extendedWebview._patchedForBigInt = true;
+    patchedWebviews.add(webview);
     /** @type {?} */
     const originalPostMessage = webview.postMessage.bind(webview);
-    // tslint:disable-next-line:no-any
     webview.postMessage = (/**
-     * @param {?} message
+     * @param {*} message
      * @return {!Thenable<boolean>}
      */
     (message) => {
-        if (message && typeof message === 'object') {
-            if (ArrayBuffer.isView(message) || message instanceof ArrayBuffer) {
-                return originalPostMessage(message);
-            }
+        if (message &&
+            typeof message === 'object' &&
+            !ArrayBuffer.isView(message) &&
+            !(message instanceof ArrayBuffer)) {
             try {
                 message = JSON.parse(JSON.stringify(message, (/**
-                 * @param {string} key
-                 * @param {?} value
-                 * @return {?}
+                 * @param {string} _key
+                 * @param {*} value
+                 * @return {*}
                  */
-                (key, value) => {
-                    return typeof value === 'bigint' ? (/** @type {bigint} */ (value)).toString() : value;
-                })));
+                (_key, value) => typeof value === 'bigint' ? (/** @type {bigint} */ (value)).toString() : value)));
             }
-            catch (e) {
-                // Ignore
+            catch {
+                // Fall through and forward unserializable payloads untouched.
             }
         }
         return originalPostMessage(message);

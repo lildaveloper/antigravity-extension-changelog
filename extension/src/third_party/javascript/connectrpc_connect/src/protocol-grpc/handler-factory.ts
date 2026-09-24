@@ -77,7 +77,7 @@ function createHandlerFactory(options) {
     /** @type {!tsickle_universal_handler_16.UniversalHandlerOptions} */
     const opt = (0, universal_handler_js_1.validateUniversalHandlerOptions)(options);
     /**
-     * @param {({kind: string, impl: function(*, !tsickle_implementation_2.HandlerContext): (?|!Promise<?>), method: ?}|{kind: string, impl: function(*, !tsickle_implementation_2.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_2.HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_2.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})} spec
+     * @param {({kind: string, impl: function(*, !tsickle_implementation_2.HandlerContext): (!Promise<?>|?), method: ?}|{kind: string, impl: function(*, !tsickle_implementation_2.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_2.HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_2.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})} spec
      * @return {?}
      */
     function fact(spec) {
@@ -99,7 +99,7 @@ exports.createHandlerFactory = createHandlerFactory;
 /**
  * @template I, O
  * @param {!tsickle_universal_handler_16.UniversalHandlerOptions} opt
- * @param {({kind: string, impl: function(?, !tsickle_implementation_2.HandlerContext): (?|!Promise<?>), method: ?}|{kind: string, impl: function(?, !tsickle_implementation_2.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<?, ?, ?>, !tsickle_implementation_2.HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<?, ?, ?>, !tsickle_implementation_2.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})} spec
+ * @param {({kind: string, impl: function(?, !tsickle_implementation_2.HandlerContext): (!Promise<?>|?), method: ?}|{kind: string, impl: function(?, !tsickle_implementation_2.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<?, ?, ?>, !tsickle_implementation_2.HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<?, ?, ?>, !tsickle_implementation_2.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})} spec
  * @return {function(!tsickle_universal_17.UniversalServerRequest): !Promise<!tsickle_universal_17.UniversalServerResponse>}
  */
 function createHandler(opt, spec) {

@@ -72,7 +72,7 @@ exports.softAssertNever = softAssertNever;
 function assert(condition, messageOrError = 'unexpected state') {
     if (!condition) {
         // if error instance is provided, use it, otherwise create a new one
-        /** @type {!Error} */
+        /** @type {!tsickle_errors_1.BugIndicatingError} */
         const errorToThrow = typeof messageOrError === 'string'
             ? new errors_1.BugIndicatingError(`Assertion Failed: ${messageOrError}`)
             : messageOrError;

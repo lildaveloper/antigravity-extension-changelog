@@ -33,7 +33,7 @@ class MessageNotifierImpl {
     }
     /**
      * @public
-     * @param {(!tsickle_vscode_2.WebviewView|!tsickle_vscode_2.WebviewPanel)} webviewView
+     * @param {(!tsickle_vscode_2.WebviewPanel|!tsickle_vscode_2.WebviewView)} webviewView
      * @return {void}
      */
     resolveWebviewView(webviewView) {
@@ -43,7 +43,7 @@ class MessageNotifierImpl {
         this.view = webviewView;
         this.webviewReady = Promise.withResolvers();
         this.disposable = webviewView.webview.onDidReceiveMessage((/**
-         * @param {(!RetryMessage|!SubmitHostMessage|!ReadyMessage)} message
+         * @param {(!ReadyMessage|!RetryMessage|!SubmitHostMessage)} message
          * @return {!Promise<void>}
          */
         async (message) => {
@@ -58,13 +58,13 @@ class MessageNotifierImpl {
                     this.webviewReady.resolve();
                     break;
                 default:
-                    (0, check_1.checkExhaustive)(message, `Unknown message type: ${((/** @type {(!RetryMessage|!SubmitHostMessage|!ReadyMessage)} */ (message))).type}`);
+                    (0, check_1.checkExhaustive)(message, `Unknown message type: ${((/** @type {(!ReadyMessage|!RetryMessage|!SubmitHostMessage)} */ (message))).type}`);
             }
         }));
     }
     /**
      * @private
-     * @param {(!PlainMessage|!ErrorMessage|!PromptHostMessage)} message
+     * @param {(!ErrorMessage|!PlainMessage|!PromptHostMessage)} message
      * @return {!Promise<void>}
      */
     async postMessage(message) {
@@ -131,7 +131,7 @@ exports.MessageNotifierImpl = MessageNotifierImpl;
 /* istanbul ignore if */
 if (false) {
     /**
-     * @type {(undefined|!tsickle_vscode_2.WebviewView|!tsickle_vscode_2.WebviewPanel)}
+     * @type {(undefined|!tsickle_vscode_2.WebviewPanel|!tsickle_vscode_2.WebviewView)}
      * @private
      */
     MessageNotifierImpl.prototype.view;

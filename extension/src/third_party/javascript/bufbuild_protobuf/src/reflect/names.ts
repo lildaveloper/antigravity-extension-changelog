@@ -38,7 +38,7 @@ const tsickle_descriptors_1 = goog.requireType("google3.third_party.javascript.b
  * For a file descriptor, return the original file path.
  *
  * See https://protobuf.com/docs/language-spec#fully-qualified-names
- * @param {(!tsickle_descriptors_1.DescFile|!tsickle_descriptors_1.DescMessage|?|!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescEnumValue|!tsickle_descriptors_1.DescMethod|!tsickle_descriptors_1.DescService|!tsickle_descriptors_1.DescOneof)} desc
+ * @param {(!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescEnumValue|!tsickle_descriptors_1.DescFile|!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescMethod|!tsickle_descriptors_1.DescOneof|!tsickle_descriptors_1.DescService|?)} desc
  * @return {string}
  */
 function qualifiedName(desc) {
@@ -46,7 +46,7 @@ function qualifiedName(desc) {
         case "field":
         case "oneof":
         case "rpc":
-            return (/** @type {(?|!tsickle_descriptors_1.DescMethod|!tsickle_descriptors_1.DescOneof)} */ (desc)).parent.typeName + "." + (/** @type {(?|!tsickle_descriptors_1.DescMethod|!tsickle_descriptors_1.DescOneof)} */ (desc)).name;
+            return (/** @type {(!tsickle_descriptors_1.DescMethod|!tsickle_descriptors_1.DescOneof|?)} */ (desc)).parent.typeName + "." + (/** @type {(!tsickle_descriptors_1.DescMethod|!tsickle_descriptors_1.DescOneof|?)} */ (desc)).name;
         case "enum_value": {
             /** @type {string} */
             const p = (/** @type {!tsickle_descriptors_1.DescEnumValue} */ (desc)).parent.parent
@@ -58,7 +58,7 @@ function qualifiedName(desc) {
         case "message":
         case "enum":
         case "extension":
-            return (/** @type {(!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescEnum|?|!tsickle_descriptors_1.DescService)} */ (desc)).typeName;
+            return (/** @type {(!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescService|?)} */ (desc)).typeName;
         case "file":
             return (/** @type {!tsickle_descriptors_1.DescFile} */ (desc)).proto.name;
     }

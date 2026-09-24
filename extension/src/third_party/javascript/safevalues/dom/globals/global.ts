@@ -36,7 +36,7 @@ exports.SafeResponse; // re-export typedef
  *     created by eval (which aren't subject to any jscompiler optimizations)
  *     will require externally declared interfaces in user code.
  * // END-INTERNAL
- * @param {(?|!Window)} win
+ * @param {(!Window|?)} win
  * @param {!tsickle_script_impl_1.SafeScript} script
  * @return {*}
  */

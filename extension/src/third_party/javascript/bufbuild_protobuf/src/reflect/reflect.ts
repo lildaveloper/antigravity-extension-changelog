@@ -252,7 +252,7 @@ if (false) {
      */
     ReflectMessageImpl.prototype.fields;
     /**
-     * @const {!ReadonlyArray<(?|!tsickle_descriptors_1.DescOneof)>}
+     * @const {!ReadonlyArray<(!tsickle_descriptors_1.DescOneof|?)>}
      * @public
      */
     ReflectMessageImpl.prototype.members;
@@ -291,7 +291,7 @@ if (false) {
 }
 /**
  * @param {*} owner
- * @param {(?|!tsickle_descriptors_1.DescOneof)} member
+ * @param {(!tsickle_descriptors_1.DescOneof|?)} member
  * @return {void}
  */
 function assertOwn(owner, member) {
@@ -670,7 +670,7 @@ function messageToReflect(field, value, check) {
             (0, guard_js_1.isObject)(value)) {
             // google.protobuf.Struct is represented with JsonObject when used in a
             // field, except when used in google.protobuf.Value.
-            value = wktStructToReflect((/** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */ (value)));
+            value = wktStructToReflect((/** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */ (value)));
         }
     }
     return new ReflectMessageImpl(field.message, (/** @type {(undefined|*)} */ (value)), check);
@@ -838,7 +838,7 @@ function longToLocal(field, value) {
     return value;
 }
 /**
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} json
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} json
  * @return {?}
  */
 function wktStructToReflect(json) {
@@ -850,7 +850,7 @@ function wktStructToReflect(json) {
     if ((0, guard_js_1.isObject)(json)) {
         for (const [k__tsickle_destructured_1, v__tsickle_destructured_2] of Object.entries(json)) {
             const k = /** @type {string} */ (k__tsickle_destructured_1);
-            const v = /** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */ (v__tsickle_destructured_2);
+            const v = /** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */ (v__tsickle_destructured_2);
             struct.fields[k] = wktValueToReflect(v);
         }
     }
@@ -858,10 +858,10 @@ function wktStructToReflect(json) {
 }
 /**
  * @param {?} val
- * @return {!Object<string,(null|string|number|boolean|?|!Array<?>)>}
+ * @return {!Object<string,(null|string|number|boolean|!Array<?>|?)>}
  */
 function wktStructToLocal(val) {
-    /** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */
+    /** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */
     const json = {};
     for (const [k__tsickle_destructured_3, v__tsickle_destructured_4] of Object.entries(val.fields)) {
         const k = /** @type {string} */ (k__tsickle_destructured_3);
@@ -872,7 +872,7 @@ function wktStructToLocal(val) {
 }
 /**
  * @param {?} val
- * @return {(null|string|number|boolean|!Object<string,?>|!Array<?>)}
+ * @return {(null|string|number|boolean|!Array<?>|!Object<string,?>)}
  */
 function wktValueToLocal(val) {
     switch (val.kind.case) {
@@ -888,7 +888,7 @@ function wktValueToLocal(val) {
     }
 }
 /**
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} json
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} json
  * @return {?}
  */
 function wktValueToReflect(json) {

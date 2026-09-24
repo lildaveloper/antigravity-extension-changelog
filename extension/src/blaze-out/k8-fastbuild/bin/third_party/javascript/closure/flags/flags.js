@@ -113,8 +113,8 @@ exports.CHECK_FC_DATA_PARSER_BREAKERS = toggles.TOGGLE_GoogFlags__use_toggles ? 
  * @const {boolean}
  * @see google3/third_party/javascript/closure/flags/flags.proto?q=symbol:\bLOG_CORRECT_XHR_ERROR_STATUSES\b
  */
-exports.LOG_CORRECT_XHR_ERROR_STATUSES = toggles.TOGGLE_GoogFlags__use_toggles ? goog.FLAGS_STAGING_DEFAULT && (toggles.TOGGLE_GoogFlags__override_disable_toggles || !toggles.TOGGLE_GoogFlags__log_correct_xhr_error_statuses__disable) :
-    goog.readFlagInternalDoNotUseOrElse(869336905, STAGING);
+exports.LOG_CORRECT_XHR_ERROR_STATUSES = toggles.TOGGLE_GoogFlags__use_toggles ? toggles.TOGGLE_GoogFlags__override_disable_toggles || !toggles.TOGGLE_GoogFlags__log_correct_xhr_error_statuses__disable :
+    goog.readFlagInternalDoNotUseOrElse(869336905, true);
 /**
  * @const {boolean}
  * @see google3/third_party/javascript/closure/flags/flags.proto?q=symbol:\bFC_DATA_USE_FETCH_TRANSPORT\b

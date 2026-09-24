@@ -51,8 +51,8 @@ function weakEqualsTypeToken(value, typeToken) {
 class ReaderWriterPair {
     /**
      * @public
-     * @param {(function(!tsickle_reader_2.BinaryReader, !Array<*>, ?): boolean|function(!tsickle_reader_2.BinaryReader, !Array<*>, ?, !Array<?>, function(!Array<*>, !tsickle_reader_2.BinaryReader): boolean, (undefined|!Array<?>)=): boolean|function(!tsickle_reader_2.BinaryReader, !Array<*>, ?, (undefined|!Array<?>)=): boolean)} $$binaryReaderFn
-     * @param {(function(!tsickle_writer_3.BinaryWriter, *, ?): void|function(!tsickle_writer_3.BinaryWriter, *, ?, !Array<?>, function(!Array<*>, !tsickle_writer_3.BinaryWriter): void): void)} $$binaryWriterFn
+     * @param {(function(!tsickle_reader_2.BinaryReader, !Array<*>, ?): boolean|function(!tsickle_reader_2.BinaryReader, !Array<*>, ?, (undefined|!Array<?>)=): boolean|function(!tsickle_reader_2.BinaryReader, !Array<*>, ?, !Array<?>, function(!Array<*>, !tsickle_reader_2.BinaryReader): boolean, (undefined|!Array<?>)=): boolean)} $$binaryReaderFn
+     * @param {(function(!tsickle_writer_3.BinaryWriter, *, ?, !Array<?>, function(!Array<*>, !tsickle_writer_3.BinaryWriter): void): void|function(!tsickle_writer_3.BinaryWriter, *, ?): void)} $$binaryWriterFn
      * @param {(boolean|!tsickle_internal_binary_type_tokens_6.OpaqueTypeToken<string>)} $$isRepeated
      * @param {!tsickle_internal_binary_type_tokens_6.OpaqueTypeToken<string>} $$valueType
      */
@@ -75,12 +75,12 @@ if (false) {
      */
     ReaderWriterPair.prototype.$$isMsg;
     /**
-     * @const {(function(!tsickle_reader_2.BinaryReader, !Array<*>, ?): boolean|function(!tsickle_reader_2.BinaryReader, !Array<*>, ?, !Array<?>, function(!Array<*>, !tsickle_reader_2.BinaryReader): boolean, (undefined|!Array<?>)=): boolean|function(!tsickle_reader_2.BinaryReader, !Array<*>, ?, (undefined|!Array<?>)=): boolean)}
+     * @const {(function(!tsickle_reader_2.BinaryReader, !Array<*>, ?): boolean|function(!tsickle_reader_2.BinaryReader, !Array<*>, ?, (undefined|!Array<?>)=): boolean|function(!tsickle_reader_2.BinaryReader, !Array<*>, ?, !Array<?>, function(!Array<*>, !tsickle_reader_2.BinaryReader): boolean, (undefined|!Array<?>)=): boolean)}
      * @public
      */
     ReaderWriterPair.prototype.$$binaryReaderFn;
     /**
-     * @const {(function(!tsickle_writer_3.BinaryWriter, *, ?): void|function(!tsickle_writer_3.BinaryWriter, *, ?, !Array<?>, function(!Array<*>, !tsickle_writer_3.BinaryWriter): void): void)}
+     * @const {(function(!tsickle_writer_3.BinaryWriter, *, ?, !Array<?>, function(!Array<*>, !tsickle_writer_3.BinaryWriter): void): void|function(!tsickle_writer_3.BinaryWriter, *, ?): void)}
      * @public
      */
     ReaderWriterPair.prototype.$$binaryWriterFn;
@@ -348,10 +348,10 @@ class OpaqueSubmessageBinaryFields {
     /**
      * @public
      * @param {!OpaqueSubmessageBinaryFields} fields
-     * @return {(?|function(): ?)}
+     * @return {(function(): ?|?)}
      */
     static asBinaryFields(fields) {
-        return (/** @type {(?|function(): ?)} */ ((/** @type {*} */ (fields))));
+        return (/** @type {(function(): ?|?)} */ ((/** @type {*} */ (fields))));
     }
 }
 /**
@@ -405,7 +405,7 @@ exports.ReaderFnWithOneofGroup;
  *
  * `instanceof` can distinguish the first case and the latter case can be
  * distinguished if the array starts with a ReaderWriterPair or not.
- * @typedef {(!ReaderWriterPair|?|function(): ?|!Array<?>)}
+ * @typedef {(function(): ?|!ReaderWriterPair|!Array<?>|?)}
  */
 exports.ExtensionFieldBinaryInfo;
 /**
@@ -714,7 +714,7 @@ function makeMessageFieldTable(cacheKey, emptyTable, addPrimitiveField, addMessa
         // Do we expect a binary fields object for this ReaderWriterPair?
         if (readerWriter?.$$isMsg) {
             cur = binaryFields[++i];
-            binaryFieldsObject = valueAsBinaryFields(binaryFields, i, (/** @type {(?|function(): ?)} */ (cur)));
+            binaryFieldsObject = valueAsBinaryFields(binaryFields, i, (/** @type {(function(): ?|?)} */ (cur)));
         }
         cur = binaryFields[++i];
         // If the next item is a number it is either a field number offset for the
@@ -753,7 +753,7 @@ function isOneofArray(v) {
  * represented as a supplier function.
  * @param {?} parent
  * @param {number} index
- * @param {(?|function(): ?)} value
+ * @param {(function(): ?|?)} value
  * @return {?}
  */
 function valueAsBinaryFields(parent, index, value) {
@@ -819,13 +819,13 @@ exports.isMessageBinaryFieldsArray = isMessageBinaryFieldsArray;
 /**
  * Returns a tuple of a ReaderWriterPair and an optional BinaryFields object for
  * the given extension.
- * @param {(!ReaderWriterPair|?|function(): ?|!Array<?>)} fieldInfo
+ * @param {(function(): ?|!ReaderWriterPair|!Array<?>|?)} fieldInfo
  * @return {!Array<?>}
  */
 function getBinaryExtensionTuple(fieldInfo) {
     if (Array.isArray(fieldInfo)) {
         if (fieldInfo[0] instanceof ReaderWriterPair) {
-            (0, assert_1.assert)((/** @type {(?|!Array<?>)} */ (fieldInfo)).length === 2);
+            (0, assert_1.assert)((/** @type {(!Array<?>|?)} */ (fieldInfo)).length === 2);
             assertBinaryFields(fieldInfo[1]);
             // A repeated message extension.
             return (/** @type {!Array<?>} */ (fieldInfo));
@@ -847,7 +847,7 @@ var JspbSparseObject;
 var JspbArray;
 /**
  * Any value we might find on the wire.
- * @typedef {(undefined|null|string|number|boolean|?|!gbigint|!tsickle_bytestring_4.ByteString|!tsickle_internal_map_9.JspbMap<?, ?>|!tsickle_message_10.Message)}
+ * @typedef {(undefined|null|string|number|boolean|!tsickle_bytestring_4.ByteString|!tsickle_internal_map_9.JspbMap<?, ?>|!tsickle_message_10.Message|!gbigint|?)}
  */
 exports.AnyJspbValue;
 /**

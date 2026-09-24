@@ -225,7 +225,7 @@ function readMapEntry(reader, map, options) {
     const field = map.field();
     /** @type {(undefined|string|number|bigint|boolean|!Uint8Array)} */
     let key;
-    /** @type {(undefined|string|number|bigint|boolean|!Uint8Array|!tsickle_reflect_3.ReflectMessage)} */
+    /** @type {(undefined|string|number|bigint|boolean|!tsickle_reflect_3.ReflectMessage|!Uint8Array)} */
     let val;
     // Read the length of the map entry, which is a varint.
     /** @type {number} */

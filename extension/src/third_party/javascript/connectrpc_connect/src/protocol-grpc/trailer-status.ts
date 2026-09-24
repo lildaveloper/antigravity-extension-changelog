@@ -85,14 +85,14 @@ function setTrailerStatus(target, error) {
                 code: error.code,
                 message: error.rawMessage,
                 details: error.details.map((/**
-                 * @param {({desc: !tsickle_protobuf_7.DescMessage, value: ?}|{type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>)})} detail
-                 * @return {(?|{typeUrl: string, value: !Uint8Array})}
+                 * @param {({type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)}|{desc: !tsickle_protobuf_7.DescMessage, value: ?})} detail
+                 * @return {({typeUrl: string, value: !Uint8Array}|?)}
                  */
                 (detail) => "desc" in detail
                     ? (0, wkt_1.anyPack)((/** @type {{desc: !tsickle_protobuf_7.DescMessage, value: ?}} */ (detail)).desc, (0, protobuf_1.create)((/** @type {{desc: !tsickle_protobuf_7.DescMessage, value: ?}} */ (detail)).desc, (/** @type {{desc: !tsickle_protobuf_7.DescMessage, value: ?}} */ (detail)).value))
                     : {
-                        typeUrl: `type.googleapis.com/${(/** @type {{type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>)}} */ (detail)).type}`,
-                        value: (/** @type {{type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>)}} */ (detail)).value,
+                        typeUrl: `type.googleapis.com/${(/** @type {{type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)}} */ (detail)).type}`,
+                        value: (/** @type {{type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)}} */ (detail)).value,
                     })),
             });
             target.set(headers_js_1.headerStatusDetailsBin, (0, http_headers_js_1.encodeBinaryHeader)(status, status_pb_js_1.StatusSchema));

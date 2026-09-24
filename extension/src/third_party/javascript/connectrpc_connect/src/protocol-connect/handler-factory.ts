@@ -97,7 +97,7 @@ function createHandlerFactory(options) {
     /** @type {!tsickle_serialization_16.Serialization<!tsickle_end_stream_7.EndStreamResponse>} */
     const endStreamSerialization = (0, end_stream_js_1.createEndStreamSerialization)(opt.jsonOptions);
     /**
-     * @param {({kind: string, impl: function(*, !tsickle_implementation_5.HandlerContext): (?|!Promise<?>), method: ?}|{kind: string, impl: function(*, !tsickle_implementation_5.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_5.HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_5.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})} spec
+     * @param {({kind: string, impl: function(*, !tsickle_implementation_5.HandlerContext): (!Promise<?>|?), method: ?}|{kind: string, impl: function(*, !tsickle_implementation_5.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_5.HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_5.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})} spec
      * @return {?}
      */
     function fact(spec) {
@@ -210,7 +210,7 @@ function createUnaryHandler(opt, spec, serialization) {
             if (timeout.error) {
                 throw (/** @type {{timeoutMs: (undefined|number), error: !tsickle_connect_error_4.ConnectError}} */ (timeout)).error;
             }
-            /** @type {(null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>|!Uint8Array)} */
+            /** @type {(null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>|!Uint8Array)} */
             let reqBody;
             if (isGet) {
                 reqBody = await readUnaryMessageFromQuery(opt.readMaxBytes, compression.request, queryParams);
@@ -267,7 +267,7 @@ function createUnaryHandler(opt, spec, serialization) {
  * @param {number} readMaxBytes
  * @param {(null|!tsickle_compression_15.Compression)} compression
  * @param {!tsickle_universal_18.UniversalServerRequest} request
- * @return {!Promise<(null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>|!Uint8Array)>}
+ * @return {!Promise<(null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>|!Uint8Array)>}
  */
 async function readUnaryMessageFromBody(readMaxBytes, compression, request) {
     if (typeof request.body == "object" &&
@@ -311,7 +311,7 @@ async function readUnaryMessageFromQuery(readMaxBytes, compression, queryParams)
  * @param {?} method
  * @param {boolean} useBinaryFormat
  * @param {!tsickle_serialization_16.MethodSerializationLookup<I, O>} serialization
- * @param {(null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>|!Uint8Array)} input
+ * @param {(null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>|!Uint8Array)} input
  * @return {?}
  */
 function parseUnaryMessage(method, useBinaryFormat, serialization, input) {
@@ -331,7 +331,7 @@ function parseUnaryMessage(method, useBinaryFormat, serialization, input) {
 /**
  * @template I, O
  * @param {!tsickle_universal_handler_17.UniversalHandlerOptions} opt
- * @param {({kind: string, impl: function(?, !tsickle_implementation_5.HandlerContext): (?|!Promise<?>), method: ?}|{kind: string, impl: function(?, !tsickle_implementation_5.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<?, ?, ?>, !tsickle_implementation_5.HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<?, ?, ?>, !tsickle_implementation_5.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})} spec
+ * @param {({kind: string, impl: function(?, !tsickle_implementation_5.HandlerContext): (!Promise<?>|?), method: ?}|{kind: string, impl: function(?, !tsickle_implementation_5.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<?, ?, ?>, !tsickle_implementation_5.HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<?, ?, ?>, !tsickle_implementation_5.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})} spec
  * @param {!tsickle_serialization_16.MethodSerializationLookup<I, O>} serialization
  * @param {!tsickle_serialization_16.Serialization<!tsickle_end_stream_7.EndStreamResponse>} endStreamSerialization
  * @return {function(!tsickle_universal_18.UniversalServerRequest): !Promise<!tsickle_universal_18.UniversalServerResponse>}

@@ -278,6 +278,19 @@ class AgentEditManager {
     }
     /**
      * Checks if the file's current content has diverged from both original and modified.
+     *
+     * "Diverged" means the buffer holds content this edit does not account for,
+     * so rendering it as a diff zone would destroy work. Callers skip the edit
+     * when this returns `true`.
+     *
+     * The cases that are *not* divergence, in the order checked below:
+     * - the buffer still matches `originalContents` (the edit has not been
+     *   applied) or already matches `modifiedContents` (it has). Either way the
+     *   buffer is consistent with this edit. Note this also covers a creation
+     *   edit against an empty buffer, since both sides are then `''`;
+     * - the buffer matches the `modifiedContents` of a diff zone already active
+     *   for this file, which happens when an edit is re-proposed while its zone
+     *   is still open.
      * @private
      * @param {!tsickle_vscode_3.TextDocument} doc
      * @param {!AddAgentEditMessage} message
@@ -309,9 +322,12 @@ class AgentEditManager {
                 }
             }
         }
-        if (normalizedOriginal === '') {
-            return false;
-        }
+        // NOTE: An edit that creates a file (empty `originalContents`) used to be
+        // treated as never diverged. That let a replayed creation edit overwrite a
+        // file the user has since written: the empty-original case is already
+        // covered above, where an empty `currentContent` matches the empty
+        // original. Reaching this point means the file has real content that is
+        // neither the original nor the modified one. See b/561515185.
         return true;
     }
     /**
@@ -371,6 +387,12 @@ class AgentEditManager {
                  * @return {(undefined|!tsickle_hunk_storage_5.HunkResolutionAction)}
                  */
                 (hash) => this.hunkStorage.getResolution(message, hash));
+                // If all hunks for this edit were already resolved, or if navigating from
+                // the review sidebar to a previously resolved file, show the read-only diff.
+                if (this.hunkStorage.hasAnyResolutions(message)) {
+                    await this.handleFullyResolvedEdit(message);
+                    return;
+                }
                 /** @type {!tsickle_diff_zone_renderer_4.RenderTextEditResult} */
                 let result;
                 if ((0, utils_1.isNotebook)(normalizedUri)) {
@@ -407,6 +429,13 @@ class AgentEditManager {
                             await this.hunkStorage.clearSnapshot(message);
                         }
                     }
+                    if (message.conversationId !== undefined &&
+                        message.turnIndex !== undefined &&
+                        this.hunkStorage.hasAnyResolutions(message)) {
+                        console.info(`[Jetski] Hunks already resolved for ${message.fileUri}, showing read-only diff.`);
+                        await this.handleFullyResolvedEdit(message);
+                        return;
+                    }
                     // When using inline diff zones, check if on-disk content diverged due to
                     // formatters or commands running during the turn. If the document on disk
                     // differs from both original and modified, but has been changed from original,
@@ -427,13 +456,6 @@ class AgentEditManager {
                     }
                     if (this.hasContentDiverged(doc, message)) {
                         console.info(`[Jetski] File content has diverged for ${message.fileUri}, showing read-only diff.`);
-                        await this.handleFullyResolvedEdit(message);
-                        return;
-                    }
-                    if (message.conversationId !== undefined &&
-                        message.turnIndex !== undefined &&
-                        this.hunkStorage.hasAnyResolutions(message)) {
-                        console.info(`[Jetski] Hunks already resolved for ${message.fileUri}, showing read-only diff.`);
                         await this.handleFullyResolvedEdit(message);
                         return;
                     }
@@ -486,10 +508,14 @@ class AgentEditManager {
     async handleHunkResolved(message, event) {
         /** @type {string} */
         const fileUri = event.fileUri;
+        /** @type {string} */
+        const normalizedUri = (0, utils_1.normalizeUri)(fileUri);
         /** @type {(undefined|{originalContents: string, modifiedContents: string, hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)})} */
-        const details = this.activeDiffZoneDetails.get(fileUri);
+        const details = this.activeDiffZoneDetails.get(normalizedUri);
         if (details && details.hunkHashes) {
-            if (event.final) {
+            /** @type {(undefined|boolean)} */
+            const isBulkResolution = event.final && event.hunkIndex == null && event.hunkHash == null;
+            if (isBulkResolution) {
                 // Record all remaining hunks as resolved so state persists across window reloads.
                 for (const hunkHash of details.hunkHashes) {
                     await this.hunkStorage.recordResolution(message, hunkHash, event.accept
@@ -499,13 +525,19 @@ class AgentEditManager {
                 details.hunkHashes = [];
             }
             else {
-                /** @type {string} */
-                const hunkHash = event.hunkHash ?? details.hunkHashes[event.hunkIndex];
+                /** @type {(undefined|string)} */
+                const hunkHash = event.hunkHash ??
+                    (event.hunkIndex != null
+                        ? details.hunkHashes[event.hunkIndex]
+                        : undefined);
                 if (hunkHash) {
                     /** @type {number} */
-                    const indexToRecord = event.hunkHash
-                        ? details.hunkHashes.indexOf(event.hunkHash)
-                        : event.hunkIndex;
+                    const indexToRecord = event.hunkIndex != null &&
+                        details.hunkHashes[event.hunkIndex] === event.hunkHash
+                        ? event.hunkIndex
+                        : event.hunkHash
+                            ? details.hunkHashes.indexOf(event.hunkHash)
+                            : (event.hunkIndex ?? -1);
                     if (indexToRecord !== -1) {
                         details.hunkHashes.splice(indexToRecord, 1);
                     }
@@ -515,9 +547,16 @@ class AgentEditManager {
                 }
             }
         }
-        if (event.final) {
-            this.activeDiffZoneDetails.delete(fileUri);
-            this.fileDiffStats.delete(fileUri);
+        if (!details ||
+            !details.hunkHashes ||
+            details.hunkHashes.length === 0 ||
+            (event.final && event.hunkIndex == null && event.hunkHash == null)) {
+            this.activeDiffZoneDetails.delete(normalizedUri);
+            this.fileDiffStats.delete(normalizedUri);
+            if (fileUri !== normalizedUri) {
+                this.activeDiffZoneDetails.delete(fileUri);
+                this.fileDiffStats.delete(fileUri);
+            }
             this.fireAgentEditsChanged();
         }
     }
@@ -537,12 +576,25 @@ class AgentEditManager {
             return false;
         }
         /** @type {boolean} */
+        const isSameConversation = message?.conversationId == null ||
+            existingDetails.conversationId == null ||
+            existingDetails.conversationId === message.conversationId;
+        if (!isSameConversation) {
+            return false;
+        }
+        /** @type {boolean} */
         const isSameTurn = this.renderer?.type === 'inline' &&
             message?.conversationId !== undefined &&
             message?.turnIndex !== undefined &&
             existingDetails.conversationId === message.conversationId &&
             existingDetails.turnIndex === message.turnIndex;
+        // Explicit user navigation from review sidebar without turnIndex (e.g. clicking
+        // an unresolved file in Files Changed). Do not compare modifiedContents here
+        // since the sidebar passes trajectory diffs which may differ from turn diffs.
+        /** @type {boolean} */
+        const isNavigationOnly = message?.turnIndex == null && strictNav;
         if (!isSameTurn &&
+            !isNavigationOnly &&
             (0, utils_1.normalizeLineEndings)(existingDetails.modifiedContents ?? '') !==
                 normalizedModifiedContents) {
             return false;

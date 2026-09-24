@@ -226,7 +226,7 @@ function convertObjectValues(obj, fn) {
 }
 /** @type {symbol} */
 const tokenZeroMessageField = Symbol();
-/** @type {!WeakMap<!tsickle_descriptors_2.DescMessage, {prototype: ?, members: !Set<(?|!tsickle_descriptors_2.DescOneof)>}>} */
+/** @type {!WeakMap<!tsickle_descriptors_2.DescMessage, {prototype: ?, members: !Set<(!tsickle_descriptors_2.DescOneof|?)>}>} */
 const messagePrototypes = new WeakMap();
 /**
  * Create a zero message.
@@ -248,11 +248,11 @@ function createZeroMessage(desc) {
     }
     else {
         // Support default values and track presence via the prototype chain
-        /** @type {(undefined|{prototype: ?, members: !Set<(?|!tsickle_descriptors_2.DescOneof)>})} */
+        /** @type {(undefined|{prototype: ?, members: !Set<(!tsickle_descriptors_2.DescOneof|?)>})} */
         const cached = messagePrototypes.get(desc);
         /** @type {?} */
         let prototype;
-        /** @type {!Set<(?|!tsickle_descriptors_2.DescOneof)>} */
+        /** @type {!Set<(!tsickle_descriptors_2.DescOneof|?)>} */
         let members;
         if (cached) {
             ({ prototype, members } = cached);
@@ -297,7 +297,7 @@ function createZeroMessage(desc) {
                     }
                 }
             }
-            msg[(/** @type {(?|!tsickle_descriptors_2.DescOneof)} */ (member)).localName] = createZeroField(member);
+            msg[(/** @type {(!tsickle_descriptors_2.DescOneof|?)} */ (member)).localName] = createZeroField(member);
         }
     }
     return (/** @type {*} */ (msg));
@@ -329,8 +329,8 @@ function needsPrototypeChain(desc) {
 /**
  * Returns a zero value for oneof groups, and for every field kind except
  * messages. Scalar and enum fields can have default values.
- * @param {(?|!tsickle_descriptors_2.DescOneof)} field
- * @return {(string|number|bigint|boolean|!Object|!Array<?>|!Uint8Array|{case: undefined, value: undefined}|{case: string, value: (string|number|bigint|boolean|*|!Uint8Array)}|symbol)}
+ * @param {(!tsickle_descriptors_2.DescOneof|?)} field
+ * @return {(string|number|bigint|boolean|symbol|!Object|!Uint8Array|{case: undefined, value: undefined}|{case: string, value: (string|number|bigint|boolean|*|!Uint8Array)}|!Array<?>)}
  */
 function createZeroField(field) {
     if (field.kind == "oneof") {

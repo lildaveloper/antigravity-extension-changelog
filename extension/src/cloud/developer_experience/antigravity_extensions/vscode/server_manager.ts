@@ -15,18 +15,20 @@ goog.module('google3.cloud.developer_experience.antigravity_extensions.vscode.se
 var module = module || { id: 'cloud/developer_experience/antigravity_extensions/vscode/server_manager.closure.js' };
 goog.require('google3.third_party.javascript.tslib.tslib');
 const tsickle_child_process_1 = goog.requireType("google3.third_party.javascript.typings.node.node.child_process");
-const tsickle_fs_2 = goog.requireType("google3.third_party.javascript.typings.node.node.fs");
-const tsickle_delegate_interfaces_3 = goog.requireType("google3.devtools.cider.extensions.jetski.delegate_interfaces");
-const tsickle_loading_message_impl_4 = goog.requireType("google3.devtools.cider.extensions.jetski.loading.loading_message_impl");
-const tsickle_http_5 = goog.requireType("google3.third_party.javascript.typings.node.node.http");
-const tsickle_net_6 = goog.requireType("google3.third_party.javascript.typings.node.node.net");
-const tsickle_os_7 = goog.requireType("google3.third_party.javascript.typings.node.node.os");
-const tsickle_readline_8 = goog.requireType("google3.third_party.javascript.typings.node.node.readline");
-const tsickle_vscode_9 = goog.requireType("vscode");
-const tsickle_binary_downloader_10 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.binary_downloader");
-const tsickle_buffered_output_channel_11 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.buffered_output_channel");
-const tsickle_telemetry_constants_12 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.telemetry_constants");
+const tsickle_crypto_2 = goog.requireType("google3.third_party.javascript.typings.node.node.crypto");
+const tsickle_fs_3 = goog.requireType("google3.third_party.javascript.typings.node.node.fs");
+const tsickle_delegate_interfaces_4 = goog.requireType("google3.devtools.cider.extensions.jetski.delegate_interfaces");
+const tsickle_loading_message_impl_5 = goog.requireType("google3.devtools.cider.extensions.jetski.loading.loading_message_impl");
+const tsickle_http_6 = goog.requireType("google3.third_party.javascript.typings.node.node.http");
+const tsickle_net_7 = goog.requireType("google3.third_party.javascript.typings.node.node.net");
+const tsickle_os_8 = goog.requireType("google3.third_party.javascript.typings.node.node.os");
+const tsickle_readline_9 = goog.requireType("google3.third_party.javascript.typings.node.node.readline");
+const tsickle_vscode_10 = goog.requireType("vscode");
+const tsickle_binary_downloader_11 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.binary_downloader");
+const tsickle_buffered_output_channel_12 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.buffered_output_channel");
+const tsickle_telemetry_constants_13 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.telemetry_constants");
 const child_process_1 = goog.require('google3.third_party.javascript.typings.node.node.child_process');
+const crypto = goog.require('google3.third_party.javascript.typings.node.node.crypto');
 const fs = goog.require('google3.third_party.javascript.typings.node.node.fs');
 const http = goog.require('google3.third_party.javascript.typings.node.node.http');
 const net = goog.require('google3.third_party.javascript.typings.node.node.net');
@@ -102,11 +104,11 @@ exports.initializeHostSecurityEnvironment = initializeHostSecurityEnvironment;
 /**
  * Configures the current extension host process environment with HTTP and HTTPS proxy settings
  * derived from VS Code workspace configuration (`http.proxy` and `http.noProxy`).
- * @param {(undefined|!tsickle_vscode_9.WorkspaceConfiguration)=} configOverride
+ * @param {(undefined|!tsickle_vscode_10.WorkspaceConfiguration)=} configOverride
  * @return {void}
  */
 function configureHostProxyEnvironment(configOverride) {
-    /** @type {!tsickle_vscode_9.WorkspaceConfiguration} */
+    /** @type {!tsickle_vscode_10.WorkspaceConfiguration} */
     const httpConfig = configOverride ?? vscode.workspace.getConfiguration('http');
     /** @type {*} */
     const rawProxy = httpConfig?.get('proxy');
@@ -137,7 +139,7 @@ exports.configureHostProxyEnvironment = configureHostProxyEnvironment;
 /**
  * Builds the process environment for launching the Antigravity backend language server,
  * propagating system proxy configurations and OS root CA certificates for corporate ZTNA/TLS inspection.
- * @param {(undefined|{baseEnv: (undefined|?), configOverride: (undefined|!tsickle_vscode_9.WorkspaceConfiguration), platform: (undefined|string), fsExists: (undefined|function(string): boolean)})=} options
+ * @param {(undefined|{baseEnv: (undefined|?), configOverride: (undefined|!tsickle_vscode_10.WorkspaceConfiguration), platform: (undefined|string), fsExists: (undefined|function(string): boolean)})=} options
  * @return {?}
  */
 function buildServerEnvironment(options) {
@@ -146,7 +148,7 @@ function buildServerEnvironment(options) {
     const platform = options?.platform ?? process.platform;
     /** @type {function(string): boolean} */
     const fsExists = options?.fsExists ?? fs.existsSync;
-    /** @type {!tsickle_vscode_9.WorkspaceConfiguration} */
+    /** @type {!tsickle_vscode_10.WorkspaceConfiguration} */
     const httpConfig = options?.configOverride ?? vscode.workspace.getConfiguration('http');
     const env = {
         ...baseEnv,
@@ -251,25 +253,25 @@ exports.ServerStartOptions = ServerStartOptions;
 if (false) {
     /**
      * The active VS Code extension context.
-     * @type {!tsickle_vscode_9.ExtensionContext}
+     * @type {!tsickle_vscode_10.ExtensionContext}
      * @public
      */
     ServerStartOptions.prototype.context;
     /**
      * Optional loading notifier to report progress status.
-     * @type {(undefined|!tsickle_loading_message_impl_4.MessageNotifierImpl)}
+     * @type {(undefined|!tsickle_loading_message_impl_5.MessageNotifierImpl)}
      * @public
      */
     ServerStartOptions.prototype.messageNotifier;
     /**
      * Optional workspace configuration override (primarily used in tests).
-     * @type {(undefined|!tsickle_vscode_9.WorkspaceConfiguration)}
+     * @type {(undefined|!tsickle_vscode_10.WorkspaceConfiguration)}
      * @public
      */
     ServerStartOptions.prototype.configOverride;
     /**
      * Optional telemetry service to log start duration (`duration_ms`) and failure telemetry.
-     * @type {(undefined|!tsickle_delegate_interfaces_3.Telemetry)}
+     * @type {(undefined|!tsickle_delegate_interfaces_4.Telemetry)}
      * @public
      */
     ServerStartOptions.prototype.telemetry;
@@ -305,10 +307,11 @@ function categorizeServerStartError(err) {
  * Manages acquiring and running the Antigravity backend language server process (`agy --hub`).
  *
  * Implements the Dynamic Auto-Installation strategy (`~/.gemini/bin/agy`).
- * @implements {tsickle_delegate_interfaces_3.HostDiagnosticsProvider}
+ * @implements {tsickle_delegate_interfaces_4.HostDiagnosticsProvider}
  */
 class AntigravityServerManager {
     constructor() {
+        this.csrfToken = crypto.randomUUID();
         /**
          * Indicates whether the server is undergoing intentional shutdown to suppress false-positive crash telemetry.
          */
@@ -328,7 +331,7 @@ class AntigravityServerManager {
     /**
      * Lazily initializes or returns the host-level BufferedOutputChannel.
      * @public
-     * @return {!tsickle_buffered_output_channel_11.BufferedOutputChannel}
+     * @return {!tsickle_buffered_output_channel_12.BufferedOutputChannel}
      */
     getOrCreateOutputChannel() {
         if (!this.outputChannel) {
@@ -339,7 +342,7 @@ class AntigravityServerManager {
     /**
      * Returns the underlying BufferedOutputChannel if initialized.
      * @public
-     * @return {(undefined|!tsickle_buffered_output_channel_11.BufferedOutputChannel)}
+     * @return {(undefined|!tsickle_buffered_output_channel_12.BufferedOutputChannel)}
      */
     getOutputChannel() {
         return this.outputChannel;
@@ -355,7 +358,7 @@ class AntigravityServerManager {
     /**
      * Gathers host-side operational logs and binary information for diagnostics collection.
      * @public
-     * @return {!Promise<!tsickle_delegate_interfaces_3.HostDiagnostics>}
+     * @return {!Promise<!tsickle_delegate_interfaces_4.HostDiagnostics>}
      */
     async getHostDiagnostics() {
         /** @type {string} */
@@ -394,15 +397,15 @@ class AntigravityServerManager {
     /**
      * Executes the Dynamic Auto-Installation state machine via `binary_downloader.ts`.
      * @public
-     * @param {!tsickle_vscode_9.ExtensionContext} context
-     * @param {(undefined|!tsickle_vscode_9.Progress<{message: (undefined|string), increment: (undefined|number)}>)=} progress
-     * @param {(undefined|!tsickle_vscode_9.WorkspaceConfiguration)=} configOverride
+     * @param {!tsickle_vscode_10.ExtensionContext} context
+     * @param {(undefined|!tsickle_vscode_10.Progress<{message: (undefined|string), increment: (undefined|number)}>)=} progress
+     * @param {(undefined|!tsickle_vscode_10.WorkspaceConfiguration)=} configOverride
      * @return {!Promise<string>}
      */
     async acquireInstalledBinaryPath(context, progress, configOverride) {
         initializeHostSecurityEnvironment();
         configureHostProxyEnvironment(configOverride);
-        /** @type {!tsickle_buffered_output_channel_11.BufferedOutputChannel} */
+        /** @type {!tsickle_buffered_output_channel_12.BufferedOutputChannel} */
         const outputChannel = this.getOrCreateOutputChannel();
         return await (0, binary_downloader_1.acquireInstalledBinaryPath)({
             context,
@@ -415,8 +418,8 @@ class AntigravityServerManager {
     /**
      * Resolves the Antigravity language server executable path via the Auto-Install approach (`~/.gemini/bin/agy`).
      * @public
-     * @param {!tsickle_vscode_9.ExtensionContext} context
-     * @param {(undefined|!tsickle_vscode_9.WorkspaceConfiguration)=} configOverride
+     * @param {!tsickle_vscode_10.ExtensionContext} context
+     * @param {(undefined|!tsickle_vscode_10.WorkspaceConfiguration)=} configOverride
      * @return {!Promise<string>}
      */
     async acquireBinaryPath(context, configOverride) {
@@ -489,18 +492,18 @@ class AntigravityServerManager {
      * Starts the Antigravity backend language server (`agy --hub`).
      *
      * @public
-     * @param {(!tsickle_vscode_9.ExtensionContext|!ServerStartOptions)} optionsOrContext Either a ServerStartOptions object or the active VS Code extension context.
-     * @param {(undefined|!tsickle_loading_message_impl_4.MessageNotifierImpl)=} messageNotifier Optional loading notifier to report progress status (legacy parameter).
-     * @param {(undefined|!tsickle_vscode_9.WorkspaceConfiguration)=} configOverride Optional workspace configuration override (legacy parameter).
-     * @param {(undefined|!tsickle_delegate_interfaces_3.Telemetry)=} telemetry Optional telemetry service to log start duration (`duration_ms`) and failure telemetry (legacy parameter).
+     * @param {(!tsickle_vscode_10.ExtensionContext|!ServerStartOptions)} optionsOrContext Either a ServerStartOptions object or the active VS Code extension context.
+     * @param {(undefined|!tsickle_loading_message_impl_5.MessageNotifierImpl)=} messageNotifier Optional loading notifier to report progress status (legacy parameter).
+     * @param {(undefined|!tsickle_vscode_10.WorkspaceConfiguration)=} configOverride Optional workspace configuration override (legacy parameter).
+     * @param {(undefined|!tsickle_delegate_interfaces_4.Telemetry)=} telemetry Optional telemetry service to log start duration (`duration_ms`) and failure telemetry (legacy parameter).
      * @return {!Promise<string>}
      */
     async start(optionsOrContext, messageNotifier, configOverride, telemetry) {
         /** @type {!ServerStartOptions} */
-        const options = typeof ((/** @type {!tsickle_vscode_9.ExtensionContext} */ (optionsOrContext))).subscriptions !==
+        const options = typeof ((/** @type {!tsickle_vscode_10.ExtensionContext} */ (optionsOrContext))).subscriptions !==
             'undefined'
             ? {
-                context: (/** @type {!tsickle_vscode_9.ExtensionContext} */ (optionsOrContext)),
+                context: (/** @type {!tsickle_vscode_10.ExtensionContext} */ (optionsOrContext)),
                 messageNotifier,
                 configOverride,
                 telemetry,
@@ -540,8 +543,9 @@ class AntigravityServerManager {
                     '--hub',
                     `--hub-port=${port}`,
                     '--app_data_dir=antigravity',
+                    `--csrf_token=${this.csrfToken}`,
                 ];
-                /** @type {!ReadonlyArray<!tsickle_vscode_9.WorkspaceFolder>} */
+                /** @type {!ReadonlyArray<!tsickle_vscode_10.WorkspaceFolder>} */
                 const workspaceFolders = vscode.workspace.workspaceFolders ?? [];
                 for (const folder of workspaceFolders) {
                     if (folder?.uri?.fsPath) {
@@ -591,7 +595,7 @@ class AntigravityServerManager {
                                     .trim();
                                 this.outputChannel?.appendLine(`[LAUNCH] Intercepted auth URL: ${url}`);
                                 try {
-                                    /** @type {!tsickle_vscode_9.Uri} */
+                                    /** @type {!tsickle_vscode_10.Uri} */
                                     const uri = vscode.Uri.parse(url);
                                     vscode.env.openExternal(uri).then((/**
                                      * @param {boolean} success
@@ -672,6 +676,7 @@ class AntigravityServerManager {
                     }
                     this.serverProcess = undefined;
                     this.serverUrl = undefined;
+                    this.port = undefined;
                 }));
                 /** @type {boolean} */
                 const ready = await this.waitForServerReady(backendUrl);
@@ -680,6 +685,7 @@ class AntigravityServerManager {
                     throw new Error(`Server failed to start at ${backendUrl}`);
                 }
                 this.serverUrl = backendUrl;
+                this.port = port;
                 /** @type {number} */
                 const durationMs = Date.now() - startTime;
                 void activeTelemetry?.logEvent(telemetry_constants_1.AntigravityEvent.SERVER_START_SUCCESS, {
@@ -689,6 +695,8 @@ class AntigravityServerManager {
                 return this.serverUrl;
             }
             catch (err) {
+                this.serverUrl = undefined;
+                this.port = undefined;
                 // Record startup failure duration, categorized reason, exit code, sanitized error message, and stack trace in telemetry.
                 /** @type {number} */
                 const durationMs = Date.now() - startTime;
@@ -727,6 +735,7 @@ class AntigravityServerManager {
         const targetProcess = this.serverProcess;
         this.serverProcess = undefined;
         this.serverUrl = undefined;
+        this.port = undefined;
         await new Promise((/**
          * @param {function((void|!PromiseLike<void>)): void} resolve
          * @return {void}
@@ -780,7 +789,17 @@ if (false) {
      */
     AntigravityServerManager.prototype.serverUrl;
     /**
-     * @type {(undefined|!tsickle_buffered_output_channel_11.BufferedOutputChannel)}
+     * @type {(undefined|number)}
+     * @public
+     */
+    AntigravityServerManager.prototype.port;
+    /**
+     * @const {string}
+     * @public
+     */
+    AntigravityServerManager.prototype.csrfToken;
+    /**
+     * @type {(undefined|!tsickle_buffered_output_channel_12.BufferedOutputChannel)}
      * @private
      */
     AntigravityServerManager.prototype.outputChannel;

@@ -61,7 +61,7 @@ if (false) {
      * All types (message, enumeration, extension, or service) contained
      * in this registry.
      * @public
-     * @return {!IterableIterator<(!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescEnum|?|!tsickle_descriptors_2.DescService), ?, ?>}
+     * @return {!IterableIterator<(!tsickle_descriptors_2.DescEnum|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescService|?), ?, ?>}
      */
     Registry.prototype[Symbol.iterator] = function () { };
     /**
@@ -69,7 +69,7 @@ if (false) {
      * its fully qualified name.
      * @public
      * @param {string} typeName
-     * @return {(undefined|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescEnum|?|!tsickle_descriptors_2.DescService)}
+     * @return {(undefined|!tsickle_descriptors_2.DescEnum|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescService|?)}
      */
     Registry.prototype.get = function (typeName) { };
     /**
@@ -122,14 +122,14 @@ if (false) {
     /**
      * Adds the given descriptor - but not types nested within - to the registry.
      * @public
-     * @param {(!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescEnum|?|!tsickle_descriptors_2.DescService)} desc
+     * @param {(!tsickle_descriptors_2.DescEnum|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescService|?)} desc
      * @return {void}
      */
     MutableRegistry.prototype.add = function (desc) { };
     /**
      * Remove the given descriptor - but not types nested within - from the registry.
      * @public
-     * @param {(!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescEnum|?|!tsickle_descriptors_2.DescService)} desc
+     * @param {(!tsickle_descriptors_2.DescEnum|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescService|?)} desc
      * @return {void}
      */
     MutableRegistry.prototype.remove = function (desc) { };
@@ -167,7 +167,7 @@ if (false) {
  * - A registry, which adds all types from the registry.
  *
  * For duplicate descriptors (same type name), the one given last wins.
- * @param {...(!tsickle_descriptors_2.DescFile|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescEnum|?|!tsickle_descriptors_2.DescService|!Registry)} input
+ * @param {...(!tsickle_descriptors_2.DescEnum|!tsickle_descriptors_2.DescFile|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescService|!Registry|?)} input
  * @return {!Registry}
  */
 function createRegistry(...input) {
@@ -176,7 +176,7 @@ function createRegistry(...input) {
 exports.createRegistry = createRegistry;
 /**
  * Create a registry that allows adding and removing descriptors.
- * @param {...(!tsickle_descriptors_2.DescFile|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescEnum|?|!tsickle_descriptors_2.DescService|!Registry)} input
+ * @param {...(!tsickle_descriptors_2.DescEnum|!tsickle_descriptors_2.DescFile|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescService|!Registry|?)} input
  * @return {!MutableRegistry}
  */
 function createMutableRegistry(...input) {
@@ -186,7 +186,7 @@ function createMutableRegistry(...input) {
         ...reg,
         /**
          * @public
-         * @param {(!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescEnum|?|!tsickle_descriptors_2.DescService)} desc
+         * @param {(!tsickle_descriptors_2.DescEnum|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescService|?)} desc
          * @return {void}
          */
         remove(desc) {
@@ -273,7 +273,7 @@ function BaseRegistry() { }
 /* istanbul ignore if */
 if (false) {
     /**
-     * @type {!Map<string, (!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescEnum|?|!tsickle_descriptors_2.DescService)>}
+     * @type {!Map<string, (!tsickle_descriptors_2.DescEnum|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescService|?)>}
      * @public
      */
     BaseRegistry.prototype.types;
@@ -284,7 +284,7 @@ if (false) {
     BaseRegistry.prototype.extendees;
     /**
      * @public
-     * @param {(!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescEnum|?|!tsickle_descriptors_2.DescService)} desc
+     * @param {(!tsickle_descriptors_2.DescEnum|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescService|?)} desc
      * @return {void}
      */
     BaseRegistry.prototype.add = function (desc) { };
@@ -299,7 +299,7 @@ if (false) {
 }
 /** @type {symbol} */
 const CACHED_TYPES_IN_FILE = Symbol();
-/** @typedef {(!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescEnum|?|!tsickle_descriptors_2.DescService)} */
+/** @typedef {(!tsickle_descriptors_2.DescEnum|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescService|?)} */
 var AnyDesc;
 /**
  * Returns the flattened types of a file, cached on the `DescFile` itself
@@ -312,7 +312,7 @@ var AnyDesc;
  * constructed, so the list is computed at most once per file.
  *
  * @param {!tsickle_descriptors_2.DescFile} file
- * @return {!ReadonlyArray<(!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescEnum|?|!tsickle_descriptors_2.DescService)>}
+ * @return {!ReadonlyArray<(!tsickle_descriptors_2.DescEnum|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescService|?)>}
  */
 function fileTypes(file) {
     return (((/** @type {*} */ ((/** @type {*} */ (file)))))[CACHED_TYPES_IN_FILE] ??= [...(0, nested_types_js_1.nestedTypes)(file)]);
@@ -359,7 +359,7 @@ function flattenFiles(root) {
  * @return {!BaseRegistry}
  */
 function createBaseRegistry() {
-    /** @type {!Map<string, (!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescEnum|?|!tsickle_descriptors_2.DescService)>} */
+    /** @type {!Map<string, (!tsickle_descriptors_2.DescEnum|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescService|?)>} */
     const types = new Map();
     /** @type {!Map<string, !Map<number, ?>>} */
     const extendees = new Map();
@@ -371,7 +371,7 @@ function createBaseRegistry() {
         extendees,
         /**
          * @public
-         * @return {!MapIterator<(!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescEnum|?|!tsickle_descriptors_2.DescService)>}
+         * @return {!MapIterator<(!tsickle_descriptors_2.DescEnum|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescService|?)>}
          */
         [Symbol.iterator]() {
             return types.values();
@@ -402,7 +402,7 @@ function createBaseRegistry() {
         },
         /**
          * @public
-         * @param {(!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescEnum|?|!tsickle_descriptors_2.DescService)} desc
+         * @param {(!tsickle_descriptors_2.DescEnum|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescService|?)} desc
          * @return {void}
          */
         add(desc) {
@@ -421,7 +421,7 @@ function createBaseRegistry() {
         /**
          * @public
          * @param {string} typeName
-         * @return {(undefined|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescEnum|?|!tsickle_descriptors_2.DescService)}
+         * @return {(undefined|!tsickle_descriptors_2.DescEnum|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescService|?)}
          */
         get(typeName) {
             return types.get(typeName);
@@ -440,7 +440,7 @@ function createBaseRegistry() {
          * @return {(undefined|!tsickle_descriptors_2.DescMessage)}
          */
         getMessage(typeName) {
-            /** @type {(undefined|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescEnum|?|!tsickle_descriptors_2.DescService)} */
+            /** @type {(undefined|!tsickle_descriptors_2.DescEnum|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescService|?)} */
             const t = types.get(typeName);
             return t?.kind == "message" ? t : undefined;
         },
@@ -450,7 +450,7 @@ function createBaseRegistry() {
          * @return {(undefined|!tsickle_descriptors_2.DescEnum)}
          */
         getEnum(typeName) {
-            /** @type {(undefined|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescEnum|?|!tsickle_descriptors_2.DescService)} */
+            /** @type {(undefined|!tsickle_descriptors_2.DescEnum|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescService|?)} */
             const t = types.get(typeName);
             return t?.kind == "enum" ? t : undefined;
         },
@@ -460,7 +460,7 @@ function createBaseRegistry() {
          * @return {(undefined|?)}
          */
         getExtension(typeName) {
-            /** @type {(undefined|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescEnum|?|!tsickle_descriptors_2.DescService)} */
+            /** @type {(undefined|!tsickle_descriptors_2.DescEnum|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescService|?)} */
             const t = types.get(typeName);
             return t?.kind == "extension" ? t : undefined;
         },
@@ -479,14 +479,14 @@ function createBaseRegistry() {
          * @return {(undefined|!tsickle_descriptors_2.DescService)}
          */
         getService(typeName) {
-            /** @type {(undefined|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescEnum|?|!tsickle_descriptors_2.DescService)} */
+            /** @type {(undefined|!tsickle_descriptors_2.DescEnum|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescService|?)} */
             const t = types.get(typeName);
             return t?.kind == "service" ? t : undefined;
         },
     };
 }
 /**
- * @param {!Iterable<(!tsickle_descriptors_2.DescFile|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescEnum|?|!tsickle_descriptors_2.DescService|!Registry), ?, ?>} inputs
+ * @param {!Iterable<(!tsickle_descriptors_2.DescEnum|!tsickle_descriptors_2.DescFile|!tsickle_descriptors_2.DescMessage|!tsickle_descriptors_2.DescService|!Registry|?), ?, ?>} inputs
  * @return {!BaseRegistry}
  */
 function initBaseRegistry(inputs) {

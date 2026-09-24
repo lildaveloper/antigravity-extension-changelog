@@ -46,7 +46,7 @@ const content_type_js_1 = goog.require('google3.third_party.javascript.connectrp
  * @param {string} methodKind
  * @param {boolean} useBinaryFormat
  * @param {(undefined|number)} timeoutMs
- * @param {(undefined|!Array<!Array<?>>|?|!Headers)} userProvidedHeaders
+ * @param {(undefined|!Array<!Array<?>>|!Headers|?)} userProvidedHeaders
  * @param {boolean} setUserAgent
  * @return {!Headers}
  */
@@ -84,7 +84,7 @@ exports.requestHeader = requestHeader;
  * @param {string} methodKind
  * @param {boolean} useBinaryFormat
  * @param {(undefined|number)} timeoutMs
- * @param {(undefined|!Array<!Array<?>>|?|!Headers)} userProvidedHeaders
+ * @param {(undefined|!Array<!Array<?>>|!Headers|?)} userProvidedHeaders
  * @param {!Array<!tsickle_compression_4.Compression>} acceptCompression
  * @param {(null|!tsickle_compression_4.Compression)} sendCompression
  * @param {boolean} setUserAgent

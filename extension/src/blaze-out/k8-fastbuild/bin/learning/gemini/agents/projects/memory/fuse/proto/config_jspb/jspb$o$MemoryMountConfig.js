@@ -11,14 +11,18 @@ goog.provide('jspb$o$jetski_memory$MemoryMountConfig');
 goog.require('jspb$google$protobuf$MutableDuration');
 goog.require('jspb$jetski_memory$MutableDumboBackendConfig');
 goog.require('jspb$jetski_memory$MutableFakeMemoryBackendConfig');
+goog.require('jspb$jetski_memory$MutableMemoryBankBackendConfig');
 goog.require('jspb$jetski_memory$MutableMemoryMountConfig');
 goog.require('jspb$jetski_memory$MutableSkillsBackendConfig');
 goog.require('jspb$jetski_memory$MutableSmithBackendConfig');
+goog.require('jspb$jetski_memory$MutableSojoBackendConfig');
 goog.require('jspb$o$google$protobuf$Duration');
 goog.require('jspb$o$jetski_memory$DumboBackendConfig');
 goog.require('jspb$o$jetski_memory$FakeMemoryBackendConfig');
+goog.require('jspb$o$jetski_memory$MemoryBankBackendConfig');
 goog.require('jspb$o$jetski_memory$SkillsBackendConfig');
 goog.require('jspb$o$jetski_memory$SmithBackendConfig');
+goog.require('jspb$o$jetski_memory$SojoBackendConfig');
 goog.require('jspb_internal_adapters');
 goog.require('jspb_internal_public_for_gencode');
 
@@ -38,6 +42,8 @@ jspb$o$jetski_memory$MemoryMountConfig.internal_toObject = function(msg) {
     dumbo: jspb$o$jetski_memory$DumboBackendConfig.internal_toObject(msg.getDumbo()),
     fake: jspb$o$jetski_memory$FakeMemoryBackendConfig.internal_toObject(msg.getFake()),
     skills: jspb$o$jetski_memory$SkillsBackendConfig.internal_toObject(msg.getSkills()),
+    sojo: jspb$o$jetski_memory$SojoBackendConfig.internal_toObject(msg.getSojo()),
+    memoryBank: jspb$o$jetski_memory$MemoryBankBackendConfig.internal_toObject(msg.getMemoryBank()),
     eagerCacheWarming: jspb_internal_adapters.getBooleanFieldWithDefault(msg, 4, true),
     pollChangesPeriod: jspb$o$google$protobuf$Duration.internal_toObject(msg.getPollChangesPeriod()),
   }));
@@ -90,6 +96,12 @@ jspb$o$jetski_memory$MemoryMountConfig.fromObject = function(obj) {
   jspb_internal_adapters.setOneofWrapperField(msg,
       jspb$jetski_memory$MutableSkillsBackendConfig,
       5, jspb$jetski_memory$MutableMemoryMountConfig.oneofGroup_backend_config_, jspb_internal_public_for_gencode.fromObjectNullable(obj.skills, jspb$o$jetski_memory$SkillsBackendConfig.fromObject));
+  jspb_internal_adapters.setOneofWrapperField(msg,
+      jspb$jetski_memory$MutableSojoBackendConfig,
+      7, jspb$jetski_memory$MutableMemoryMountConfig.oneofGroup_backend_config_, jspb_internal_public_for_gencode.fromObjectNullable(obj.sojo, jspb$o$jetski_memory$SojoBackendConfig.fromObject));
+  jspb_internal_adapters.setOneofWrapperField(msg,
+      jspb$jetski_memory$MutableMemoryBankBackendConfig,
+      8, jspb$jetski_memory$MutableMemoryMountConfig.oneofGroup_backend_config_, jspb_internal_public_for_gencode.fromObjectNullable(obj.memoryBank, jspb$o$jetski_memory$MemoryBankBackendConfig.fromObject));
   jspb_internal_adapters.setBooleanField(msg, 4, obj.eagerCacheWarming);
   jspb_internal_adapters.setWrapperField(msg,
       jspb$google$protobuf$MutableDuration,

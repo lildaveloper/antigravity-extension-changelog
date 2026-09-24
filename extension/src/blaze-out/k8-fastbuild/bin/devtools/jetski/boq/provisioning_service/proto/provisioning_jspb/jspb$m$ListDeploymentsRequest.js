@@ -37,6 +37,7 @@ jspb$devtools_jetski_provisioning$MutableListDeploymentsRequest = class extends 
    * optional View view = 1;
    * @override
    * @return {!jspb$e.devtools_jetski_provisioning$ListDeploymentsRequest$View}
+   * @deprecated
    */
   getView() {
     return /** @type {!jspb$e.devtools_jetski_provisioning$ListDeploymentsRequest$View} */ (jspb_internal_adapters.getEnumFieldWithDefault(this, 1));
@@ -46,6 +47,7 @@ jspb$devtools_jetski_provisioning$MutableListDeploymentsRequest = class extends 
   /**
    * @param {!jspb$e.devtools_jetski_provisioning$ListDeploymentsRequest$View|null|undefined} value
    * @return {!jspb$devtools_jetski_provisioning$MutableListDeploymentsRequest} returns this
+   * @deprecated
    */
   setView(value) {
     return jspb_internal_adapters.setEnumField(this, 1, value);
@@ -55,6 +57,7 @@ jspb$devtools_jetski_provisioning$MutableListDeploymentsRequest = class extends 
   /**
    * Clears the field.
    * @return {!jspb$devtools_jetski_provisioning$MutableListDeploymentsRequest} returns this
+   * @deprecated
    */
   clearView() {
     return jspb_internal_adapters.clearField(this, 1);
@@ -65,6 +68,7 @@ jspb$devtools_jetski_provisioning$MutableListDeploymentsRequest = class extends 
    * Returns whether this field is set.
    * @override
    * @return {boolean}
+   * @deprecated
    */
   hasView() {
     return jspb_internal_adapters.hasEnumField(this, 1);
@@ -75,6 +79,7 @@ jspb$devtools_jetski_provisioning$MutableListDeploymentsRequest = class extends 
    * optional View view = 1;
    * @override
    * @return {!jspb$e.devtools_jetski_provisioning$ListDeploymentsRequest$View|undefined}
+   * @deprecated
    */
   getViewOrUndefined() {
     return /** @type {!jspb$e.devtools_jetski_provisioning$ListDeploymentsRequest$View|undefined} */ (jspb_internal_adapters.getEnumFieldOrUndefined(this, 1));

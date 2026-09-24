@@ -1669,12 +1669,12 @@ if (false) {
 const compactionThreshold = 2;
 /** @typedef {!UniqueContainer<function(?): void>} */
 var ListenerContainer;
-/** @typedef {(!UniqueContainer<function(?): void>|!Array<(undefined|!UniqueContainer<function(?): void>)>)} */
+/** @typedef {(!Array<(undefined|!UniqueContainer<function(?): void>)>|!UniqueContainer<function(?): void>)} */
 var ListenerOrListeners;
-/** @type {function((!UniqueContainer<function(?): void>|!Array<(undefined|!UniqueContainer<function(?): void>)>), function(!UniqueContainer<function(?): void>): void): void} */
+/** @type {function((!Array<(undefined|!UniqueContainer<function(?): void>)>|!UniqueContainer<function(?): void>), function(!UniqueContainer<function(?): void>): void): void} */
 const forEachListener = (/**
  * @template T
- * @param {(!UniqueContainer<function(?): void>|!Array<(undefined|!UniqueContainer<function(?): void>)>)} listeners
+ * @param {(!Array<(undefined|!UniqueContainer<function(?): void>)>|!UniqueContainer<function(?): void>)} listeners
  * @param {function(!UniqueContainer<function(?): void>): void} fn
  * @return {void}
  */
@@ -1748,7 +1748,7 @@ class Emitter {
             }
             if (this._listeners) {
                 if (_enableDisposeWithListenerWarning) {
-                    /** @type {(!UniqueContainer<function(T): void>|!Array<(undefined|!UniqueContainer<function(T): void>)>)} */
+                    /** @type {(!Array<(undefined|!UniqueContainer<function(T): void>)>|!UniqueContainer<function(T): void>)} */
                     const listeners = this._listeners;
                     queueMicrotask((/**
                      * @return {void}
@@ -1926,7 +1926,7 @@ class Emitter {
      */
     _deliverQueue(dq) {
         /** @type {!Array<(undefined|!UniqueContainer<function(T): void>)>} */
-        const listeners = (/** @type {!Array<(undefined|!UniqueContainer<function(T): void>)>} */ ((/** @type {(!UniqueContainer<function(?): void>|!Array<(undefined|!UniqueContainer<function(?): void>)>)} */ ((/** @type {!Emitter<?>} */ (dq.current))._listeners))));
+        const listeners = (/** @type {!Array<(undefined|!UniqueContainer<function(T): void>)>} */ ((/** @type {(!Array<(undefined|!UniqueContainer<function(?): void>)>|!UniqueContainer<function(?): void>)} */ ((/** @type {!Emitter<?>} */ (dq.current))._listeners))));
         while (dq.i < dq.end) {
             // important: dq.i is incremented before calling deliver() because it might reenter deliverQueue()
             this._deliver(listeners[dq.i++], (/** @type {T} */ (dq.value)));
@@ -2012,7 +2012,7 @@ if (false) {
      * The array listeners can be 'sparse', to avoid reallocating the array
      * whenever any listener is added or removed. If more than `1 / compactionThreshold`
      * of the array is empty, only then is it resized.
-     * @type {(undefined|!UniqueContainer<function(T): void>|!Array<(undefined|!UniqueContainer<function(T): void>)>)}
+     * @type {(undefined|!Array<(undefined|!UniqueContainer<function(T): void>)>|!UniqueContainer<function(T): void>)}
      * @protected
      */
     Emitter.prototype._listeners;
@@ -2201,7 +2201,7 @@ class AsyncEmitter extends Emitter {
             // wait until and then wait for all thenables to resolve
             Object.freeze(thenables);
             await Promise.allSettled(thenables).then((/**
-             * @param {!Array<(!PromiseRejectedResult|!PromiseFulfilledResult<*>)>} values
+             * @param {!Array<(!PromiseFulfilledResult<*>|!PromiseRejectedResult)>} values
              * @return {void}
              */
             (values) => {
@@ -2682,13 +2682,13 @@ class EventBufferer {
      * @public
      * @template T, O
      * @param {?} event
-     * @param {(undefined|function((undefined|T|O), T): (T|O))=} reduce
+     * @param {(undefined|function((undefined|O|T), T): (O|T))=} reduce
      * @param {(undefined|O)=} initial
      * @return {?}
      */
     wrapEvent(event, reduce, initial) {
         return (/**
-         * @param {function((T|O)): *} listener
+         * @param {function((O|T)): *} listener
          * @param {?=} thisArgs
          * @param {(undefined|!Array<!tsickle_lifecycle_6.IDisposable>|!tsickle_lifecycle_6.DisposableStore)=} disposables
          * @return {!tsickle_lifecycle_6.IDisposable}

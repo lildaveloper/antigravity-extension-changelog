@@ -83,7 +83,7 @@ if (false) {
      */
     EndTagReplacement.prototype.tagName;
 }
-/** @typedef {(!HtmlReplacement|!StartTagReplacement|!EndTagReplacement)} */
+/** @typedef {(!EndTagReplacement|!HtmlReplacement|!StartTagReplacement)} */
 var Replacement;
 /**
  * Marker used for replacements.
@@ -154,7 +154,7 @@ class HtmlFormatter {
      * @return {string}
      */
     replaceFormattingString(openedTags, match) {
-        /** @type {(undefined|!HtmlReplacement|!StartTagReplacement|!EndTagReplacement)} */
+        /** @type {(undefined|!EndTagReplacement|!HtmlReplacement|!StartTagReplacement)} */
         const replacement = this.replacements.get(match);
         if (!replacement) {
             // Someone included a string looking like our internal marker in the
@@ -258,7 +258,7 @@ class HtmlFormatter {
     /**
      * Stores a replacement and returns its marker.
      * @private
-     * @param {(!HtmlReplacement|!StartTagReplacement|!EndTagReplacement)} replacement
+     * @param {(!EndTagReplacement|!HtmlReplacement|!StartTagReplacement)} replacement
      * @return {string}
      */
     storeReplacement(replacement) {
@@ -272,7 +272,7 @@ exports.HtmlFormatter = HtmlFormatter;
 /* istanbul ignore if */
 if (false) {
     /**
-     * @const {!Map<string, (!HtmlReplacement|!StartTagReplacement|!EndTagReplacement)>}
+     * @const {!Map<string, (!EndTagReplacement|!HtmlReplacement|!StartTagReplacement)>}
      * @private
      */
     HtmlFormatter.prototype.replacements;

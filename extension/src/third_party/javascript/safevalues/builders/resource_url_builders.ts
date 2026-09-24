@@ -244,17 +244,17 @@ exports.trustedResourceUrl = trustedResourceUrl;
 /**
  * Similar to iterable, but using the concrete types so we don't rely on the
  * iterable protocol, which needs a poyfill in ES5
- * @typedef {(!ReadonlyMap<string, ?>|!ReadonlyArray<!Array<?>>|?)}
+ * @typedef {(?|!ReadonlyArray<!Array<?>>|!ReadonlyMap<string, ?>)}
  */
 var IterableEntries;
-/** @typedef {(!ReadonlyMap<string, (undefined|null|string|number|boolean|!ReadonlyArray<(undefined|null|string|number|boolean)>)>|!ReadonlyArray<!Array<?>>|?|!ReadonlyMap<string, string>|!URLSearchParams)} */
+/** @typedef {(?|!ReadonlyArray<!Array<?>>|!ReadonlyMap<string, string>|!ReadonlyMap<string, (undefined|null|string|number|boolean|!ReadonlyArray<(undefined|null|string|number|boolean)>)>|!URLSearchParams)} */
 var SearchParams;
 /**
  * Creates a new TrustedResourceUrl with params to replace the URL's existing
  * search parameters.
  *
  * @param {!tsickle_resource_url_impl_2.TrustedResourceUrl} trustedUrl
- * @param {(!ReadonlyMap<string, (undefined|null|string|number|boolean|!ReadonlyArray<(undefined|null|string|number|boolean)>)>|!ReadonlyArray<!Array<?>>|?|!ReadonlyMap<string, string>|!URLSearchParams)} params What to add to the URL. Parameters with value `null` or
+ * @param {(?|!ReadonlyArray<!Array<?>>|!ReadonlyMap<string, string>|!ReadonlyMap<string, (undefined|null|string|number|boolean|!ReadonlyArray<(undefined|null|string|number|boolean)>)>|!URLSearchParams)} params What to add to the URL. Parameters with value `null` or
  * `undefined` are skipped. Both keys and values will be encoded. Do not pass
  * pre-encoded values as this will result them being double encoded. If the
  * value is an array then the same parameter is added for every element in the
@@ -272,7 +272,7 @@ exports.replaceParams = replaceParams;
  * parameters.
  *
  * @param {!tsickle_resource_url_impl_2.TrustedResourceUrl} trustedUrl
- * @param {(!ReadonlyMap<string, (undefined|null|string|number|boolean|!ReadonlyArray<(undefined|null|string|number|boolean)>)>|!ReadonlyArray<!Array<?>>|?|!ReadonlyMap<string, string>|!URLSearchParams)} params What to add to the URL. Parameters with value `null` or
+ * @param {(?|!ReadonlyArray<!Array<?>>|!ReadonlyMap<string, string>|!ReadonlyMap<string, (undefined|null|string|number|boolean|!ReadonlyArray<(undefined|null|string|number|boolean)>)>|!URLSearchParams)} params What to add to the URL. Parameters with value `null` or
  * `undefined` are skipped. Both keys and values will be encoded. Do not pass
  * pre-encoded values as this will result them being double encoded. If the
  * value is an array then the same parameter is added for every element in the
@@ -289,7 +289,7 @@ exports.appendParams = appendParams;
  * @param {string} path
  * @param {string} params
  * @param {string} hash
- * @param {(!ReadonlyMap<string, (undefined|null|string|number|boolean|!ReadonlyArray<(undefined|null|string|number|boolean)>)>|!ReadonlyArray<!Array<?>>|?|!ReadonlyMap<string, string>|!URLSearchParams)} newParams
+ * @param {(?|!ReadonlyArray<!Array<?>>|!ReadonlyMap<string, string>|!ReadonlyMap<string, (undefined|null|string|number|boolean|!ReadonlyArray<(undefined|null|string|number|boolean)>)>|!URLSearchParams)} newParams
  * @return {!tsickle_resource_url_impl_2.TrustedResourceUrl}
  */
 function appendParamsInternal(path, params, hash, newParams) {
@@ -332,7 +332,7 @@ function appendParamsInternal(path, params, hash, newParams) {
     }
     else {
         // tslint:disable-next-line:g3-no-void-expression
-        (/** @type {(!ReadonlyMap<string, (undefined|null|string|number|boolean|!ReadonlyArray<(undefined|null|string|number|boolean)>)>|!ReadonlyMap<string, string>|!URLSearchParams)} */ (newParams)).forEach(addParam);
+        (/** @type {(!ReadonlyMap<string, string>|!ReadonlyMap<string, (undefined|null|string|number|boolean|!ReadonlyArray<(undefined|null|string|number|boolean)>)>|!URLSearchParams)} */ (newParams)).forEach(addParam);
     }
     return (0, resource_url_impl_1.createResourceUrlInternal)(path + params + hash);
 }

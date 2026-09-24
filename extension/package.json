@@ -3,7 +3,7 @@
   "displayName": "Google Antigravity",
   "description": "Bring Google's agent-first development platform to Visual Studio Code.",
   "icon": "img/logo.png",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "publisher": "google",
   "license": "SEE LICENSE IN LICENSE.txt",
   "engines": {
@@ -237,12 +237,12 @@
   "buildInfo": {
     "BUILD_CLIENT": "(SrcFS)",
     "BUILD_CLIENT_MINT_STATUS": "1",
-    "BUILD_DEPOT_PATH": "//depot/branches/antigravity_vscode_extension_release_branch/980964133.1/google3",
+    "BUILD_DEPOT_PATH": "//depot/branches/antigravity_vscode_extension_release_branch/985059174.1/google3",
     "BUILD_DIRECTORY": "/google/src/cloud/buildrabbit-username/buildrabbit-client/google3",
     "BUILD_USERNAME": "kokoro-dedicated",
-    "BUILD_BLAZE_RELEASE": "release blaze-2026.09.02-1 (mainline @974746007)",
-    "BUILD_EMBED_LABEL": "antigravity_vscode_extension_1.4.0_RC01",
-    "BUILD_HOSTNAME": "oqbb8.prod.google.com",
+    "BUILD_BLAZE_RELEASE": "release blaze-2026.09.11-2 (mainline @979001970)",
+    "BUILD_EMBED_LABEL": "antigravity_vscode_extension_1.5.0_RC02",
+    "BUILD_HOSTNAME": "jgbho14.prod.google.com",
     "VERIFIABLE": "0",
     "WORKSPACE_STATUS_COMMAND_ARGUMENT": "<precomputed>"
   }

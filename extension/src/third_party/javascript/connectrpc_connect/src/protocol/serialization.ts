@@ -71,10 +71,10 @@ if (false) {
  * rejected by default. In connect-es, unknown JSON fields are ignored
  * by default.
  * @param {(undefined|?)} options
- * @return {{ignoreUnknownFields: (undefined|boolean), registry: (undefined|!tsickle_protobuf_1.Registry), alwaysEmitImplicit: (undefined|boolean), enumAsInteger: (undefined|boolean), useProtoFieldName: (undefined|boolean)}}
+ * @return {{alwaysEmitImplicit: (undefined|boolean), enumAsInteger: (undefined|boolean), useProtoFieldName: (undefined|boolean), ignoreUnknownFields: (undefined|boolean), registry: (undefined|!tsickle_protobuf_1.Registry)}}
  */
 function getJsonOptions(options) {
-    /** @type {{ignoreUnknownFields: (undefined|boolean), registry: (undefined|!tsickle_protobuf_1.Registry), alwaysEmitImplicit: (undefined|boolean), enumAsInteger: (undefined|boolean), useProtoFieldName: (undefined|boolean)}} */
+    /** @type {{alwaysEmitImplicit: (undefined|boolean), enumAsInteger: (undefined|boolean), useProtoFieldName: (undefined|boolean), ignoreUnknownFields: (undefined|boolean), registry: (undefined|!tsickle_protobuf_1.Registry)}} */
     const o = { ...options };
     o.ignoreUnknownFields ??= true;
     return o;
@@ -268,9 +268,9 @@ var JsonSerializationOptions;
 function createJsonSerialization(desc, options) {
     /** @type {{encode: function((undefined|string)=): !Uint8Array}} */
     const textEncoder = options?.textEncoder ?? new TextEncoder();
-    /** @type {({decode: function((undefined|!Uint8Array)=): string}|!TextDecoder)} */
+    /** @type {(!TextDecoder|{decode: function((undefined|!Uint8Array)=): string})} */
     const textDecoder = options?.textDecoder ?? new TextDecoder();
-    /** @type {{ignoreUnknownFields: (undefined|boolean), registry: (undefined|!tsickle_protobuf_1.Registry), alwaysEmitImplicit: (undefined|boolean), enumAsInteger: (undefined|boolean), useProtoFieldName: (undefined|boolean)}} */
+    /** @type {{alwaysEmitImplicit: (undefined|boolean), enumAsInteger: (undefined|boolean), useProtoFieldName: (undefined|boolean), ignoreUnknownFields: (undefined|boolean), registry: (undefined|!tsickle_protobuf_1.Registry)}} */
     const o = getJsonOptions(options);
     return {
         /**

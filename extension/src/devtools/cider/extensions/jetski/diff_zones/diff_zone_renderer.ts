@@ -25,7 +25,8 @@ const cider_1 = goog.require('google3.devtools.cider.extensions.cider');
 const cell_1 = goog.require('google3.research.colab.frontend.common.nbformat.v4.cell');
 const vscode = goog.require('vscode'); // from //devtools/cider/extensions:vscode
 /**
- * Event payload emitted when a single diff hunk is resolved by the user in the UI.
+ * Event payload emitted when a single diff hunk or an entire file is resolved by
+ * the user in the UI.
  * @record
  */
 function HunkResolutionEvent() { }
@@ -38,7 +39,7 @@ if (false) {
      */
     HunkResolutionEvent.prototype.fileUri;
     /**
-     * @type {number}
+     * @type {(undefined|number)}
      * @public
      */
     HunkResolutionEvent.prototype.hunkIndex;
@@ -322,7 +323,7 @@ function parseNotebookCells(originalContents) {
         const cells = notebook.cells ?? [];
         return cells.map((/**
          * @param {!tsickle_cell_2.Cell} cell
-         * @return {{cellKind: !tsickle_vscode_4.NotebookCellKind, language: string, value: string, metadata: (undefined|{id: (undefined|string), name: (undefined|string), tags: (undefined|!Array<string>), colab: (undefined|!tsickle_cell_7.Metadata), imported_from: (undefined|!tsickle_cell_7.ImportedFrom), colab_type: (undefined|!tsickle_cell_7.CellType), nbgrader: (undefined|!NbGrader), editable: (undefined|boolean)})}}
+         * @return {{cellKind: !tsickle_vscode_4.NotebookCellKind, language: string, value: string, metadata: (undefined|{name: (undefined|string), tags: (undefined|!Array<string>), id: (undefined|string), colab: (undefined|!tsickle_cell_7.Metadata), imported_from: (undefined|!tsickle_cell_7.ImportedFrom), colab_type: (undefined|!tsickle_cell_7.CellType), nbgrader: (undefined|!NbGrader), editable: (undefined|boolean)})}}
          */
         (cell) => {
             /** @type {(undefined|string)} */

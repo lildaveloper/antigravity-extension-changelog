@@ -1028,6 +1028,96 @@ jspb$jetski_memory$MutableFuseConfig = class extends jspb_internal_public_for_ge
 
 
   /**
+   * optional int64 sql_max_ram_mb = 30;
+   * @override
+   * @return {!gbigint}
+   */
+  getSqlMaxRamMb() {
+    return jspb_internal_adapters.getInt64GbigintFieldWithDefault(this, 30, jspb_internal_public_for_gencode.toGbigint(8192));
+  }
+
+
+  /**
+   * optional int64 sql_max_ram_mb = 30;
+   * @override
+   * @return {number}
+   * @deprecated unsafe int64 behavior: go/jspb-api-gotchas#int64
+   */
+  getSqlMaxRamMb_asLegacyNumberOrString() {
+    return jspb_internal_adapters.getInt64FieldWithDefault(this, 30, 8192);
+  }
+
+
+  /**
+   * optional int64 sql_max_ram_mb = 30;
+   * @override
+   * @return {string}
+   */
+  getSqlMaxRamMb_asString() {
+    return jspb_internal_adapters.getInt64FieldWithDefault_asString(this, 30, '8192');
+  }
+
+
+  /**
+   * @param {number|string|!gbigint|null|undefined} value
+   * @return {!jspb$jetski_memory$MutableFuseConfig} returns this
+   */
+  setSqlMaxRamMb(value) {
+    return jspb_internal_adapters.setInt64Field(this, 30, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$jetski_memory$MutableFuseConfig} returns this
+   */
+  clearSqlMaxRamMb() {
+    return jspb_internal_adapters.clearField(this, 30);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasSqlMaxRamMb() {
+    return jspb_internal_adapters.hasInt64Field(this, 30);
+  }
+
+
+  /**
+   * optional int64 sql_max_ram_mb = 30;
+   * @override
+   * @return {!gbigint|undefined}
+   */
+  getSqlMaxRamMbOrUndefined() {
+    return jspb_internal_adapters.getInt64GbigintFieldOrUndefined(this, 30);
+  }
+
+
+  /**
+   * optional int64 sql_max_ram_mb = 30;
+   * @override
+   * @return {number|undefined}
+   * @deprecated unsafe int64 behavior: go/jspb-api-gotchas#int64
+   */
+  getSqlMaxRamMbOrUndefined_asLegacyNumberOrString() {
+    return jspb_internal_adapters.getInt64FieldOrUndefined(this, 30);
+  }
+
+
+  /**
+   * optional int64 sql_max_ram_mb = 30;
+   * @override
+   * @return {string|undefined}
+   */
+  getSqlMaxRamMbOrUndefined_asString() {
+    return jspb_internal_adapters.getInt64FieldOrUndefined_asString(this, 30);
+  }
+
+
+  /**
    * optional bool disable_skills = 29;
    * @override
    * @return {boolean}
@@ -1117,6 +1207,7 @@ jspb$jetski_memory$MutableFuseConfig.hasInstance = /** @pureOrBreakMyCode */ (js
  *  debounceWindow: (?jspb$google$protobuf$MutableDuration.ObjectFormat|undefined),
  *  pollChangesPeriod: (?jspb$google$protobuf$MutableDuration.ObjectFormat|undefined),
  *  cacheMaxMb: (?number|string|undefined),
+ *  sqlMaxRamMb: (?number|string|undefined),
  *  disableSkills: (?boolean|undefined)
  * }}
  */
@@ -1201,6 +1292,8 @@ if (goog.DEBUG && !COMPILED) {
  *  pollChangesPeriod: (!jspb$ro.google$protobuf$ReadonlyDuration|undefined),
  *  cacheMaxMb: (!gbigint|undefined),
  *  cacheMaxMb_asLegacyNumberOrString: (number|string|undefined),
+ *  sqlMaxRamMb: (!gbigint|undefined),
+ *  sqlMaxRamMb_asLegacyNumberOrString: (number|string|undefined),
  *  disableSkills: (boolean|undefined)
  * }}
  */

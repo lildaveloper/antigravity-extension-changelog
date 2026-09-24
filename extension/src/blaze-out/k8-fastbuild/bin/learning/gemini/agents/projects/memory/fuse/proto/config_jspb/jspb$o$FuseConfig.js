@@ -46,6 +46,7 @@ jspb$o$jetski_memory$FuseConfig.internal_toObject = function(msg) {
     debounceWindow: jspb$o$google$protobuf$Duration.internal_toObject(msg.getDebounceWindow()),
     pollChangesPeriod: jspb$o$google$protobuf$Duration.internal_toObject(msg.getPollChangesPeriod()),
     cacheMaxMb: jspb_internal_adapters.getInt64FieldWithDefault(msg, 9, 512),
+    sqlMaxRamMb: jspb_internal_adapters.getInt64FieldWithDefault(msg, 30, 8192),
     disableSkills: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getBooleanFieldLegacyNullable(msg, 29)),
   }));
 
@@ -107,6 +108,7 @@ jspb$o$jetski_memory$FuseConfig.fromObject = function(obj) {
       jspb$google$protobuf$MutableDuration,
       19, jspb_internal_public_for_gencode.fromObjectNullable(obj.pollChangesPeriod, jspb$o$google$protobuf$Duration.fromObject));
   jspb_internal_adapters.setInt64Field(msg, 9, obj.cacheMaxMb);
+  jspb_internal_adapters.setInt64Field(msg, 30, obj.sqlMaxRamMb);
   jspb_internal_adapters.setBooleanField(msg, 29, obj.disableSkills);
   return msg;
 };

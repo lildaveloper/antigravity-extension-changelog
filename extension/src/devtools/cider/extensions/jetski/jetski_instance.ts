@@ -45,7 +45,7 @@ if (false) {
      */
     JetskiInstanceConfig.prototype.type;
     /**
-     * @type {(!tsickle_vscode_1.WebviewView|!tsickle_vscode_1.WebviewPanel)}
+     * @type {(!tsickle_vscode_1.WebviewPanel|!tsickle_vscode_1.WebviewView)}
      * @public
      */
     JetskiInstanceConfig.prototype.view;
@@ -225,7 +225,7 @@ if (false) {
      */
     JetskiInstance.prototype.disposables;
     /**
-     * @const {(!tsickle_vscode_1.WebviewView|!tsickle_vscode_1.WebviewPanel)}
+     * @const {(!tsickle_vscode_1.WebviewPanel|!tsickle_vscode_1.WebviewView)}
      * @private
      */
     JetskiInstance.prototype.view;

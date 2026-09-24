@@ -190,7 +190,7 @@ function bootFieldOptions(init) {
         targets: init.targets ?? [],
         editionDefaults: init.editionDefaults?.map((/**
          * @param {?} e
-         * @return {{value: string, edition: !tsickle_descriptor_pb_1.Edition}}
+         * @return {{edition: !tsickle_descriptor_pb_1.Edition, value: string}}
          */
         (e) => ({
             $typeName: (/** @type {string} */ ("google.protobuf.FieldOptions.EditionDefault")),
@@ -217,7 +217,7 @@ function bootEnumDescriptorProto(init) {
         reservedRange: [],
         value: init.value.map((/**
          * @param {?} e
-         * @return {{number: number, name: string}}
+         * @return {{name: string, number: number}}
          */
         (e) => ({
             $typeName: (/** @type {string} */ ("google.protobuf.EnumValueDescriptorProto")),

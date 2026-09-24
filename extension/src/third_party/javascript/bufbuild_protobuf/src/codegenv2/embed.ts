@@ -116,7 +116,7 @@ function stripJsonNames(d) {
  * Compute the path to a message, enumeration, extension, or service in a
  * file descriptor.
  *
- * @param {(!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescEnum|?|!tsickle_descriptors_1.DescService)} desc
+ * @param {(!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescService|?)} desc
  * @return {!Array<number>}
  */
 function pathInFileDesc(desc) {
@@ -124,9 +124,9 @@ function pathInFileDesc(desc) {
         return [(/** @type {!tsickle_descriptors_1.DescService} */ (desc)).file.services.indexOf(desc)];
     }
     /** @type {(undefined|!tsickle_descriptors_1.DescMessage)} */
-    const parent = (/** @type {(!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescEnum|?)} */ (desc)).parent;
+    const parent = (/** @type {(!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescMessage|?)} */ (desc)).parent;
     if (parent == undefined) {
-        switch ((/** @type {(!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescEnum|?)} */ (desc)).kind) {
+        switch ((/** @type {(!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescMessage|?)} */ (desc)).kind) {
             case "enum":
                 return [(/** @type {!tsickle_descriptors_1.DescEnum} */ (desc)).file.enums.indexOf(desc)];
             case "message":
@@ -154,7 +154,7 @@ function pathInFileDesc(desc) {
     }
     /** @type {!Array<number>} */
     const path = findPath(parent);
-    switch ((/** @type {(!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescEnum|?)} */ (desc)).kind) {
+    switch ((/** @type {(!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescMessage|?)} */ (desc)).kind) {
         case "extension":
             return [...path, parent.nestedExtensions.indexOf(desc)];
         case "message":

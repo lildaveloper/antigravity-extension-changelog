@@ -257,7 +257,7 @@ function createEnvelopeReadableStream(stream) {
             /** @type {boolean} */
             let enqueuedOnce = false;
             while (!enqueuedOnce) {
-                /** @type {(!ReadableStreamReadValueResult<!Uint8Array>|!ReadableStreamReadDoneResult<!Uint8Array>)} */
+                /** @type {(!ReadableStreamReadDoneResult<!Uint8Array>|!ReadableStreamReadValueResult<!Uint8Array>)} */
                 const result = await reader.read();
                 if (result.done) {
                     if (buffer.byteLength > 0) {

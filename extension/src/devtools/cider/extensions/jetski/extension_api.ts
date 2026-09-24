@@ -58,7 +58,7 @@ exports.DynamicContextProvider; // type-only export
 var ContextArg;
 /**
  * Typing for arguments passed to ExtensionApiImpl.addContext.
- * @typedef {(undefined|string|{value: ?, case: string}|{case: undefined, value: undefined}|{case: string, value: ?})}
+ * @typedef {(undefined|string|{case: string, value: ?}|{value: ?, case: string}|{case: undefined, value: undefined})}
  */
 exports.ContextChunk;
 /**
@@ -228,6 +228,20 @@ function isWorkspaceRoot(uri) {
     return CITC_REGEX.test(path) || COG_REGEX.test(path);
 }
 /**
+ * Safely decodes a URI component, returning the original string if decoding fails
+ * due to malformed escape sequences.
+ * @param {string} str
+ * @return {string}
+ */
+function safeDecodeURIComponent(str) {
+    try {
+        return decodeURIComponent(str);
+    }
+    catch {
+        return str;
+    }
+}
+/**
  * Central implementation of the ExtensionApi service.
  *
  * Handles all RPC calls from the Jetski iframe, manages the lifecycle of
@@ -236,13 +250,6 @@ function isWorkspaceRoot(uri) {
  * tsickle: dropped implements: dropped implements of a type literal: ServiceImplWithoutEvents<typeof ExtensionApi, AntigravityApiEmitters>
  */
 class ExtensionApiImpl {
-    /**
-     * @public
-     * @return {!tsickle_vscode_8.Event<!tsickle_jetski_instance_12.JetskiInstance>}
-     */
-    get onDidRegisterView() {
-        return this.onDidRegisterViewEmitter.event;
-    }
     /**
      * Registers the HostDiagnosticsProvider with this extension API instance.
      * @public
@@ -515,7 +522,16 @@ class ExtensionApiImpl {
         this.contextCategoryProviders = new Map();
         this.feedbackMetadata = {};
         this.modifiedContentsMap = new Map();
+        this.onDidChangeTextDocumentContentEmitter = new vscode.EventEmitter();
+        /**
+         * Provides the change event required by the
+         * {\@link vscode.TextDocumentContentProvider} contract. VS Code caches
+         * the content of a virtual document per URI, so firing this event is
+         * the only way to make it re-query `provideTextDocumentContent`.
+         */
+        this.onDidChange = this.onDidChangeTextDocumentContentEmitter.event;
         this.onDidRegisterViewEmitter = new vscode.EventEmitter();
+        this.onDidRegisterView = this.onDidRegisterViewEmitter.event;
         this.originalContentsMap = new Map();
         this.registeredCommands = new Set();
         this.sentNotificationIds = new Set();
@@ -586,7 +602,7 @@ class ExtensionApiImpl {
                 this.setChatFocused(false);
             }
         })));
-        this.context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('jetski-diff', this));
+        this.context.subscriptions.push(this.onDidChangeTextDocumentContentEmitter, vscode.workspace.registerTextDocumentContentProvider('jetski-diff', this));
         this.context.subscriptions.push(vscode.commands.registerCommand(`${this.naming.prefix}.insertSnippet`, (/**
          * @return {!Promise<void>}
          */
@@ -672,12 +688,21 @@ class ExtensionApiImpl {
         async () => {
             await this.newConversation();
         })));
+        /** @type {function(): !Promise<void>} */
+        const resetConversationHandler = (/**
+         * @return {!Promise<void>}
+         */
+        async () => {
+            await this.context.workspaceState.update('lastConversationId', undefined);
+            await vscode.commands.executeCommand(`${this.naming.prefix}.reconnect`);
+        });
+        this.context.subscriptions.push(vscode.commands.registerCommand(`${this.naming.prefix}.resetConversation`, resetConversationHandler));
         this.context.subscriptions.push(vscode.commands.registerCommand('antigravity.addContext', (/**
          * @param {...?} args
          * @return {!Promise<void>}
          */
         async (...args) => {
-            /** @type {!Array<(undefined|string|{value: ?, case: string}|{case: undefined, value: undefined}|{case: string, value: ?})>} */
+            /** @type {!Array<(undefined|string|{case: string, value: ?}|{value: ?, case: string}|{case: undefined, value: undefined})>} */
             const chunks = [];
             /** @type {!Array<(string|{type: string, text: string}|{type: string, uri: string, label: (undefined|string), range: (undefined|{startLineNumber: number, endLineNumber: number, startColumn: number, endColumn: number})}|{type: string, url: string}|{type: string, processId: (undefined|string|number), name: (undefined|string), selectionContent: (undefined|string)})>} */
             const items = args.flat();
@@ -800,14 +825,14 @@ class ExtensionApiImpl {
     }
     /**
      * @public
-     * @param {...(undefined|string|{value: ?, case: string}|{case: undefined, value: undefined}|{case: string, value: ?})} chunks
+     * @param {...(undefined|string|{case: string, value: ?}|{value: ?, case: string}|{case: undefined, value: undefined})} chunks
      * @return {!Promise<void>}
      */
     async addContext(...chunks) {
         /** @type {!tsickle_jetski_instance_12.JetskiInstance} */
         const view = await this.ensureMainInstance();
         view.focus();
-        /** @type {!Array<(undefined|string|{value: ?, case: string}|{case: undefined, value: undefined}|{case: string, value: ?})>} */
+        /** @type {!Array<(undefined|string|{case: string, value: ?}|{value: ?, case: string}|{case: undefined, value: undefined})>} */
         const expandedChunks = [];
         for (const chunk of chunks) {
             expandedChunks.push(chunk);
@@ -817,7 +842,7 @@ class ExtensionApiImpl {
         }
         /** @type {!Array<?>} */
         const items = expandedChunks.map((/**
-         * @param {(undefined|string|{value: ?, case: string}|{case: undefined, value: undefined}|{case: string, value: ?})} chunk
+         * @param {(undefined|string|{case: string, value: ?}|{value: ?, case: string}|{case: undefined, value: undefined})} chunk
          * @return {?}
          */
         (chunk) => {
@@ -872,7 +897,40 @@ class ExtensionApiImpl {
      */
     async newConversation() {
         /** @type {!tsickle_jetski_instance_12.JetskiInstance} */
-        const view = await this.ensureMainInstance();
+        let view;
+        /** @type {(undefined|number)} */
+        let timeoutId;
+        try {
+            view = await Promise.race([
+                this.ensureMainInstance(),
+                new Promise((/**
+                 * @param {function(!PromiseLike<?>): void} _
+                 * @param {function(?=): void} reject
+                 * @return {void}
+                 */
+                (_, reject) => {
+                    timeoutId = setTimeout((/**
+                     * @return {void}
+                     */
+                    () => {
+                        reject(new Error('View ready timeout'));
+                    }), 2000);
+                })),
+            ]);
+        }
+        catch (e) {
+            /** @type {string} */
+            const errorMessage = e instanceof Error ? ((/** @type {!Error} */ (e)).stack ?? (/** @type {!Error} */ (e)).message) : String(e);
+            (0, util_1.getOutputChannel)().appendLine(`[ExtensionApi] Main view not ready for newConversation RPC, resetting conversation: ${errorMessage}`);
+            await this.context.workspaceState.update('lastConversationId', undefined);
+            await vscode.commands.executeCommand(`${this.naming.prefix}.reconnect`);
+            return;
+        }
+        finally {
+            if (timeoutId != null) {
+                clearTimeout(timeoutId);
+            }
+        }
         view.focus();
         await view.api.newConversation({});
     }
@@ -937,14 +995,16 @@ class ExtensionApiImpl {
      */
     provideTextDocumentContent(uri) {
         /** @type {string} */
-        const fileUri = decodeURIComponent(uri.path.substring(1));
-        if (uri.authority === 'original') {
-            return this.originalContentsMap.get(fileUri) ?? '';
-        }
-        else if (uri.authority === 'modified') {
-            return this.modifiedContentsMap.get(fileUri) ?? '';
-        }
-        return '';
+        const rawKey = uri.path.substring(1);
+        /** @type {string} */
+        const decodedKey = safeDecodeURIComponent(rawKey);
+        /** @type {(undefined|!Map<string, string>)} */
+        const contentsMap = uri.authority === 'original'
+            ? this.originalContentsMap
+            : uri.authority === 'modified'
+                ? this.modifiedContentsMap
+                : undefined;
+        return contentsMap?.get(rawKey) ?? contentsMap?.get(decodedKey) ?? '';
     }
     /**
      * @private
@@ -1048,7 +1108,7 @@ class ExtensionApiImpl {
     }
     /**
      * @public
-     * @param {(!tsickle_vscode_8.WebviewView|!tsickle_vscode_8.WebviewPanel)} webviewView
+     * @param {(!tsickle_vscode_8.WebviewPanel|!tsickle_vscode_8.WebviewView)} webviewView
      * @param {string} type
      * @return {!Promise<void>}
      */
@@ -1074,31 +1134,13 @@ class ExtensionApiImpl {
         });
         this.views.push(view);
         this.onDidRegisterViewEmitter.fire(view);
-        if (this.commentsStateJson !== '{}') {
-            void view.api
-                .setComments({ commentsStateJson: this.commentsStateJson })
-                .catch((/**
-             * @param {?} e
-             * @return {void}
-             */
-            (e) => {
-                console.error('[Jetski] Failed to send initial comments to new view', e);
-            }));
-        }
+        // Seeding is fire-and-forget on purpose. It waits internally for the view
+        // to report ready, and `WebviewRenderer.renderJetskiIframe` awaits
+        // `registerWebview`; awaiting here would therefore hold up rendering, and
+        // would hang outright for a view that never becomes ready. Do not add an
+        // `await`.
+        void this.seedNewView(view);
         void this.forwardContextCategories(view);
-        /** @type {!Array<!tsickle_agent_edit_manager_5.FileAgentEditState>} */
-        const currentDiffStates = this.agentEditManager.getCurrentStates();
-        if (currentDiffStates.length > 0) {
-            void view.api.setFileDiffs({ fileDiffs: currentDiffStates }).catch((/**
-             * @param {?} e
-             * @return {void}
-             */
-            (e) => {
-                if (connect_1.ConnectError.from(e).code !== connect_1.Code.NotFound) {
-                    console.error('[ExtensionAPI] Failed to send initial file diffs to new view', e);
-                }
-            }));
-        }
         /** @type {!Array<!tsickle_vscode_8.Disposable>} */
         const viewDisposables = [];
         viewDisposables.push(view.api.onDidChangeUrl((/**
@@ -1164,6 +1206,68 @@ class ExtensionApiImpl {
             }
             view.dispose();
         }));
+    }
+    /**
+     * Pushes the host's cached state into a newly registered view.
+     *
+     * This has to wait for `view.ready`: `registerWebview` runs as soon as the
+     * webview HTML is set, but the iframe still has to fetch and boot the
+     * toolkit bundle before it registers any RPC handlers. Sending immediately
+     * means the payload is dropped on the floor, leaving the view with an empty
+     * comments store until something else happens to push an update
+     * (b/561705459). Four other call sites in this file already await
+     * `view.ready` for exactly this reason.
+     *
+     * Note `forwardContextCategories` is deliberately NOT moved in here: it
+     * tolerates `Code.NotFound` because the webview pulls categories itself once
+     * ready, so it already has a recovery path. Comments has no pull path.
+     * @private
+     * @param {!tsickle_jetski_instance_12.JetskiInstance} view
+     * @return {!Promise<void>}
+     */
+    async seedNewView(view) {
+        // `view.ready` comes from Event.toPromise, which resolves on the first
+        // ready event and never rejects. So for a view that is disposed before it
+        // ever boots this simply stays pending forever and the rest of this method
+        // never runs -- which is the behaviour we want. The catch is defensive
+        // only.
+        try {
+            await view.ready;
+        }
+        catch {
+            return;
+        }
+        // Booting can take seconds, so re-check that the view is still registered
+        // rather than pushing state at a webview that has since been closed.
+        if (!this.views.includes(view)) {
+            return;
+        }
+        // Re-read rather than capturing at registration time: booting the bundle
+        // can take seconds, during which another view may have broadcast newer
+        // state. We want the newest, not a snapshot from registration.
+        if (this.commentsStateJson !== '{}') {
+            try {
+                await view.api.setComments({
+                    commentsStateJson: this.commentsStateJson,
+                });
+            }
+            catch (e) {
+                console.error('[Jetski] Failed to send initial comments to new view', e);
+            }
+        }
+        // This previously suppressed Code.NotFound, which was a workaround for
+        // firing before the view had registered its handler. Now that we wait for
+        // ready, a NotFound here is a genuine problem and should be logged.
+        /** @type {!Array<!tsickle_agent_edit_manager_5.FileAgentEditState>} */
+        const currentDiffStates = this.agentEditManager.getCurrentStates();
+        if (currentDiffStates.length > 0) {
+            try {
+                await view.api.setFileDiffs({ fileDiffs: currentDiffStates });
+            }
+            catch (e) {
+                console.error('[ExtensionAPI] Failed to send initial file diffs to new view', e);
+            }
+        }
     }
     /**
      * @private
@@ -1454,15 +1558,6 @@ class ExtensionApiImpl {
                 catch (e) {
                     // Ignore stat failure, proceed to open as file
                 }
-                // Check if file is resolved in current edit session
-                /** @type {boolean} */
-                const hasUnresolved = this.agentEditManager.hasUnresolvedHunks(request.fileUri);
-                /** @type {(undefined|{originalContents: string, modifiedContents: string})} */
-                const diffDetails = this.agentEditManager.getDiffZoneDetails(request.fileUri);
-                if (!hasUnresolved && diffDetails) {
-                    await this.openVirtualDiff(request.fileUri, diffDetails.originalContents, diffDetails.modifiedContents, `Diff: ${request.fileUri.substring(request.fileUri.lastIndexOf('/') + 1)} (Resolved)`);
-                    return {};
-                }
                 // When Jetski runs an agent in a linked worktree, file links in chat point
                 // to that worktree CitC workspace. Because Cider only mounts the active
                 // workspace, opening worktree URIs directly fails with "nonexistent file".
@@ -1614,14 +1709,25 @@ class ExtensionApiImpl {
     async openVirtualDiff(fileUri, originalContents, modifiedContents, title) {
         this.originalContentsMap.set(fileUri, originalContents);
         this.modifiedContentsMap.set(fileUri, modifiedContents);
+        /** @type {string} */
+        const decodedFileUri = safeDecodeURIComponent(fileUri);
+        if (decodedFileUri !== fileUri) {
+            this.originalContentsMap.set(decodedFileUri, originalContents);
+            this.modifiedContentsMap.set(decodedFileUri, modifiedContents);
+        }
         /** @type {!tsickle_vscode_8.Uri} */
         const originalUri = vscode.Uri.parse(`jetski-diff://original/${encodeURIComponent(fileUri)}`);
         /** @type {!tsickle_vscode_8.Uri} */
         const modifiedUri = vscode.Uri.parse(`jetski-diff://modified/${encodeURIComponent(fileUri)}`);
         /** @type {string} */
-        const fileName = fileUri.substring(fileUri.lastIndexOf('/') + 1);
+        const fileName = safeDecodeURIComponent(fileUri.substring(fileUri.lastIndexOf('/') + 1));
         /** @type {string} */
-        const finalTitle = title ?? `Diff: ${fileName}`;
+        const finalTitle = title || `Diff: ${fileName}`;
+        // The virtual document URIs only encode the file URI, so opening a second
+        // diff for the same file reuses documents whose contents VS Code has
+        // already cached. Invalidate them so the contents set above are picked up.
+        this.onDidChangeTextDocumentContentEmitter.fire(originalUri);
+        this.onDidChangeTextDocumentContentEmitter.fire(modifiedUri);
         await vscode.commands.executeCommand('vscode.diff', originalUri, modifiedUri, finalTitle);
     }
     /**
@@ -1637,7 +1743,7 @@ class ExtensionApiImpl {
                 /** @type {!tsickle_vscode_8.Uri} */
                 const modified = (0, workspace_1.toCiderWebclientUri)(request.modifiedUri);
                 /** @type {string} */
-                const title = request.title ?? 'Diff';
+                const title = request.title || 'Diff';
                 await vscode.commands.executeCommand('vscode.diff', original, modified, title);
             }
             catch (e) {
@@ -1993,20 +2099,21 @@ class ExtensionApiImpl {
     /**
      * @public
      * @param {?} request
-     * @return {(!Promise<{success: boolean, errorMessage: (undefined|string)}>|{success: boolean, errorMessage: undefined}|{success: boolean, errorMessage: string})}
+     * @return {!Promise<{success: boolean, errorMessage: (undefined|string)}>}
      */
-    resolveConnection(request) {
+    async resolveConnection(request) {
         /** @type {!tsickle_util_16.OutputChannelWithNetwork} */
         const log = (0, util_1.getOutputChannel)();
         log.appendLine(`[ExtensionApi] resolveConnection called with type: ${request.type}`);
         if (request.type === iframe_messages_pb_1.ConnectionResolutionType.RECONNECT) {
             log.appendLine('[ExtensionApi] Reconnection requested by UI');
-            void vscode.commands.executeCommand(`${this.naming.prefix}.reconnect`);
+            await this.context.workspaceState.update('lastConversationId', undefined);
+            await vscode.commands.executeCommand(`${this.naming.prefix}.reconnect`);
             return { success: true };
         }
         if (request.type === iframe_messages_pb_1.ConnectionResolutionType.RESTART_LS) {
             log.appendLine('[ExtensionApi] Restart requested by UI');
-            void vscode.commands.executeCommand(`${this.naming.prefix}.triggerUpdate`);
+            await vscode.commands.executeCommand(`${this.naming.prefix}.triggerUpdate`);
             return { success: true };
         }
         if (!this.connectionResolver) {
@@ -2017,7 +2124,7 @@ class ExtensionApiImpl {
             };
         }
         try {
-            return this.connectionResolver.resolveConnection(request.type);
+            return await this.connectionResolver.resolveConnection(request.type);
         }
         catch (e) {
             return {
@@ -2214,10 +2321,29 @@ if (false) {
      */
     ExtensionApiImpl.prototype.notebookExecutor;
     /**
+     * @const {!tsickle_vscode_8.EventEmitter<!tsickle_vscode_8.Uri>}
+     * @private
+     */
+    ExtensionApiImpl.prototype.onDidChangeTextDocumentContentEmitter;
+    /**
+     * Provides the change event required by the
+     * {\@link vscode.TextDocumentContentProvider} contract. VS Code caches
+     * the content of a virtual document per URI, so firing this event is
+     * the only way to make it re-query `provideTextDocumentContent`.
+     * @const {!tsickle_vscode_8.Event<!tsickle_vscode_8.Uri>}
+     * @public
+     */
+    ExtensionApiImpl.prototype.onDidChange;
+    /**
      * @const {!tsickle_vscode_8.EventEmitter<!tsickle_jetski_instance_12.JetskiInstance>}
      * @private
      */
     ExtensionApiImpl.prototype.onDidRegisterViewEmitter;
+    /**
+     * @const {!tsickle_vscode_8.Event<!tsickle_jetski_instance_12.JetskiInstance>}
+     * @public
+     */
+    ExtensionApiImpl.prototype.onDidRegisterView;
     /**
      * @const {!Map<string, string>}
      * @private

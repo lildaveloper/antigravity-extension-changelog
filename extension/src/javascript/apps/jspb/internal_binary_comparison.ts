@@ -90,7 +90,7 @@ class BinaryComparisonTypeInfo {
         const extensions = this.extensions;
         if (extensions == null)
             return undefined;
-        /** @type {(!tsickle_internal_binary_fields_2.ReaderWriterPair|?|function(): ?|!Array<?>)} */
+        /** @type {(function(): ?|!tsickle_internal_binary_fields_2.ReaderWriterPair|!Array<?>|?)} */
         const thisExt = extensions[fieldNumber];
         if (thisExt == null)
             return undefined;
@@ -99,7 +99,7 @@ class BinaryComparisonTypeInfo {
         if (tuple[0].$$isRepeated && !this.repeatedFields?.has(fieldNumber)) {
             (this.repeatedFields ||= new Set()).add(fieldNumber);
         }
-        /** @type {(undefined|?|function(): ?)} */
+        /** @type {(undefined|function(): ?|?)} */
         const extBinaryFields = tuple[1];
         if (extBinaryFields == null)
             return undefined;

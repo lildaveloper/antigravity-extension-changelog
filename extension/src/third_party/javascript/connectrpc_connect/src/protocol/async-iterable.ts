@@ -246,7 +246,7 @@ exports.sinkAllBytes = sinkAllBytes;
 /**
  * @template I, O
  * @param {!AsyncIterable<I, ?, ?>} source
- * @param {...(undefined|!PipeOptions|function(!AsyncIterable<*, ?, ?>): !AsyncIterable<*, ?, ?>)} rest
+ * @param {...(undefined|function(!AsyncIterable<*, ?, ?>): !AsyncIterable<*, ?, ?>|!PipeOptions)} rest
  * @return {!AsyncIterable<O, ?, ?>}
  */
 async function* pipe(source, ...rest) {
@@ -316,7 +316,7 @@ async function* pipe(source, ...rest) {
 }
 exports.pipe = pipe;
 /**
- * @param {!Array<(undefined|!PipeOptions|function(!AsyncIterable<*, ?, ?>): !AsyncIterable<*, ?, ?>)>} rest
+ * @param {!Array<(undefined|function(!AsyncIterable<*, ?, ?>): !AsyncIterable<*, ?, ?>|!PipeOptions)>} rest
  * @return {!Array<?>}
  */
 function pickTransforms(rest) {
@@ -995,7 +995,7 @@ function createWritableIterable() {
     //
     // The writes and reads each check of their counterpart is
     // already available and either interact/add themselves to the queue.
-    /** @type {!Array<function((!IteratorYieldResult<T>|!IteratorReturnResult<undefined>)): void>} */
+    /** @type {!Array<function((!IteratorReturnResult<undefined>|!IteratorYieldResult<T>)): void>} */
     const readQueue = [];
     /** @type {!Array<T>} */
     const writeQueue = [];
@@ -1045,7 +1045,7 @@ function createWritableIterable() {
             if (closed) {
                 throw err ?? new Error("cannot write, WritableIterable already closed");
             }
-            /** @type {(undefined|function((!IteratorYieldResult<T>|!IteratorReturnResult<undefined>)): void)} */
+            /** @type {(undefined|function((!IteratorReturnResult<undefined>|!IteratorYieldResult<T>)): void)} */
             const read = readQueue.shift();
             if (read === undefined) {
                 // We didn't find a pending read so we add the payload to the write queue.

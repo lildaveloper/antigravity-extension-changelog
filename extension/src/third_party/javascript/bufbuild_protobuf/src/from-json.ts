@@ -127,7 +127,7 @@ exports.mergeFromJsonString = mergeFromJsonString;
  * Parse a message from a JSON value.
  * @template Desc
  * @param {Desc} schema
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} json
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} json
  * @param {(undefined|?)=} options
  * @return {?}
  */
@@ -159,7 +159,7 @@ exports.fromJson = fromJson;
  * @template Desc
  * @param {Desc} schema
  * @param {?} target
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} json
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} json
  * @param {(undefined|?)=} options
  * @return {?}
  */
@@ -211,7 +211,7 @@ function isEnumJson(descEnum, value) {
 exports.isEnumJson = isEnumJson;
 /**
  * @param {!tsickle_reflect_types_6.ReflectMessage} msg
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} json
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} json
  * @param {!JsonReadOptions} opts
  * @return {void}
  */
@@ -231,7 +231,7 @@ function readMessage(msg, json, opts) {
     }
     for (const [jsonKey__tsickle_destructured_1, jsonValue__tsickle_destructured_2] of Object.entries(json)) {
         const jsonKey = /** @type {string} */ (jsonKey__tsickle_destructured_1);
-        const jsonValue = /** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */ (jsonValue__tsickle_destructured_2);
+        const jsonValue = /** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */ (jsonValue__tsickle_destructured_2);
         /** @type {(undefined|?)} */
         const field = jsonNames.get(jsonKey);
         if (field) {
@@ -273,7 +273,7 @@ function readMessage(msg, json, opts) {
 /**
  * @param {!tsickle_reflect_types_6.ReflectMessage} msg
  * @param {?} field
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} json
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} json
  * @param {!JsonReadOptions} opts
  * @return {void}
  */
@@ -298,7 +298,7 @@ function readField(msg, field, json, opts) {
 }
 /**
  * @param {!tsickle_reflect_types_6.ReflectMap<*, *>} map
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} json
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} json
  * @param {!JsonReadOptions} opts
  * @return {void}
  */
@@ -313,7 +313,7 @@ function readMapField(map, json, opts) {
     }
     for (const [jsonMapKey__tsickle_destructured_6, jsonMapValue__tsickle_destructured_7] of Object.entries(json)) {
         const jsonMapKey = /** @type {string} */ (jsonMapKey__tsickle_destructured_6);
-        const jsonMapValue = /** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */ (jsonMapValue__tsickle_destructured_7);
+        const jsonMapValue = /** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */ (jsonMapValue__tsickle_destructured_7);
         if (jsonMapValue === null) {
             throw new error_js_1.FieldError(field, "map value must not be null");
         }
@@ -336,14 +336,14 @@ function readMapField(map, json, opts) {
                 value = scalarFromJson(field, jsonMapValue, true);
                 break;
         }
-        /** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */
+        /** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */
         const key = mapKeyFromJson(field.mapKey, jsonMapKey);
         map.set(key, value);
     }
 }
 /**
  * @param {!tsickle_reflect_types_6.ReflectList<*>} list
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} json
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} json
  * @param {!JsonReadOptions} opts
  * @return {void}
  */
@@ -383,7 +383,7 @@ function readListField(list, json, opts) {
 /**
  * @param {!tsickle_reflect_types_6.ReflectMessage} msg
  * @param {?} field
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} json
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} json
  * @param {!JsonReadOptions} opts
  * @return {void}
  */
@@ -400,7 +400,7 @@ function readMessageField(msg, field, json, opts) {
 /**
  * @param {!tsickle_reflect_types_6.ReflectMessage} msg
  * @param {?} field
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} json
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} json
  * @param {!JsonReadOptions} opts
  * @return {void}
  */
@@ -417,11 +417,11 @@ function readEnumField(msg, field, json, opts) {
 /**
  * @param {!tsickle_reflect_types_6.ReflectMessage} msg
  * @param {?} field
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} json
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} json
  * @return {void}
  */
 function readScalarField(msg, field, json) {
-    /** @type {(null|string|number|bigint|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>|!Uint8Array|symbol)} */
+    /** @type {(null|string|number|bigint|boolean|symbol|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>|!Uint8Array)} */
     const scalarValue = scalarFromJson(field, json, false);
     if (scalarValue === tokenNull) {
         msg.clear(field);
@@ -434,7 +434,7 @@ function readScalarField(msg, field, json) {
 const tokenIgnoredUnknownEnum = Symbol();
 /**
  * @param {!tsickle_descriptors_1.DescEnum} desc
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} json
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} json
  * @param {boolean} ignoreUnknownFields
  * @param {boolean} nullAsZeroValue
  * @return {(number|symbol)}
@@ -473,9 +473,9 @@ function readEnum(desc, json, ignoreUnknownFields, nullAsZeroValue) {
 const tokenNull = Symbol();
 /**
  * @param {?} field
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} json
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} json
  * @param {boolean} nullAsZeroValue
- * @return {(null|string|number|bigint|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>|!Uint8Array|symbol)}
+ * @return {(null|string|number|bigint|boolean|symbol|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>|!Uint8Array)}
  */
 function scalarFromJson(field, json, nullAsZeroValue) {
     if (json === null) {
@@ -558,8 +558,8 @@ function scalarFromJson(field, json, nullAsZeroValue) {
  *
  * Returns the input if the JSON value cannot be converted.
  * @param {!tsickle_descriptors_1.ScalarType} type
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} json
- * @return {(null|string|number|boolean|!Object<string,?>|!Array<?>)}
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} json
+ * @return {(null|string|number|boolean|!Array<?>|!Object<string,?>)}
  */
 function mapKeyFromJson(type, json) {
     switch (type) {
@@ -585,8 +585,8 @@ function mapKeyFromJson(type, json) {
  * Try to parse a JSON value to a 32-bit integer for the reflect API.
  *
  * Returns the input if the JSON value cannot be converted.
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} json
- * @return {(null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>)}
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} json
+ * @return {(null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)}
  */
 function int32FromJson(json) {
     if (typeof json == "string") {
@@ -611,11 +611,11 @@ function int32FromJson(json) {
 /**
  * @param {string} jsonString
  * @param {string} typeName
- * @return {(null|string|number|boolean|!Object<string,?>|!Array<?>)}
+ * @return {(null|string|number|boolean|!Array<?>|!Object<string,?>)}
  */
 function parseJsonString(jsonString, typeName) {
     try {
-        return (/** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */ (JSON.parse(jsonString)));
+        return (/** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */ (JSON.parse(jsonString)));
     }
     catch (e) {
         /** @type {string} */
@@ -625,7 +625,7 @@ function parseJsonString(jsonString, typeName) {
 }
 /**
  * @param {!tsickle_reflect_types_6.ReflectMessage} msg
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} jsonValue
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} jsonValue
  * @param {!JsonReadOptions} opts
  * @return {boolean}
  */
@@ -672,7 +672,7 @@ function tryWktFromJson(msg, jsonValue, opts) {
 }
 /**
  * @param {?} any
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} json
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} json
  * @param {!JsonReadOptions} opts
  * @return {void}
  */
@@ -683,7 +683,7 @@ function anyFromJson(any, json, opts) {
     if (Object.keys(json).length == 0) {
         return;
     }
-    /** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */
+    /** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */
     const typeUrl = json["@type"];
     if (typeof typeUrl != "string" || typeUrl == "") {
         throw new Error(`cannot decode message ${any.$typeName} from JSON: "@type" is empty`);
@@ -704,12 +704,12 @@ function anyFromJson(any, json, opts) {
     const msg = (0, reflect_js_1.reflect)(desc);
     if (typeName.startsWith("google.protobuf.") &&
         Object.prototype.hasOwnProperty.call(json, "value")) {
-        /** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */
-        const value = (/** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */ ((/** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */ (json)).value));
+        /** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */
+        const value = (/** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */ ((/** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */ (json)).value));
         readMessage(msg, value, opts);
     }
     else {
-        /** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */
+        /** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */
         const copy = Object.assign({}, json);
         // biome-ignore lint/performance/noDelete: <explanation>
         delete copy["@type"];
@@ -719,7 +719,7 @@ function anyFromJson(any, json, opts) {
 }
 /**
  * @param {?} timestamp
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} json
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} json
  * @return {void}
  */
 function timestampFromJson(timestamp, json) {
@@ -752,7 +752,7 @@ function timestampFromJson(timestamp, json) {
 }
 /**
  * @param {?} duration
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} json
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} json
  * @return {void}
  */
 function durationFromJson(duration, json) {
@@ -782,7 +782,7 @@ function durationFromJson(duration, json) {
 }
 /**
  * @param {?} fieldMask
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} json
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} json
  * @return {void}
  */
 function fieldMaskFromJson(fieldMask, json) {
@@ -812,7 +812,7 @@ function fieldMaskFromJson(fieldMask, json) {
 }
 /**
  * @param {?} struct
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} json
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} json
  * @return {void}
  */
 function structFromJson(struct, json) {
@@ -821,7 +821,7 @@ function structFromJson(struct, json) {
     }
     for (const [k__tsickle_destructured_8, v__tsickle_destructured_9] of Object.entries(json)) {
         const k = /** @type {string} */ (k__tsickle_destructured_8);
-        const v = /** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */ (v__tsickle_destructured_9);
+        const v = /** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */ (v__tsickle_destructured_9);
         /** @type {?} */
         const parsedV = (0, create_js_1.create)(index_js_1.ValueSchema);
         valueFromJson(parsedV, v);
@@ -830,7 +830,7 @@ function structFromJson(struct, json) {
 }
 /**
  * @param {?} value
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} json
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} json
  * @return {?}
  */
 function valueFromJson(value, json) {
@@ -868,7 +868,7 @@ function valueFromJson(value, json) {
 }
 /**
  * @param {?} listValue
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} json
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} json
  * @return {void}
  */
 function listValueFromJson(listValue, json) {

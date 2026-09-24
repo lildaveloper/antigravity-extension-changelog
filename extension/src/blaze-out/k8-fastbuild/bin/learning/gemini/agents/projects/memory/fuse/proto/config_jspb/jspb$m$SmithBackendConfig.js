@@ -253,7 +253,7 @@ jspb$jetski_memory$MutableSmithBackendConfig.fromFields = /** @pureOrBreakMyCode
  */
 jspb$jetski_memory$MutableSmithBackendConfig.getFields = /** @pureOrBreakMyCode */ (jspb_internal_public_for_gencode.makeGetFieldsForTesting());
 
-var jspb$jetski_memory$MutableMemoryMountConfig;
-Object.defineProperty(this, 'jspb$jetski_memory$MutableMemoryMountConfig', {
-  get() { return jspb$jetski_memory$MutableMemoryMountConfig; },
-  set(v) { jspb$jetski_memory$MutableMemoryMountConfig = v; },
+var jspb$jetski_memory$MutableSojoBackendConfig;
+Object.defineProperty(this, 'jspb$jetski_memory$MutableSojoBackendConfig', {
+  get() { return jspb$jetski_memory$MutableSojoBackendConfig; },
+  set(v) { jspb$jetski_memory$MutableSojoBackendConfig = v; },

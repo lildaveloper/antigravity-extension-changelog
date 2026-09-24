@@ -111,7 +111,7 @@ function validateHostInput(value) {
 exports.validateHostInput = validateHostInput;
 /**
  * Updates the description of the webview view with the current host.
- * @param {(undefined|!tsickle_vscode_5.WebviewView|!tsickle_vscode_5.WebviewPanel)} view
+ * @param {(undefined|!tsickle_vscode_5.WebviewPanel|!tsickle_vscode_5.WebviewView)} view
  * @param {!Promise<!tsickle_util_6.ServerInfo>} serverInfo
  * @return {!Promise<void>}
  */
@@ -199,11 +199,6 @@ async function configureServer(context) {
                 label: '$(device-desktop) Set Host',
                 description: 'Configure your host (e.g. johnd.c.googlers.com)',
                 action: 'host',
-            },
-            {
-                label: '$(link) Set Custom Server URL',
-                description: 'Directly set the Jetski server URL (overrides auto-detection)',
-                action: 'url',
             },
             {
                 label: workspaceActive
@@ -313,9 +308,6 @@ async function configureServer(context) {
                     `\n\nDetails: ${e}`);
             }
         }
-    }
-    else if (selected.action === 'url') {
-        await vscode.commands.executeCommand('jetski-web.setServerUrl', target);
     }
     else if (selected.action === 'reset') {
         clearSettings(config, target);

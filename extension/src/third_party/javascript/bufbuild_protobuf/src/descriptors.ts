@@ -94,7 +94,7 @@ ScalarType[ScalarType.SINT32] = 'SINT32';
 ScalarType[ScalarType.SINT64] = 'SINT64';
 /**
  * A union of all descriptors, discriminated by a `kind` property.
- * @typedef {(!DescFile|!DescMessage|?|!DescEnum|!DescEnumValue|!DescMethod|!DescService|!DescOneof)}
+ * @typedef {(!DescEnum|!DescEnumValue|!DescFile|!DescMessage|!DescMethod|!DescOneof|!DescService|?)}
  */
 exports.AnyDesc;
 /**
@@ -371,7 +371,7 @@ if (false) {
     /**
      * Fields and oneof groups for this message, ordered by their appearance in the
      * protobuf source.
-     * @const {!Array<(?|!DescOneof)>}
+     * @const {!Array<(!DescOneof|?)>}
      * @public
      */
     DescMessage.prototype.members;

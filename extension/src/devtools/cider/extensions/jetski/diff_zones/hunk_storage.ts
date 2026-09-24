@@ -274,12 +274,38 @@ class HunkStorage {
     hasAnyResolutions(hunkContext) {
         /** @type {!ResolvedHunksStorage} */
         const storage = this.getStorage();
+        /** @type {(undefined|string)} */
+        const fileUri = hunkContext.fileUri;
+        if (hunkContext.turnIndex != null) {
+            /** @type {string} */
+            const prefix = `${hunkContext.conversationId ?? 'default'}_${hunkContext.turnIndex}_${fileUri ?? 'unknown'}_`;
+            for (const key in storage) {
+                if (Object.prototype.hasOwnProperty.call(storage, key) &&
+                    key.startsWith(prefix)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        if (!fileUri) {
+            return false;
+        }
+        // When turnIndex is undefined (e.g. navigation from the review sidebar),
+        // check if any turn in the conversation has stored resolutions for the file.
+        /** @type {(undefined|string)} */
+        const conversationPrefix = hunkContext.conversationId
+            ? `${hunkContext.conversationId}_`
+            : undefined;
         /** @type {string} */
-        const prefix = `${hunkContext.conversationId ?? 'default'}_${hunkContext.turnIndex ?? -1}_${hunkContext.fileUri ?? 'unknown'}_`;
+        const fileSegment = `_${fileUri}_`;
         for (const key in storage) {
-            if (Object.prototype.hasOwnProperty.call(storage, key) &&
-                key.startsWith(prefix)) {
-                return true;
+            if (Object.prototype.hasOwnProperty.call(storage, key)) {
+                if (conversationPrefix && !key.startsWith(conversationPrefix)) {
+                    continue;
+                }
+                if (key.includes(fileSegment)) {
+                    return true;
+                }
             }
         }
         return false;

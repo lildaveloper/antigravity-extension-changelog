@@ -154,11 +154,6 @@ exports.EnumDetailsSchema = (0, codegenv2_1.messageDesc)(exports.file_storage_da
  * match, then select the top level semantic type as
  * the annotation for the field.
  *
- * When adding a new type, please file a bug under the Logs Infrastructure >
- * Curation > logs validator buganizer component
- * (https://b.corp.google.com/components/72091) to handle the new type in
- * logs-validator.
- *
  * We disable clang-format; the hierarchical indentation below is intentional.
  * clang-format off
  * LINT.IfChange

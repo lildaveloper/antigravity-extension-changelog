@@ -75,7 +75,7 @@ exports.Struct;
  * The JSON representation for `Struct` is JSON object.
  *
  * \@generated from message google.protobuf.Struct
- * @typedef {!Object<string,(null|string|number|boolean|?|!Array<?>)>}
+ * @typedef {!Object<string,(null|string|number|boolean|!Array<?>|?)>}
  */
 exports.StructJson;
 /**
@@ -105,7 +105,7 @@ exports.Value;
  * The JSON representation for `Value` is JSON value.
  *
  * \@generated from message google.protobuf.Value
- * @typedef {(null|string|number|boolean|!Object<string,?>|!Array<?>)}
+ * @typedef {(null|string|number|boolean|!Array<?>|!Object<string,?>)}
  */
 exports.ValueJson;
 /**
@@ -129,7 +129,7 @@ exports.ListValue;
  * The JSON representation for `ListValue` is JSON array.
  *
  * \@generated from message google.protobuf.ListValue
- * @typedef {!Array<(null|string|number|boolean|!Object<string,?>|!Array<?>)>}
+ * @typedef {!Array<(null|string|number|boolean|!Array<?>|!Object<string,?>)>}
  */
 exports.ListValueJson;
 /**

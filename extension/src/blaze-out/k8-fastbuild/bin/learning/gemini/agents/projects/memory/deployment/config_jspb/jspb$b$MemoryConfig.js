@@ -31,7 +31,8 @@ jspb$b$jetski_memory$MemoryConfig.fields = /** @pureOrBreakMyCode */([
   jspb$b$jetski_memory$DreamingConfig.fields,
   jspb_internal_binary.RBoolIgnoringDefaultWBool,
   jspb_internal_binary.RStringRequireUtf8IgnoringDefaultWString,
-  jspb_internal_binary.REnumIgnoringDefaultWEnum
+  jspb_internal_binary.REnumIgnoringDefaultWEnum,
+  jspb_internal_binary.RRepeatedStringRequireUtf8WRepeatedString
 ]);
 
 /**

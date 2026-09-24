@@ -27,7 +27,7 @@ const options_pb_1 = goog.require('google3.third_party.jetski.cortex_pb.options_
  * Describes the file third_party/jetski/hooks_pb/hooks.proto.
  * @type {?}
  */
-exports.file_third_party_jetski_hooks_pb_hooks = (0, codegenv2_1.fileDesc)("Cid0aGlyZF9wYXJ0eS9qZXRza2kvaG9va3NfcGIvaG9va3MucHJvdG8SDGV4YS5ob29rc19wYiJDCgxIb29rVG9vbENhbGwSDAoEbmFtZRgBIAEoCRIlCgRhcmdzGAIgASgLMhcuZ29vZ2xlLnByb3RvYnVmLlN0cnVjdCLKAQoRSG9va1N5c3RlbU1lc3NhZ2USFgoOc3lzdGVtX21lc3NhZ2UYASABKAkSPwoIbWV0YWRhdGEYAiADKAsyLS5leGEuaG9va3NfcGIuSG9va1N5c3RlbU1lc3NhZ2UuTWV0YWRhdGFFbnRyeRIrCgVtZWRpYRgDIAMoCzIcLmV4YS5jb2RlaXVtX2NvbW1vbl9wYi5NZWRpYRovCg1NZXRhZGF0YUVudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAEiPwoQSG9va0Vycm9yTWVzc2FnZRIVCg1tb2RlbF9tZXNzYWdlGAEgASgJEhQKDHVzZXJfbWVzc2FnZRgCIAEoCSJPCg9Ib29rVXNlck1lc3NhZ2USDwoHY29udGVudBgBIAEoCRIrCgVtZWRpYRgCIAMoCzIcLmV4YS5jb2RlaXVtX2NvbW1vbl9wYi5NZWRpYSLJAQoUSG9va0VwaGVtZXJhbE1lc3NhZ2USDwoHY29udGVudBgBIAEoCRIrCgVtZWRpYRgCIAMoCzIcLmV4YS5jb2RlaXVtX2NvbW1vbl9wYi5NZWRpYRJCCghtZXRhZGF0YRgDIAMoCzIwLmV4YS5ob29rc19wYi5Ib29rRXBoZW1lcmFsTWVzc2FnZS5NZXRhZGF0YUVudHJ5Gi8KDU1ldGFkYXRhRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4ASK+AwoQSG9va0luamVjdGVkU3RlcBI5Cgl0b29sX2NhbGwYASABKAsyGi5leGEuaG9va3NfcGIuSG9va1Rvb2xDYWxsQggYAeDH/PsPAUgAEhYKDHVzZXJfbWVzc2FnZRgCIAEoCUgAEhsKEWVwaGVtZXJhbF9tZXNzYWdlGAMgASgJSAASOQoOc3lzdGVtX21lc3NhZ2UYBCABKAsyHy5leGEuaG9va3NfcGIuSG9va1N5c3RlbU1lc3NhZ2VIABI/Cg1lcnJvcl9tZXNzYWdlGAYgASgLMh4uZXhhLmhvb2tzX3BiLkhvb2tFcnJvck1lc3NhZ2VCBuDH/PsPAUgAEkIKEWhvb2tfdXNlcl9tZXNzYWdlGAcgASgLMh0uZXhhLmhvb2tzX3BiLkhvb2tVc2VyTWVzc2FnZUIG4Mf8+w8BSAASTAoWaG9va19lcGhlbWVyYWxfbWVzc2FnZRgIIAEoCzIiLmV4YS5ob29rc19wYi5Ib29rRXBoZW1lcmFsTWVzc2FnZUIG4Mf8+w8BSAASJAoUbW9kZWxfYXBpX2NvbnRlbnRfaWQYBSABKAlCBuDH/PsPAUIGCgRzdGVwIosCCg5Ib29rQXJnc0NvbW1vbhIXCg9jb252ZXJzYXRpb25faWQYASABKAkSFwoPd29ya3NwYWNlX3BhdGhzGAIgAygJEhcKD3RyYW5zY3JpcHRfcGF0aBgDIAEoCRIfChdhcnRpZmFjdF9kaXJlY3RvcnlfcGF0aBgEIAEoCRIcCgxleGVjdXRpb25faWQYBSABKAlCBuDH/PsPARISCgptb2RlbF9uYW1lGAYgASgJEh4KDmlzX2JhdHRsZV9tb2RlGAcgASgIQgbgx/z7DwESHwoPbGFzdF91c2VyX2lucHV0GAggASgJQgbgx/z7DwESGgoKYWdlbnRfbmFtZRgJIAEoCUIG4Mf8+w8BIs0DCghIb29rQXJncxIsCgZjb21tb24YBiABKAsyHC5leGEuaG9va3NfcGIuSG9va0FyZ3NDb21tb24SOwoScHJlX3Rvb2xfaG9va19hcmdzGAIgASgLMh0uZXhhLmhvb2tzX3BiLlByZVRvb2xIb29rQXJnc0gAEj0KE3Bvc3RfdG9vbF9ob29rX2FyZ3MYAyABKAsyHi5leGEuaG9va3NfcGIuUG9zdFRvb2xIb29rQXJnc0gAEkcKGHByZV9pbnZvY2F0aW9uX2hvb2tfYXJncxgBIAEoCzIjLmV4YS5ob29rc19wYi5QcmVJbnZvY2F0aW9uSG9va0FyZ3NIABJJChlwb3N0X2ludm9jYXRpb25faG9va19hcmdzGAUgASgLMiQuZXhhLmhvb2tzX3BiLlBvc3RJbnZvY2F0aW9uSG9va0FyZ3NIABI0Cg5zdG9wX2hvb2tfYXJncxgEIAEoCzIaLmV4YS5ob29rc19wYi5TdG9wSG9va0FyZ3NIABJFChdzZXNzaW9uX3N0YXJ0X2hvb2tfYXJncxgHIAEoCzIiLmV4YS5ob29rc19wYi5TZXNzaW9uU3RhcnRIb29rQXJnc0gAQgYKBGFyZ3MiUgoPUHJlVG9vbEhvb2tBcmdzEi0KCXRvb2xfY2FsbBgBIAEoCzIaLmV4YS5ob29rc19wYi5Ib29rVG9vbENhbGwSEAoIc3RlcF9pZHgYAiABKAUi2QEKEVByZVRvb2xIb29rUmVzdWx0EhkKCGRlY2lzaW9uGAQgASgJQgegoPCYAfAVEhcKBnJlYXNvbhgFIAEoCUIHoKDwmAHsDhIqCglvdmVyd3JpdGUYAyABKAsyFy5nb29nbGUucHJvdG9idWYuU3RydWN0EiUKFHBlcm1pc3Npb25fb3ZlcnJpZGVzGAYgAygJQgegoPCYAewOEh0KCmFsbG93X3Rvb2wYASABKAhCCRgBoKDwmAHwFRIeCgtkZW55X3JlYXNvbhgCIAEoCUIJGAGgoPCYAewOInoKEFBvc3RUb29sSG9va0FyZ3MSEAoIc3RlcF9pZHgYASABKAUSLQoJdG9vbF9jYWxsGAIgASgLMhouZXhhLmhvb2tzX3BiLkhvb2tUb29sQ2FsbBINCgVlcnJvchgDIAEoCRIWCgZyZXN1bHQYBCABKAlCBuDH/PsPASJXChJQb3N0VG9vbEhvb2tSZXN1bHQSLAoQb3ZlcndyaXRlX3Jlc3VsdBgBIAEoCUINoKDwmAHsDuDH/PsPAUgAiAEBQhMKEV9vdmVyd3JpdGVfcmVzdWx0IkoKFVByZUludm9jYXRpb25Ib29rQXJncxIWCg5pbnZvY2F0aW9uX251bRgBIAEoBRIZChFpbml0aWFsX251bV9zdGVwcxgCIAEoBSJPChdQcmVJbnZvY2F0aW9uSG9va1Jlc3VsdBI0CgxpbmplY3Rfc3RlcHMYASADKAsyHi5leGEuaG9va3NfcGIuSG9va0luamVjdGVkU3RlcCKJAQoWUG9zdEludm9jYXRpb25Ib29rQXJncxIWCg5pbnZvY2F0aW9uX251bRgBIAEoBRIZChFpbml0aWFsX251bV9zdGVwcxgCIAEoBRIcCgxtb2RlbF9vdXRwdXQYAyABKAlCBuDH/PsPARIeCg5tb2RlbF90aGlua2luZxgEIAEoCUIG4Mf8+w8BIm4KGFBvc3RJbnZvY2F0aW9uSG9va1Jlc3VsdBI0CgxpbmplY3Rfc3RlcHMYASADKAsyHi5leGEuaG9va3NfcGIuSG9va0luamVjdGVkU3RlcBIcChR0ZXJtaW5hdGlvbl9iZWhhdmlvchgCIAEoCSKIAQoMU3RvcEhvb2tBcmdzEhUKDWV4ZWN1dGlvbl9udW0YASABKAUSGgoSdGVybWluYXRpb25fcmVhc29uGAIgASgJEg0KBWVycm9yGAMgASgJEhIKCmZ1bGx5X2lkbGUYBCABKAgSIgoSZmluYWxfbW9kZWxfb3V0cHV0GAUgASgJQgbgx/z7DwEiMgoOU3RvcEhvb2tSZXN1bHQSEAoIZGVjaXNpb24YASABKAkSDgoGcmVhc29uGAIgASgJIhYKFFNlc3Npb25TdGFydEhvb2tBcmdzIk4KFlNlc3Npb25TdGFydEhvb2tSZXN1bHQSNAoMaW5qZWN0X3N0ZXBzGAEgAygLMh4uZXhhLmhvb2tzX3BiLkhvb2tJbmplY3RlZFN0ZXAiHgoLQ29tbWFuZEhvb2sSDwoHY29tbWFuZBgBIAEoCSIrCgpQcm9tcHRIb29rEg4KBnByb21wdBgBIAEoCRINCgVtb2RlbBgCIAEoCSKJAQoRSG9va0hhbmRsZXJDb25maWcSDwoHdGltZW91dBgBIAEoBRIsCgdjb21tYW5kGAIgASgLMhkuZXhhLmhvb2tzX3BiLkNvbW1hbmRIb29rSAASKgoGcHJvbXB0GAMgASgLMhguZXhhLmhvb2tzX3BiLlByb21wdEhvb2tIAEIJCgdoYW5kbGVyQj1CBUhvb2tzUAFaMmdvb2dsZTMvdGhpcmRfcGFydHkvamV0c2tpL2hvb2tzX3BiL2hvb2tzX2dvX3Byb3RvYgZwcm90bzM", [struct_pb_1.file_google_protobuf_struct, semantic_annotations_pb_1.file_storage_datapol_annotations_proto_semantic_annotations, codeium_common_pb_1.file_third_party_jetski_codeium_common_pb_codeium_common, options_pb_1.file_third_party_jetski_cortex_pb_options]);
+exports.file_third_party_jetski_hooks_pb_hooks = (0, codegenv2_1.fileDesc)("Cid0aGlyZF9wYXJ0eS9qZXRza2kvaG9va3NfcGIvaG9va3MucHJvdG8SDGV4YS5ob29rc19wYiJDCgxIb29rVG9vbENhbGwSDAoEbmFtZRgBIAEoCRIlCgRhcmdzGAIgASgLMhcuZ29vZ2xlLnByb3RvYnVmLlN0cnVjdCLKAQoRSG9va1N5c3RlbU1lc3NhZ2USFgoOc3lzdGVtX21lc3NhZ2UYASABKAkSPwoIbWV0YWRhdGEYAiADKAsyLS5leGEuaG9va3NfcGIuSG9va1N5c3RlbU1lc3NhZ2UuTWV0YWRhdGFFbnRyeRIrCgVtZWRpYRgDIAMoCzIcLmV4YS5jb2RlaXVtX2NvbW1vbl9wYi5NZWRpYRovCg1NZXRhZGF0YUVudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAEiPwoQSG9va0Vycm9yTWVzc2FnZRIVCg1tb2RlbF9tZXNzYWdlGAEgASgJEhQKDHVzZXJfbWVzc2FnZRgCIAEoCSJPCg9Ib29rVXNlck1lc3NhZ2USDwoHY29udGVudBgBIAEoCRIrCgVtZWRpYRgCIAMoCzIcLmV4YS5jb2RlaXVtX2NvbW1vbl9wYi5NZWRpYSLJAQoUSG9va0VwaGVtZXJhbE1lc3NhZ2USDwoHY29udGVudBgBIAEoCRIrCgVtZWRpYRgCIAMoCzIcLmV4YS5jb2RlaXVtX2NvbW1vbl9wYi5NZWRpYRJCCghtZXRhZGF0YRgDIAMoCzIwLmV4YS5ob29rc19wYi5Ib29rRXBoZW1lcmFsTWVzc2FnZS5NZXRhZGF0YUVudHJ5Gi8KDU1ldGFkYXRhRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4ASIpCg5Ib29rQ2hlY2twb2ludBIXCg9zZXNzaW9uX3N1bW1hcnkYASABKAki+gMKEEhvb2tJbmplY3RlZFN0ZXASOQoJdG9vbF9jYWxsGAEgASgLMhouZXhhLmhvb2tzX3BiLkhvb2tUb29sQ2FsbEIIGAHgx/z7DwFIABIWCgx1c2VyX21lc3NhZ2UYAiABKAlIABIbChFlcGhlbWVyYWxfbWVzc2FnZRgDIAEoCUgAEjkKDnN5c3RlbV9tZXNzYWdlGAQgASgLMh8uZXhhLmhvb2tzX3BiLkhvb2tTeXN0ZW1NZXNzYWdlSAASPwoNZXJyb3JfbWVzc2FnZRgGIAEoCzIeLmV4YS5ob29rc19wYi5Ib29rRXJyb3JNZXNzYWdlQgbgx/z7DwFIABJCChFob29rX3VzZXJfbWVzc2FnZRgHIAEoCzIdLmV4YS5ob29rc19wYi5Ib29rVXNlck1lc3NhZ2VCBuDH/PsPAUgAEkwKFmhvb2tfZXBoZW1lcmFsX21lc3NhZ2UYCCABKAsyIi5leGEuaG9va3NfcGIuSG9va0VwaGVtZXJhbE1lc3NhZ2VCBuDH/PsPAUgAEjoKCmNoZWNrcG9pbnQYCSABKAsyHC5leGEuaG9va3NfcGIuSG9va0NoZWNrcG9pbnRCBuDH/PsPAUgAEiQKFG1vZGVsX2FwaV9jb250ZW50X2lkGAUgASgJQgbgx/z7DwFCBgoEc3RlcCKzAgoOSG9va0FyZ3NDb21tb24SFwoPY29udmVyc2F0aW9uX2lkGAEgASgJEhcKD3dvcmtzcGFjZV9wYXRocxgCIAMoCRIXCg90cmFuc2NyaXB0X3BhdGgYAyABKAkSHwoXYXJ0aWZhY3RfZGlyZWN0b3J5X3BhdGgYBCABKAkSHAoMZXhlY3V0aW9uX2lkGAUgASgJQgbgx/z7DwESEgoKbW9kZWxfbmFtZRgGIAEoCRIeCg5pc19iYXR0bGVfbW9kZRgHIAEoCEIG4Mf8+w8BEh8KD2xhc3RfdXNlcl9pbnB1dBgIIAEoCUIG4Mf8+w8BEhoKCmFnZW50X25hbWUYCSABKAlCBuDH/PsPARImChZwYXJlbnRfY29udmVyc2F0aW9uX2lkGAogASgJQgbgx/z7DwEizQMKCEhvb2tBcmdzEiwKBmNvbW1vbhgGIAEoCzIcLmV4YS5ob29rc19wYi5Ib29rQXJnc0NvbW1vbhI7ChJwcmVfdG9vbF9ob29rX2FyZ3MYAiABKAsyHS5leGEuaG9va3NfcGIuUHJlVG9vbEhvb2tBcmdzSAASPQoTcG9zdF90b29sX2hvb2tfYXJncxgDIAEoCzIeLmV4YS5ob29rc19wYi5Qb3N0VG9vbEhvb2tBcmdzSAASRwoYcHJlX2ludm9jYXRpb25faG9va19hcmdzGAEgASgLMiMuZXhhLmhvb2tzX3BiLlByZUludm9jYXRpb25Ib29rQXJnc0gAEkkKGXBvc3RfaW52b2NhdGlvbl9ob29rX2FyZ3MYBSABKAsyJC5leGEuaG9va3NfcGIuUG9zdEludm9jYXRpb25Ib29rQXJnc0gAEjQKDnN0b3BfaG9va19hcmdzGAQgASgLMhouZXhhLmhvb2tzX3BiLlN0b3BIb29rQXJnc0gAEkUKF3Nlc3Npb25fc3RhcnRfaG9va19hcmdzGAcgASgLMiIuZXhhLmhvb2tzX3BiLlNlc3Npb25TdGFydEhvb2tBcmdzSABCBgoEYXJncyJSCg9QcmVUb29sSG9va0FyZ3MSLQoJdG9vbF9jYWxsGAEgASgLMhouZXhhLmhvb2tzX3BiLkhvb2tUb29sQ2FsbBIQCghzdGVwX2lkeBgCIAEoBSLZAQoRUHJlVG9vbEhvb2tSZXN1bHQSGQoIZGVjaXNpb24YBCABKAlCB6Cg8JgB8BUSFwoGcmVhc29uGAUgASgJQgegoPCYAewOEioKCW92ZXJ3cml0ZRgDIAEoCzIXLmdvb2dsZS5wcm90b2J1Zi5TdHJ1Y3QSJQoUcGVybWlzc2lvbl9vdmVycmlkZXMYBiADKAlCB6Cg8JgB7A4SHQoKYWxsb3dfdG9vbBgBIAEoCEIJGAGgoPCYAfAVEh4KC2RlbnlfcmVhc29uGAIgASgJQgkYAaCg8JgB7A4iegoQUG9zdFRvb2xIb29rQXJncxIQCghzdGVwX2lkeBgBIAEoBRItCgl0b29sX2NhbGwYAiABKAsyGi5leGEuaG9va3NfcGIuSG9va1Rvb2xDYWxsEg0KBWVycm9yGAMgASgJEhYKBnJlc3VsdBgEIAEoCUIG4Mf8+w8BIlcKElBvc3RUb29sSG9va1Jlc3VsdBIsChBvdmVyd3JpdGVfcmVzdWx0GAEgASgJQg2goPCYAewO4Mf8+w8BSACIAQFCEwoRX292ZXJ3cml0ZV9yZXN1bHQiSgoVUHJlSW52b2NhdGlvbkhvb2tBcmdzEhYKDmludm9jYXRpb25fbnVtGAEgASgFEhkKEWluaXRpYWxfbnVtX3N0ZXBzGAIgASgFIk8KF1ByZUludm9jYXRpb25Ib29rUmVzdWx0EjQKDGluamVjdF9zdGVwcxgBIAMoCzIeLmV4YS5ob29rc19wYi5Ib29rSW5qZWN0ZWRTdGVwIokBChZQb3N0SW52b2NhdGlvbkhvb2tBcmdzEhYKDmludm9jYXRpb25fbnVtGAEgASgFEhkKEWluaXRpYWxfbnVtX3N0ZXBzGAIgASgFEhwKDG1vZGVsX291dHB1dBgDIAEoCUIG4Mf8+w8BEh4KDm1vZGVsX3RoaW5raW5nGAQgASgJQgbgx/z7DwEibgoYUG9zdEludm9jYXRpb25Ib29rUmVzdWx0EjQKDGluamVjdF9zdGVwcxgBIAMoCzIeLmV4YS5ob29rc19wYi5Ib29rSW5qZWN0ZWRTdGVwEhwKFHRlcm1pbmF0aW9uX2JlaGF2aW9yGAIgASgJIogBCgxTdG9wSG9va0FyZ3MSFQoNZXhlY3V0aW9uX251bRgBIAEoBRIaChJ0ZXJtaW5hdGlvbl9yZWFzb24YAiABKAkSDQoFZXJyb3IYAyABKAkSEgoKZnVsbHlfaWRsZRgEIAEoCBIiChJmaW5hbF9tb2RlbF9vdXRwdXQYBSABKAlCBuDH/PsPASIyCg5TdG9wSG9va1Jlc3VsdBIQCghkZWNpc2lvbhgBIAEoCRIOCgZyZWFzb24YAiABKAkiFgoUU2Vzc2lvblN0YXJ0SG9va0FyZ3MiTgoWU2Vzc2lvblN0YXJ0SG9va1Jlc3VsdBI0CgxpbmplY3Rfc3RlcHMYASADKAsyHi5leGEuaG9va3NfcGIuSG9va0luamVjdGVkU3RlcCIeCgtDb21tYW5kSG9vaxIPCgdjb21tYW5kGAEgASgJIisKClByb21wdEhvb2sSDgoGcHJvbXB0GAEgASgJEg0KBW1vZGVsGAIgASgJIokBChFIb29rSGFuZGxlckNvbmZpZxIPCgd0aW1lb3V0GAEgASgFEiwKB2NvbW1hbmQYAiABKAsyGS5leGEuaG9va3NfcGIuQ29tbWFuZEhvb2tIABIqCgZwcm9tcHQYAyABKAsyGC5leGEuaG9va3NfcGIuUHJvbXB0SG9va0gAQgkKB2hhbmRsZXJCPUIFSG9va3NQAVoyZ29vZ2xlMy90aGlyZF9wYXJ0eS9qZXRza2kvaG9va3NfcGIvaG9va3NfZ29fcHJvdG9iBnByb3RvMw", [struct_pb_1.file_google_protobuf_struct, semantic_annotations_pb_1.file_storage_datapol_annotations_proto_semantic_annotations, codeium_common_pb_1.file_third_party_jetski_codeium_common_pb_codeium_common, options_pb_1.file_third_party_jetski_cortex_pb_options]);
 /**
  * HookToolCall represents a tool invocation with a name and arguments.
  * LINT.IfChange(hook_tool_call)
@@ -99,6 +99,20 @@ exports.HookEphemeralMessage;
  */
 exports.HookEphemeralMessageSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 4);
 /**
+ * HookCheckpoint represents an injected CortexStepCheckpoint.
+ * LINT.IfChange(hook_checkpoint)
+ *
+ * \@generated from message exa.hooks_pb.HookCheckpoint
+ * @typedef {?}
+ */
+exports.HookCheckpoint;
+/**
+ * Describes the message exa.hooks_pb.HookCheckpoint.
+ * Use `create(HookCheckpointSchema)` to create a new message.
+ * @type {?}
+ */
+exports.HookCheckpointSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 5);
+/**
  * HookInjectedStep represents a step to inject into the conversation.
  * LINT.IfChange(hook_injected_step)
  *
@@ -111,7 +125,7 @@ exports.HookInjectedStep;
  * Use `create(HookInjectedStepSchema)` to create a new message.
  * @type {?}
  */
-exports.HookInjectedStepSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 5);
+exports.HookInjectedStepSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 6);
 /**
  * HookArgsCommon contains system variables passed to all hooks.
  *
@@ -124,7 +138,7 @@ exports.HookArgsCommon;
  * Use `create(HookArgsCommonSchema)` to create a new message.
  * @type {?}
  */
-exports.HookArgsCommonSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 6);
+exports.HookArgsCommonSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 7);
 /**
  * HookArgs encapsulates all possible arguments passed to a hook.
  *
@@ -137,7 +151,7 @@ exports.HookArgs;
  * Use `create(HookArgsSchema)` to create a new message.
  * @type {?}
  */
-exports.HookArgsSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 7);
+exports.HookArgsSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 8);
 /**
  * PreToolHookArgs are the arguments passed to a pre-tool hook.
  *
@@ -150,7 +164,7 @@ exports.PreToolHookArgs;
  * Use `create(PreToolHookArgsSchema)` to create a new message.
  * @type {?}
  */
-exports.PreToolHookArgsSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 8);
+exports.PreToolHookArgsSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 9);
 /**
  * PreToolHookResult is the result of a pre-tool hook.
  * LINT.IfChange(pre_tool_hook_result)
@@ -164,7 +178,7 @@ exports.PreToolHookResult;
  * Use `create(PreToolHookResultSchema)` to create a new message.
  * @type {?}
  */
-exports.PreToolHookResultSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 9);
+exports.PreToolHookResultSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 10);
 /**
  * PostToolHookArgs are the arguments passed to a post-tool hook.
  *
@@ -177,7 +191,7 @@ exports.PostToolHookArgs;
  * Use `create(PostToolHookArgsSchema)` to create a new message.
  * @type {?}
  */
-exports.PostToolHookArgsSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 10);
+exports.PostToolHookArgsSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 11);
 /**
  * PostToolHookResult is the result of a post-tool hook.
  * LINT.IfChange(post_tool_hook_result)
@@ -191,7 +205,7 @@ exports.PostToolHookResult;
  * Use `create(PostToolHookResultSchema)` to create a new message.
  * @type {?}
  */
-exports.PostToolHookResultSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 11);
+exports.PostToolHookResultSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 12);
 /**
  * PreInvocationHookArgs are the arguments passed to a pre-invocation hook.
  *
@@ -204,7 +218,7 @@ exports.PreInvocationHookArgs;
  * Use `create(PreInvocationHookArgsSchema)` to create a new message.
  * @type {?}
  */
-exports.PreInvocationHookArgsSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 12);
+exports.PreInvocationHookArgsSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 13);
 /**
  * PreInvocationHookResult is the result of a pre-invocation hook.
  * LINT.IfChange(pre_invocation_hook_result)
@@ -218,7 +232,7 @@ exports.PreInvocationHookResult;
  * Use `create(PreInvocationHookResultSchema)` to create a new message.
  * @type {?}
  */
-exports.PreInvocationHookResultSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 13);
+exports.PreInvocationHookResultSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 14);
 /**
  * PostInvocationHookArgs are the arguments passed to a post-invocation hook.
  *
@@ -231,7 +245,7 @@ exports.PostInvocationHookArgs;
  * Use `create(PostInvocationHookArgsSchema)` to create a new message.
  * @type {?}
  */
-exports.PostInvocationHookArgsSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 14);
+exports.PostInvocationHookArgsSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 15);
 /**
  * PostInvocationHookResult is the result of a post-invocation hook.
  * LINT.IfChange(post_invocation_hook_result)
@@ -245,7 +259,7 @@ exports.PostInvocationHookResult;
  * Use `create(PostInvocationHookResultSchema)` to create a new message.
  * @type {?}
  */
-exports.PostInvocationHookResultSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 15);
+exports.PostInvocationHookResultSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 16);
 /**
  * StopHookArgs are the arguments passed to a stop hook.
  *
@@ -258,7 +272,7 @@ exports.StopHookArgs;
  * Use `create(StopHookArgsSchema)` to create a new message.
  * @type {?}
  */
-exports.StopHookArgsSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 16);
+exports.StopHookArgsSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 17);
 /**
  * StopHookResult is the result of a stop hook.
  * LINT.IfChange(stop_hook_result)
@@ -272,7 +286,7 @@ exports.StopHookResult;
  * Use `create(StopHookResultSchema)` to create a new message.
  * @type {?}
  */
-exports.StopHookResultSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 17);
+exports.StopHookResultSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 18);
 /**
  * SessionStartHookArgs contains arguments passed to a session start hook.
  *
@@ -285,7 +299,7 @@ exports.SessionStartHookArgs;
  * Use `create(SessionStartHookArgsSchema)` to create a new message.
  * @type {?}
  */
-exports.SessionStartHookArgsSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 18);
+exports.SessionStartHookArgsSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 19);
 /**
  * SessionStartHookResult is the result of a session start hook.
  * LINT.IfChange(session_start_hook_result)
@@ -299,7 +313,7 @@ exports.SessionStartHookResult;
  * Use `create(SessionStartHookResultSchema)` to create a new message.
  * @type {?}
  */
-exports.SessionStartHookResultSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 19);
+exports.SessionStartHookResultSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 20);
 /**
  * CommandHook executes a shell command. This is the "command" variant of a
  * HookHandlerConfig.
@@ -313,7 +327,7 @@ exports.CommandHook;
  * Use `create(CommandHookSchema)` to create a new message.
  * @type {?}
  */
-exports.CommandHookSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 20);
+exports.CommandHookSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 21);
 /**
  * PromptHook runs a background Gemini model with the given prompt. This is the
  * "prompt" variant of a HookHandlerConfig.
@@ -327,7 +341,7 @@ exports.PromptHook;
  * Use `create(PromptHookSchema)` to create a new message.
  * @type {?}
  */
-exports.PromptHookSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 21);
+exports.PromptHookSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 22);
 /**
  * HookHandlerConfig is the in-memory representation of a single hook action
  * configured in a hooks.json file. The action is selected via the `handler`
@@ -347,4 +361,4 @@ exports.HookHandlerConfig;
  * Use `create(HookHandlerConfigSchema)` to create a new message.
  * @type {?}
  */
-exports.HookHandlerConfigSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 22);
+exports.HookHandlerConfigSchema = (0, codegenv2_1.messageDesc)(exports.file_third_party_jetski_hooks_pb_hooks, 23);

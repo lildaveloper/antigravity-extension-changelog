@@ -8,6 +8,7 @@
 
 goog.provide('jspb$b$jetbox_state_pb$GoogleSpecificConfig');
 
+goog.require('jspb$b$jetbox_state_pb$CogWorkspaceConfig');
 goog.require('jspb$jetbox_state_pb$MutableGoogleSpecificConfig');
 goog.require('jspb_internal_binary');
 goog.require('jspb_internal_public_for_gencode');
@@ -22,7 +23,8 @@ goog.require('jspb_internal_public_for_gencode');
  */
 jspb$b$jetbox_state_pb$GoogleSpecificConfig.fields = /** @pureOrBreakMyCode */([
   0,
-  jspb_internal_binary.RWEnum
+  jspb_internal_binary.RWEnum,
+  jspb$b$jetbox_state_pb$CogWorkspaceConfig.fields
 ]);
 
 /**

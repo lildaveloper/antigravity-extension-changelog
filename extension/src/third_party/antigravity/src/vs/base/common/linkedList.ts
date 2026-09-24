@@ -46,12 +46,12 @@ if (false) {
      */
     Node.prototype.element;
     /**
-     * @type {(!Node|!Node<*>)}
+     * @type {(!Node<*>|!Node)}
      * @public
      */
     Node.prototype.next;
     /**
-     * @type {(!Node|!Node<*>)}
+     * @type {(!Node<*>|!Node)}
      * @public
      */
     Node.prototype.prev;

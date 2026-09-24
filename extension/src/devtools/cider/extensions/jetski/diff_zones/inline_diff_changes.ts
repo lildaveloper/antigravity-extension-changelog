@@ -57,7 +57,7 @@ class InlineDiffChanges {
         /** @type {number} */
         let lastLineProcessedInOriginal = -1;
         for (const hunk of sortedHunks) {
-            /** @type {{lines: !Array<string>, oldStart: number, oldLines: number, newStart: number, newLines: number, linedelimiters: !Array<string>}} */
+            /** @type {{oldStart: number, oldLines: number, newStart: number, newLines: number, linedelimiters: !Array<string>, lines: !Array<string>}} */
             const cleanHunk = {
                 ...hunk,
                 lines: hunk.lines.filter((/**

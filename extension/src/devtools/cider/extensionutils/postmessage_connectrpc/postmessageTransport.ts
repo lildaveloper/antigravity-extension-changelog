@@ -54,15 +54,15 @@ class PostMessageTransport {
          * @return {void}
          */
         (message) => {
-            if (!isDataMessage(message) || (/** @type {(!DataMessage|!DataErrorMessage)} */ (message)).channel !== this.channel) {
+            if (!isDataMessage(message) || (/** @type {(!DataErrorMessage|!DataMessage)} */ (message)).channel !== this.channel) {
                 return;
             }
             /** @type {(undefined|!PromiseWithResolvers<(*|?)>)} */
-            const resolver = this.pendingRequests.get((/** @type {(!DataMessage|!DataErrorMessage)} */ (message)).requestId);
+            const resolver = this.pendingRequests.get((/** @type {(!DataErrorMessage|!DataMessage)} */ (message)).requestId);
             if (!resolver) {
                 return;
             }
-            if ((/** @type {(!DataMessage|!DataErrorMessage)} */ (message)).error) {
+            if ((/** @type {(!DataErrorMessage|!DataMessage)} */ (message)).error) {
                 console.error('[Jetski] PostMessageTransport error: ', message);
                 resolver.reject(new connect_1.ConnectError((/** @type {!DataErrorMessage} */ (message)).errorVal.message, (/** @type {!DataErrorMessage} */ (message)).errorVal.code));
             }
@@ -79,7 +79,7 @@ class PostMessageTransport {
      * @param {?} method
      * @param {(undefined|!AbortSignal)} signal
      * @param {(undefined|number)} timeoutMs
-     * @param {(undefined|!Array<!Array<?>>|?|!Headers)} header
+     * @param {(undefined|!Array<!Array<?>>|!Headers|?)} header
      * @param {?} input
      * @return {!Promise<!tsickle_connect_2.UnaryResponse<I, O>>}
      */
@@ -185,7 +185,7 @@ if (false) {
      */
     PostMessageTransport.prototype.onDidReceiveMessage;
 }
-/** @typedef {function(?): (?|!Promise<?>)} */
+/** @typedef {function(?): (!Promise<?>|?)} */
 var MethodFunction;
 /**
  * @record
@@ -195,7 +195,7 @@ function MethodHandler() { }
 /* istanbul ignore if */
 if (false) {
     /**
-     * @type {function(?): (?|!Promise<?>)}
+     * @type {function(?): (!Promise<?>|?)}
      * @public
      */
     MethodHandler.prototype.fn;
@@ -221,7 +221,7 @@ class PostMessageRouter {
      * @public
      * @param {T} serviceDesc
      * @param {string} channel
-     * @param {function((!DataMessage|!DataErrorMessage)): *} postMessage
+     * @param {function((!DataErrorMessage|!DataMessage)): *} postMessage
      * @param {(!BaseEvent<*>|?)} onDidReceiveMessage
      */
     constructor(serviceDesc, channel, postMessage, onDidReceiveMessage) {
@@ -236,7 +236,7 @@ class PostMessageRouter {
          */
         async (message) => {
             if (!isDataMessage(message) ||
-                (/** @type {(!DataMessage|!DataErrorMessage)} */ (message)).error ||
+                (/** @type {(!DataErrorMessage|!DataMessage)} */ (message)).error ||
                 (/** @type {!DataMessage} */ (message)).channel !== this.channel ||
                 !(/** @type {!DataMessage} */ (message)).payload) {
                 return;
@@ -315,7 +315,7 @@ class PostMessageRouter {
                  * @param {*} req
                  * @return {!Promise<(*|?)>}
                  */
-                (req) => (/** @type {!Promise<(*|?)>} */ ((/** @type {(function(*, !tsickle_connect_2.HandlerContext): (?|!Promise<?>)|function(*, !tsickle_connect_2.HandlerContext): !AsyncIterable<?, ?, ?>|function(!AsyncIterable<*, ?, ?>, !tsickle_connect_2.HandlerContext): !Promise<?>|function(!AsyncIterable<*, ?, ?>, !tsickle_connect_2.HandlerContext): !AsyncIterable<?, ?, ?>)} */ (implFn)).bind(implementation)((/** @type {?} */ (req)), context))))),
+                (req) => (/** @type {!Promise<(*|?)>} */ ((/** @type {(function(!AsyncIterable<*, ?, ?>, !tsickle_connect_2.HandlerContext): !AsyncIterable<?, ?, ?>|function(!AsyncIterable<*, ?, ?>, !tsickle_connect_2.HandlerContext): !Promise<?>|function(*, !tsickle_connect_2.HandlerContext): !AsyncIterable<?, ?, ?>|function(*, !tsickle_connect_2.HandlerContext): (!Promise<?>|?))} */ (implFn)).bind(implementation)((/** @type {?} */ (req)), context))))),
                 input: method.input,
                 output: method.output,
             });
@@ -326,7 +326,7 @@ class PostMessageRouter {
      * @public
      * @template I, O
      * @param {?} method
-     * @param {function(?): (?|!Promise<?>)} handler
+     * @param {function(?): (!Promise<?>|?)} handler
      * @return {!PostMessageRouter}
      */
     rpc(method, handler) {
@@ -340,8 +340,8 @@ class PostMessageRouter {
     /**
      * @private
      * @template I, O
-     * @param {function(?): (?|!Promise<?>)} handler
-     * @return {function(*): (*|?|!Promise<?>|!Promise<*>)}
+     * @param {function(?): (!Promise<?>|?)} handler
+     * @return {function(*): (*|!Promise<*>|!Promise<?>|?)}
      */
     loosen(handler) {
         return (/** @type {function(*): (*|!Promise<*>)} */ ((/** @type {*} */ (handler))));
@@ -366,7 +366,7 @@ if (false) {
      */
     PostMessageRouter.prototype.channel;
     /**
-     * @const {function((!DataMessage|!DataErrorMessage)): *}
+     * @const {function((!DataErrorMessage|!DataMessage)): *}
      * @private
      */
     PostMessageRouter.prototype.postMessage;
@@ -383,7 +383,7 @@ if (false) {
  * @param {string} clientChannel
  * @param {S} serverService
  * @param {string} serverChannel
- * @param {function((!DataMessage|!DataErrorMessage)): *} postMessage
+ * @param {function((!DataErrorMessage|!DataMessage)): *} postMessage
  * @param {(!BaseEvent<*>|?)} onDidReceiveMessage
  * @return {{client: ?, router: !PostMessageRouter<S>}}
  */
@@ -402,7 +402,7 @@ exports.createClientAndRouter = createClientAndRouter;
  * @param {string} clientChannel
  * @param {S} serverService
  * @param {string} serverChannel
- * @param {function((!DataMessage|!DataErrorMessage)): *} postMessage
+ * @param {function((!DataErrorMessage|!DataMessage)): *} postMessage
  * @param {(!BaseEvent<*>|?)} onDidReceiveMessage
  * @param {function(?): ?} implementation
  * @return {?}

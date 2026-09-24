@@ -161,7 +161,7 @@ var ToJson;
  * @return {string}
  */
 function toJsonString(schema, message, options) {
-    /** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */
+    /** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */
     const jsonValue = toJson(schema, message, options);
     return JSON.stringify(jsonValue, null, options?.prettySpaces ?? 0);
 }
@@ -188,14 +188,14 @@ exports.enumToJson = enumToJson;
 /**
  * @param {!tsickle_reflect_types_6.ReflectMessage} msg
  * @param {!JsonWriteOptions} opts
- * @return {(null|string|number|boolean|!Object<string,?>|!Array<?>)}
+ * @return {(null|string|number|boolean|!Array<?>|!Object<string,?>)}
  */
 function reflectToJson(msg, opts) {
-    /** @type {(undefined|null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>)} */
+    /** @type {(undefined|null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)} */
     const wktJson = tryWktToJson(msg, opts);
     if (wktJson !== undefined)
         return wktJson;
-    /** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */
+    /** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */
     const json = {};
     for (const f of msg.sortedFields) {
         if (!msg.isSet(f)) {
@@ -207,7 +207,7 @@ function reflectToJson(msg, opts) {
                 continue;
             }
         }
-        /** @type {(undefined|null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>)} */
+        /** @type {(undefined|null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)} */
         const jsonValue = fieldToJson(f, msg.get(f), opts);
         if (jsonValue !== undefined) {
             json[jsonName(f, opts)] = jsonValue;
@@ -231,7 +231,7 @@ function reflectToJson(msg, opts) {
                 const [container__tsickle_destructured_1, field__tsickle_destructured_2] = (0, extensions_js_1.createExtensionContainer)(extension, value);
                 const container = /** @type {!tsickle_reflect_types_6.ReflectMessage} */ (container__tsickle_destructured_1);
                 const field = /** @type {?} */ (field__tsickle_destructured_2);
-                /** @type {(undefined|null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>)} */
+                /** @type {(undefined|null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)} */
                 const jsonValue = fieldToJson(field, container.get(field), opts);
                 if (jsonValue !== undefined) {
                     json[extension.jsonName] = jsonValue;
@@ -245,7 +245,7 @@ function reflectToJson(msg, opts) {
  * @param {?} f
  * @param {*} val
  * @param {!JsonWriteOptions} opts
- * @return {(undefined|null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>)}
+ * @return {(undefined|null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)}
  */
 function fieldToJson(f, val, opts) {
     switch (f.fieldKind) {
@@ -264,12 +264,12 @@ function fieldToJson(f, val, opts) {
 /**
  * @param {!tsickle_reflect_types_6.ReflectMap<*, *>} map
  * @param {!JsonWriteOptions} opts
- * @return {(undefined|!Object<string,(null|string|number|boolean|?|!Array<?>)>)}
+ * @return {(undefined|!Object<string,(null|string|number|boolean|!Array<?>|?)>)}
  */
 function mapToJson(map, opts) {
     /** @type {?} */
     const f = map.field();
-    /** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */
+    /** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */
     const jsonObj = {};
     switch (f.mapKind) {
         case "scalar":
@@ -299,22 +299,22 @@ function mapToJson(map, opts) {
 /**
  * @param {!tsickle_reflect_types_6.ReflectList<*>} list
  * @param {!JsonWriteOptions} opts
- * @return {(undefined|!Array<(null|string|number|boolean|!Object<string,?>|!Array<?>)>)}
+ * @return {(undefined|!Array<(null|string|number|boolean|!Array<?>|!Object<string,?>)>)}
  */
 function listToJson(list, opts) {
     /** @type {?} */
     const f = list.field();
-    /** @type {!Array<(null|string|number|boolean|!Object<string,?>|!Array<?>)>} */
+    /** @type {!Array<(null|string|number|boolean|!Array<?>|!Object<string,?>)>} */
     const jsonArr = [];
     switch (f.listKind) {
         case "scalar":
             for (const item of list) {
-                jsonArr.push((/** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */ (scalarToJson(f, item))));
+                jsonArr.push((/** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */ (scalarToJson(f, item))));
             }
             break;
         case "enum":
             for (const item of list) {
-                jsonArr.push((/** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */ (enumToJsonInternal(f.enum, item, opts.enumAsInteger))));
+                jsonArr.push((/** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */ (enumToJsonInternal(f.enum, item, opts.enumAsInteger))));
             }
             break;
         case "message":
@@ -419,7 +419,7 @@ function jsonName(f, opts) {
 /**
  * @param {!tsickle_reflect_types_6.ReflectMessage} msg
  * @param {!JsonWriteOptions} opts
- * @return {(undefined|null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>)}
+ * @return {(undefined|null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)}
  */
 function tryWktToJson(msg, opts) {
     if (!msg.desc.typeName.startsWith("google.protobuf.")) {
@@ -452,7 +452,7 @@ function tryWktToJson(msg, opts) {
 /**
  * @param {?} val
  * @param {!JsonWriteOptions} opts
- * @return {(null|string|number|boolean|!Object<string,?>|!Array<?>)}
+ * @return {(null|string|number|boolean|!Array<?>|!Object<string,?>)}
  */
 function anyToJson(val, opts) {
     if (val.typeUrl === "") {
@@ -472,7 +472,7 @@ function anyToJson(val, opts) {
     if (!desc || !message) {
         throw new Error(`cannot encode message ${val.$typeName} to JSON: "${val.typeUrl}" is not in the type registry`);
     }
-    /** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */
+    /** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */
     let json = reflectToJson((0, reflect_js_1.reflect)(desc, message), opts);
     if (desc.typeName.startsWith("google.protobuf.") ||
         json === null ||
@@ -539,10 +539,10 @@ function fieldMaskToJson(val) {
 }
 /**
  * @param {?} val
- * @return {!Object<string,(null|string|number|boolean|?|!Array<?>)>}
+ * @return {!Object<string,(null|string|number|boolean|!Array<?>|?)>}
  */
 function structToJson(val) {
-    /** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */
+    /** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */
     const json = {};
     for (const [k__tsickle_destructured_9, v__tsickle_destructured_10] of Object.entries(val.fields)) {
         const k = /** @type {string} */ (k__tsickle_destructured_9);
@@ -553,7 +553,7 @@ function structToJson(val) {
 }
 /**
  * @param {?} val
- * @return {(null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|!Array<?>)>)}
+ * @return {(null|string|number|boolean|!Array<(null|string|number|boolean|!Array<?>|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)}
  */
 function valueToJson(val) {
     switch (val.kind.case) {
@@ -578,7 +578,7 @@ function valueToJson(val) {
 }
 /**
  * @param {?} val
- * @return {!Array<(null|string|number|boolean|!Object<string,?>|!Array<?>)>}
+ * @return {!Array<(null|string|number|boolean|!Array<?>|!Object<string,?>)>}
  */
 function listValueToJson(val) {
     return val.values.map(valueToJson);

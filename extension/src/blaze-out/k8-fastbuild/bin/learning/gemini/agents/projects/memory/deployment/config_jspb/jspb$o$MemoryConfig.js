@@ -36,6 +36,7 @@ jspb$o$jetski_memory$MemoryConfig.internal_toObject = function(msg) {
     disableSkills: jspb_internal_adapters.getBooleanFieldWithDefault(msg, 5),
     profile: jspb_internal_adapters.getStringFieldWithDefault(msg, 6),
     releaseTrack: jspb_internal_adapters.getEnumFieldWithDefault(msg, 7),
+    forceExperimentsList: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getRepeatedStringField(msg, 8, jspb_internal_adapters.RepeatedArrayReturnType.EITHER_FROZEN_OR_UNFROZEN)),
   }));
 
 };
@@ -86,6 +87,7 @@ jspb$o$jetski_memory$MemoryConfig.fromObject = function(obj) {
   jspb_internal_adapters.setProto3BooleanField(msg, 5, obj.disableSkills);
   jspb_internal_adapters.setProto3StringField(msg, 6, obj.profile);
   jspb_internal_adapters.setProto3EnumField(msg, 7, obj.releaseTrack);
+  jspb_internal_adapters.setRepeatedStringField(msg, 8, obj.forceExperimentsList);
   return msg;
 };
 }

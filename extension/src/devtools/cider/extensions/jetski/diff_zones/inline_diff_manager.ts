@@ -135,6 +135,12 @@ class InlineDiffManager {
      */
     constructor() {
         this.activeDiffs = new Map();
+        // URIs currently undergoing internal saves/reverts to prevent event loops.
+        this.internalSaveUris = new Set();
+        // URIs with pending manual save (Cmd/Ctrl+S) to finalize as accepted on didSave.
+        this.pendingManualSaveUris = new Set();
+        // URIs with pending auto-save to finalize as rejected on didSave.
+        this.pendingAutoSaveUris = new Set();
         this.disposables = [];
         this.isResolvingHunk = false;
         this.onDidFinalizeFileEmitter = new vscode.EventEmitter();
@@ -272,7 +278,34 @@ class InlineDiffManager {
          */
         (event) => {
             this.handleDocumentEdit(event);
-        })), vscode.workspace.onDidCloseTextDocument((/**
+        })), 
+        // Intercept file save events: on manual save (Cmd+S/Ctrl+S), synchronously replace the buffer
+        // with clean modified text via waitUntil before content is flushed to disk.
+        ...(typeof vscode.workspace.onWillSaveTextDocument === 'function'
+            ? [
+                vscode.workspace.onWillSaveTextDocument((/**
+                 * @param {!tsickle_vscode_1.TextDocumentWillSaveEvent} event
+                 * @return {void}
+                 */
+                (event) => {
+                    this.handleDocumentWillSave(event);
+                })),
+            ]
+            : []), 
+        // Finalize the diff session as accepted once the save completes to disk.
+        ...(typeof vscode.workspace.onDidSaveTextDocument === 'function'
+            ? [
+                vscode.workspace.onDidSaveTextDocument((/**
+                 * @param {!tsickle_vscode_1.TextDocument} doc
+                 * @return {void}
+                 */
+                (doc) => {
+                    this.handleDocumentDidSave(doc);
+                })),
+            ]
+            : []), 
+        // Handle document close events when documents are explicitly closed/disposed.
+        vscode.workspace.onDidCloseTextDocument((/**
          * @param {!tsickle_vscode_1.TextDocument} doc
          * @return {void}
          */
@@ -284,7 +317,27 @@ class InlineDiffManager {
             (e) => {
                 console.error('[Antigravity] Error handling document close:', e);
             }));
-        })));
+        })), 
+        // Handle closing tabs (e.g. user clicks [X] and chooses "Don't Save").
+        // VS Code closes the visual tab and discards dirty buffer state without closing/disposing
+        // the underlying TextDocument model, so onDidChangeTabs is required to catch tab closures.
+        ...(vscode.window?.tabGroups?.onDidChangeTabs
+            ? [
+                vscode.window.tabGroups.onDidChangeTabs((/**
+                 * @param {!tsickle_vscode_1.TabChangeEvent} event
+                 * @return {void}
+                 */
+                (event) => {
+                    this.handleTabsChange(event).catch((/**
+                     * @param {?} e
+                     * @return {void}
+                     */
+                    (e) => {
+                        console.error('[Antigravity] Error handling tab change:', e);
+                    }));
+                })),
+            ]
+            : []));
         this.disposables.push(this.onDidChangeActiveDiffsEmitter, this.onDidFinalizeFileEmitter, this.onDidResolveHunkEmitter);
     }
     /**
@@ -293,7 +346,25 @@ class InlineDiffManager {
      * @return {(undefined|!ActiveDiff)}
      */
     getActiveDiff(uriStr) {
-        return this.activeDiffs.get(uriStr);
+        return this.activeDiffs.get(uriStr) ?? this.findActiveDiffFuzzy(uriStr);
+    }
+    /**
+     * @private
+     * @param {string} uriStr
+     * @return {(undefined|!ActiveDiff)}
+     */
+    findActiveDiffFuzzy(uriStr) {
+        /** @type {string} */
+        const normalizedTarget = (0, utils_1.normalizeUri)(uriStr);
+        for (const [key__tsickle_destructured_1, diff__tsickle_destructured_2] of this.activeDiffs.entries()) {
+            const key = /** @type {string} */ (key__tsickle_destructured_1);
+            const diff = /** @type {!ActiveDiff} */ (diff__tsickle_destructured_2);
+            if ((0, utils_1.normalizeUri)(key) === normalizedTarget ||
+                (0, utils_1.normalizeUri)(diff.uri.toString()) === normalizedTarget) {
+                return diff;
+            }
+        }
+        return undefined;
     }
     /**
      * @public
@@ -425,8 +496,16 @@ class InlineDiffManager {
             activeDiff.changes.ranges = remainingRanges;
         }
         activeDiff.combinedText = document.getText();
-        if (document.isDirty) {
-            await document.save();
+        /** @type {string} */
+        const normalizedKey = (0, utils_1.normalizeUri)(uriStr);
+        this.internalSaveUris.add(normalizedKey);
+        try {
+            if (document.isDirty) {
+                await document.save();
+            }
+        }
+        finally {
+            this.internalSaveUris.delete(normalizedKey);
         }
         if (activeDiff.changes.ranges.length === 0) {
             await this.finalizeFile(uriStr, true);
@@ -513,8 +592,16 @@ class InlineDiffManager {
             activeDiff.changes.ranges = remainingRanges;
         }
         activeDiff.combinedText = document.getText();
-        if (document.isDirty) {
-            await document.save();
+        /** @type {string} */
+        const normalizedKey = (0, utils_1.normalizeUri)(uriStr);
+        this.internalSaveUris.add(normalizedKey);
+        try {
+            if (document.isDirty) {
+                await document.save();
+            }
+        }
+        finally {
+            this.internalSaveUris.delete(normalizedKey);
         }
         if (activeDiff.changes.ranges.length === 0) {
             await this.finalizeFile(uriStr, false);
@@ -574,7 +661,7 @@ class InlineDiffManager {
         /** @type {string} */
         const uriStr = typeof targetUri === 'string' ? targetUri : (/** @type {!tsickle_vscode_1.Uri} */ (targetUri)).toString();
         /** @type {(undefined|!ActiveDiff)} */
-        const activeDiff = this.activeDiffs.get(uriStr);
+        const activeDiff = this.getActiveDiff(uriStr);
         if (!activeDiff) {
             console.warn(`[Antigravity] acceptAll failed: no active diff found for uriStr: ${uriStr}`);
             return;
@@ -582,7 +669,7 @@ class InlineDiffManager {
         /** @type {!tsickle_vscode_1.TextDocument} */
         const document = await vscode.workspace.openTextDocument(activeDiff.uri);
         await this.applyContentReplacement(document, activeDiff.modifiedText);
-        await this.finalizeFile(uriStr, true);
+        await this.finalizeFile(activeDiff.uri.toString(), true);
     }
     /**
      * Rejects all pending changes in a file.
@@ -599,7 +686,7 @@ class InlineDiffManager {
         /** @type {string} */
         const uriStr = typeof targetUri === 'string' ? targetUri : (/** @type {!tsickle_vscode_1.Uri} */ (targetUri)).toString();
         /** @type {(undefined|!ActiveDiff)} */
-        const activeDiff = this.activeDiffs.get(uriStr);
+        const activeDiff = this.getActiveDiff(uriStr);
         if (!activeDiff) {
             console.warn(`[Antigravity] rejectAll failed: no active diff found for uriStr: ${uriStr}`);
             return;
@@ -607,7 +694,18 @@ class InlineDiffManager {
         /** @type {!tsickle_vscode_1.TextDocument} */
         const document = await vscode.workspace.openTextDocument(activeDiff.uri);
         await this.applyContentReplacement(document, activeDiff.originalText);
-        await this.finalizeFile(uriStr, false);
+        // Guarantee originalText is written directly to disk even if the editor buffer was closed/discarded.
+        if (vscode.workspace?.fs) {
+            try {
+                /** @type {!Uint8Array} */
+                const encoded = new TextEncoder().encode(activeDiff.originalText);
+                await vscode.workspace.fs.writeFile(activeDiff.uri, encoded);
+            }
+            catch (fsError) {
+                console.error(`[Antigravity] rejectAll: fs.writeFile failed for ${activeDiff.uri.toString()}:`, fsError);
+            }
+        }
+        await this.finalizeFile(activeDiff.uri.toString(), false);
     }
     /**
      * Reverts all registered diff files to their original state and disposes resource hooks.
@@ -684,14 +782,13 @@ class InlineDiffManager {
     // ---------------------------------------------------------------------------
     // Private Helpers
     // ---------------------------------------------------------------------------
-    // Flushes GitLens line annotations and triggers VS Code Git status refresh so new/accepted code
-    // displays uncommitted changes rather than stale commit blame.
+    // Flushes GitLens line annotations and triggers a VS Code Git status refresh so new/accepted
+    // code displays uncommitted changes rather than stale commit blame.
     //
-    // NOTE: 'git.refresh' must only be executed if the workspace has active Git repositories.
-    // When executed in non-Git workspaces (e.g. Google3/CitC workspaces, standalone files, or uninitialized
-    // scratch projects), VS Code's Git extension CommandCenter throws "There are no available repositories".
-    // Because VS Code handles this internally by showing a modal error dialog (with "Open Git Log") and
-    // resolving the command promise, an outer try/catch cannot suppress the error dialog.
+    // The refresh is always scoped to the repository owning the edited document. Dispatching a
+    // parameterless 'git.refresh' makes the Git extension fall back to Model.pickRepository(),
+    // which shows a "Choose a repository" quick pick in multi-repo workspaces and an unsuppressable
+    // modal error in non-Git ones. See refreshGitForUri() for details.
     /**
      * @private
      * @param {(undefined|!tsickle_vscode_1.Uri)=} targetUri
@@ -704,14 +801,7 @@ class InlineDiffManager {
             await vscode.commands.executeCommand('gitlens.clearFileAnnotations');
         }
         catch { }
-        if (hasOpenGitRepositories()) {
-            try {
-                await vscode.commands.executeCommand('git.refresh');
-            }
-            catch {
-                // git.refresh may fail if the repository is busy or locked; safe to ignore.
-            }
-        }
+        await refreshGitForUri(docUri);
         if (this.gitRefreshTimeout) {
             clearTimeout(this.gitRefreshTimeout);
             this.gitRefreshTimeout = undefined;
@@ -721,12 +811,7 @@ class InlineDiffManager {
          */
         async () => {
             this.gitRefreshTimeout = undefined;
-            if (hasOpenGitRepositories()) {
-                try {
-                    await vscode.commands.executeCommand('git.refresh');
-                }
-                catch { }
-            }
+            await refreshGitForUri(docUri);
             if (docUri) {
                 await this.touchGitIndexForUri(docUri);
             }
@@ -811,17 +896,25 @@ class InlineDiffManager {
      * @private
      * @param {!tsickle_vscode_1.TextDocument} document
      * @param {string} text
-     * @return {!Promise<void>}
+     * @return {!Promise<boolean>}
      */
     async applyContentReplacement(document, text) {
         /** @type {!tsickle_vscode_1.WorkspaceEdit} */
         const edit = new vscode.WorkspaceEdit();
+        /** @type {!tsickle_vscode_1.Position} */
+        const endPosition = document.lineCount > 0
+            ? document.lineAt(document.lineCount - 1).range.end
+            : new vscode.Position(0, 0);
         /** @type {!tsickle_vscode_1.Range} */
-        const fullRange = new vscode.Range(new vscode.Position(0, 0), document.lineAt(document.lineCount - 1).range.end);
+        const fullRange = new vscode.Range(new vscode.Position(0, 0), endPosition);
         edit.replace(document.uri, fullRange, text);
         this.isResolvingHunk = true;
-        await vscode.workspace.applyEdit(edit);
-        this.isResolvingHunk = false;
+        try {
+            return await vscode.workspace.applyEdit(edit);
+        }
+        finally {
+            this.isResolvingHunk = false;
+        }
     }
     /**
      * @private
@@ -947,7 +1040,7 @@ class InlineDiffManager {
         /** @type {string} */
         const key = editor.document.uri.toString();
         /** @type {(undefined|!ActiveDiff)} */
-        const activeDiff = this.activeDiffs.get(key);
+        const activeDiff = this.getActiveDiff(key);
         if (activeDiff) {
             await this.showDiffInEditor(editor, activeDiff);
             await vscode.commands.executeCommand('setContext', 'antigravity.hasActiveDiff', true);
@@ -957,7 +1050,7 @@ class InlineDiffManager {
             await vscode.commands.executeCommand('setContext', 'antigravity.hasActiveDiff', false);
         }
     }
-    // Clean up active diff state on tab close without reverting the file on disk.
+    // Revert to originalText and reject diff when document is closed without saving.
     /**
      * @private
      * @param {!tsickle_vscode_1.TextDocument} document
@@ -967,14 +1060,54 @@ class InlineDiffManager {
         /** @type {string} */
         const key = document.uri.toString();
         /** @type {(undefined|!ActiveDiff)} */
-        const activeDiff = this.activeDiffs.get(key);
-        if (!activeDiff)
+        const activeDiff = this.getActiveDiff(key);
+        if (!activeDiff) {
             return;
-        // Clean up active diff state without mutating or reverting the file on disk.
-        this.activeDiffs.delete(key);
-        this.onDidChangeActiveDiffsEmitter.fire();
-        this.debouncedRefreshCodeLenses();
-        await vscode.commands.executeCommand('setContext', 'antigravity.hasActiveDiff', this.hasActiveDiffs());
+        }
+        await this.rejectAll(activeDiff.uri);
+    }
+    // Handle closed tabs to reject diffs when dirty buffer state is discarded.
+    /**
+     * @private
+     * @param {!tsickle_vscode_1.TabChangeEvent} event
+     * @return {!Promise<void>}
+     */
+    async handleTabsChange(event) {
+        if (!event.closed || event.closed.length === 0) {
+            return;
+        }
+        // Collect all URIs currently open in any tab group.
+        /** @type {!Set<string>} */
+        const openUris = new Set();
+        for (const group of vscode.window.tabGroups?.all ?? []) {
+            for (const tab of group.tabs) {
+                /** @type {(undefined|!tsickle_vscode_1.Uri)} */
+                const uri = getTabUri(tab);
+                if (uri) {
+                    openUris.add((0, utils_1.normalizeUri)(uri.toString()));
+                }
+            }
+        }
+        for (const tab of event.closed) {
+            /** @type {(undefined|!tsickle_vscode_1.Uri)} */
+            const uri = getTabUri(tab);
+            if (!uri)
+                continue;
+            /** @type {string} */
+            const uriStr = uri.toString();
+            /** @type {string} */
+            const normalizedUri = (0, utils_1.normalizeUri)(uriStr);
+            // Skip if the file remains open in another split editor.
+            if (openUris.has(normalizedUri)) {
+                continue;
+            }
+            /** @type {(undefined|!ActiveDiff)} */
+            const activeDiff = this.getActiveDiff(uriStr);
+            if (!activeDiff) {
+                continue;
+            }
+            await this.rejectAll(activeDiff.uri);
+        }
     }
     /**
      * @private
@@ -983,9 +1116,17 @@ class InlineDiffManager {
      * @return {!Promise<void>}
      */
     async revertDocument(document, originalText) {
-        await this.applyContentReplacement(document, originalText);
-        if (document.isDirty) {
-            await document.save();
+        /** @type {string} */
+        const normalizedKey = (0, utils_1.normalizeUri)(document.uri.toString());
+        this.internalSaveUris.add(normalizedKey);
+        try {
+            await this.applyContentReplacement(document, originalText);
+            if (document.isDirty) {
+                await document.save();
+            }
+        }
+        finally {
+            this.internalSaveUris.delete(normalizedKey);
         }
     }
     /**
@@ -996,30 +1137,123 @@ class InlineDiffManager {
      */
     async finalizeFile(uriStr, accepted) {
         /** @type {(undefined|!ActiveDiff)} */
-        const activeDiff = this.activeDiffs.get(uriStr);
-        if (!activeDiff)
+        const activeDiff = this.getActiveDiff(uriStr);
+        if (!activeDiff) {
+            console.warn(`[Antigravity] finalizeFile: no active diff found for ${uriStr}`);
             return;
-        /** @type {!tsickle_vscode_1.TextDocument} */
-        const document = await vscode.workspace.openTextDocument(activeDiff.uri);
-        if (document.isDirty) {
-            await document.save();
         }
-        this.activeDiffs.delete(uriStr);
-        this.onDidChangeActiveDiffsEmitter.fire();
-        this.debouncedRefreshCodeLenses();
-        // Update antigravity.hasActiveDiff context key based on remaining pending diffs across all files.
-        await vscode.commands.executeCommand('setContext', 'antigravity.hasActiveDiff', this.hasActiveDiffs());
-        for (const editor of vscode.window?.visibleTextEditors ?? []) {
-            if (editor.document?.uri?.toString?.() === uriStr) {
-                this.clearDecorations(editor);
+        /** @type {string} */
+        const key = activeDiff.uri.toString();
+        /** @type {string} */
+        const normalizedKey = (0, utils_1.normalizeUri)(key);
+        if (this.internalSaveUris.has(normalizedKey)) {
+            return;
+        }
+        this.internalSaveUris.add(normalizedKey);
+        try {
+            /** @type {!tsickle_vscode_1.TextDocument} */
+            const document = await vscode.workspace.openTextDocument(activeDiff.uri);
+            if (document.isDirty) {
+                await document.save();
             }
+            this.activeDiffs.delete(key);
+            if (uriStr !== key) {
+                this.activeDiffs.delete(uriStr);
+            }
+            this.onDidChangeActiveDiffsEmitter.fire();
+            this.debouncedRefreshCodeLenses();
+            // Update antigravity.hasActiveDiff context key based on remaining pending diffs across all files.
+            await vscode.commands.executeCommand('setContext', 'antigravity.hasActiveDiff', this.hasActiveDiffs());
+            for (const editor of vscode.window?.visibleTextEditors ?? []) {
+                if (editor.document?.uri?.toString?.() === key) {
+                    this.clearDecorations(editor);
+                }
+            }
+            await this.refreshGitAndGitLens(activeDiff.uri);
+            this.onDidFinalizeFileEmitter.fire({
+                uri: activeDiff.uri,
+                accepted,
+                modifiedText: activeDiff.modifiedText,
+            });
         }
-        await this.refreshGitAndGitLens(activeDiff.uri);
-        this.onDidFinalizeFileEmitter.fire({
-            uri: activeDiff.uri,
-            accepted,
-            modifiedText: activeDiff.modifiedText,
-        });
+        finally {
+            this.internalSaveUris.delete(normalizedKey);
+        }
+    }
+    // Pre-save hook: manual save applies modifiedText; auto-save reverts to originalText.
+    /**
+     * @private
+     * @param {!tsickle_vscode_1.TextDocumentWillSaveEvent} event
+     * @return {void}
+     */
+    handleDocumentWillSave(event) {
+        try {
+            /** @type {string} */
+            const normalizedKey = (0, utils_1.normalizeUri)(event.document.uri.toString());
+            if (this.internalSaveUris.has(normalizedKey)) {
+                return;
+            }
+            /** @type {(undefined|!ActiveDiff)} */
+            const activeDiff = this.getActiveDiff(event.document.uri.toString());
+            if (!activeDiff) {
+                return;
+            }
+            /** @type {!tsickle_vscode_1.Position} */
+            const endPosition = event.document.lineCount > 0
+                ? event.document.lineAt(event.document.lineCount - 1).range.end
+                : new vscode.Position(0, 0);
+            /** @type {!tsickle_vscode_1.Range} */
+            const fullRange = new vscode.Range(new vscode.Position(0, 0), endPosition);
+            // Auto-saves (AfterDelay / FocusOut): revert buffer so disk remains clean and reject diff.
+            if (event.reason != null &&
+                event.reason !== vscode.TextDocumentSaveReason.Manual) {
+                this.pendingAutoSaveUris.add(normalizedKey);
+                event.waitUntil(Promise.resolve([
+                    vscode.TextEdit.replace(fullRange, activeDiff.originalText),
+                ]));
+                return;
+            }
+            this.pendingManualSaveUris.add(normalizedKey);
+            event.waitUntil(Promise.resolve([
+                vscode.TextEdit.replace(fullRange, activeDiff.modifiedText),
+            ]));
+        }
+        catch (e) {
+            console.error('[Antigravity] Error handling document will save:', e);
+        }
+    }
+    // Post-save hook: finalize as accepted for manual save, or rejected for auto-save.
+    /**
+     * @private
+     * @param {!tsickle_vscode_1.TextDocument} document
+     * @return {void}
+     */
+    handleDocumentDidSave(document) {
+        /** @type {string} */
+        const normalizedKey = (0, utils_1.normalizeUri)(document.uri.toString());
+        if (this.internalSaveUris.has(normalizedKey)) {
+            return;
+        }
+        /** @type {boolean} */
+        const isManualSave = this.pendingManualSaveUris.delete(normalizedKey);
+        /** @type {boolean} */
+        const isAutoSave = this.pendingAutoSaveUris.delete(normalizedKey);
+        if (!isManualSave && !isAutoSave) {
+            return;
+        }
+        /** @type {string} */
+        const key = document.uri.toString();
+        /** @type {(undefined|!ActiveDiff)} */
+        const activeDiff = this.getActiveDiff(key);
+        if (activeDiff) {
+            this.finalizeFile(key, isManualSave).catch((/**
+             * @param {?} e
+             * @return {void}
+             */
+            (e) => {
+                console.error('[Antigravity] Error finalizing file on save:', e);
+            }));
+        }
     }
     /**
      * @private
@@ -1061,6 +1295,21 @@ if (false) {
      * @private
      */
     InlineDiffManager.prototype.activeDiffs;
+    /**
+     * @const {!Set<string>}
+     * @private
+     */
+    InlineDiffManager.prototype.internalSaveUris;
+    /**
+     * @const {!Set<string>}
+     * @private
+     */
+    InlineDiffManager.prototype.pendingManualSaveUris;
+    /**
+     * @const {!Set<string>}
+     * @private
+     */
+    InlineDiffManager.prototype.pendingAutoSaveUris;
     /**
      * @const {!Array<!tsickle_vscode_1.Disposable>}
      * @private
@@ -1185,9 +1434,9 @@ class InlineDiffCodeLensProvider {
         }
         /** @type {!Array<!tsickle_vscode_1.CodeLens>} */
         const codeLenses = [];
-        for (const [index__tsickle_destructured_1, range__tsickle_destructured_2] of activeDiff.changes.ranges.entries()) {
-            const index = /** @type {number} */ (index__tsickle_destructured_1);
-            const range = /** @type {!tsickle_inline_diff_change_range_7.InlineDiffChangeRange} */ (range__tsickle_destructured_2);
+        for (const [index__tsickle_destructured_3, range__tsickle_destructured_4] of activeDiff.changes.ranges.entries()) {
+            const index = /** @type {number} */ (index__tsickle_destructured_3);
+            const range = /** @type {!tsickle_inline_diff_change_range_7.InlineDiffChangeRange} */ (range__tsickle_destructured_4);
             /** @type {!tsickle_vscode_1.Position} */
             const position = new vscode.Position(range.start, 0);
             /** @type {!tsickle_vscode_1.Range} */
@@ -1233,27 +1482,71 @@ if (false) {
     InlineDiffCodeLensProvider.prototype.manager;
 }
 /**
- * Checks whether VS Code's built-in Git extension is active and managing at least one repository.
+ * Resolves the Git repository that owns `targetUri`.
  *
- * In VS Code, 'git.refresh' is decorated with { repository: true }. If no repository argument
- * is provided, VS Code falls back to Model.pickRepository(). If openRepositories.length === 0,
- * it throws an error and displays a modal warning dialog ("Git: There are no available repositories").
- * Checking repositories.length > 0 here ensures we only trigger git.refresh in valid Git contexts.
- * @return {boolean}
+ * Resolution is delegated to the Git extension's own `getRepository()` so that
+ * nested repositories, submodules and platform-specific path comparison behave
+ * exactly as they do elsewhere in VS Code.
+ *
+ * Returns undefined when the Git extension is missing or inactive, when the API
+ * is unavailable, or when the URI does not belong to any open repository.
+ * @param {(undefined|!tsickle_vscode_1.Uri)=} targetUri
+ * @return {(undefined|!GitApiRepository)}
  */
-function hasOpenGitRepositories() {
+function getOwningGitRepository(targetUri) {
+    if (!targetUri) {
+        return undefined;
+    }
     try {
-        /** @type {(undefined|!tsickle_vscode_1.Extension<{getAPI: (undefined|function(number): {repositories: (undefined|!ReadonlyArray<*>)})}>)} */
+        /** @type {(undefined|!tsickle_vscode_1.Extension<!GitExtensionExports>)} */
         const gitExtension = vscode.extensions?.getExtension('vscode.git');
         if (!gitExtension || !gitExtension.isActive) {
-            return false;
+            return undefined;
         }
-        /** @type {(undefined|{repositories: (undefined|!ReadonlyArray<*>)})} */
+        /** @type {(undefined|!GitApi)} */
         const gitApi = gitExtension.exports?.getAPI?.(1);
-        return Boolean(gitApi?.repositories && gitApi.repositories.length > 0);
+        if (typeof gitApi?.getRepository !== 'function') {
+            return undefined;
+        }
+        return gitApi.getRepository(targetUri) ?? undefined;
     }
     catch {
-        return false;
+        // Resolution is best-effort: the Git extension is third-party and may throw
+        // from getAPI() or getRepository(). Callers treat undefined as "no owning
+        // repository" and skip the refresh, which is the safe outcome here.
+        return undefined;
+    }
+}
+/**
+ * Refreshes VS Code's Git status for the repository that owns `targetUri`.
+ *
+ * 'git.refresh' is registered with `{ repository: true }`, so the Git extension
+ * resolves its first argument through `Model.getRepository()`. When that
+ * resolution yields nothing it falls back to `Model.pickRepository()`, which:
+ *   - throws "There are no available repositories" when none are open, which
+ *     VS Code surfaces as a modal dialog the caller cannot suppress, and
+ *   - shows a "Choose a repository" quick pick when more than one is open.
+ *
+ * Because this runs on every diff registration and on every hunk accept/reject,
+ * an unresolved 'git.refresh' spams that quick pick in workspaces containing
+ * more than one repository (b/561494994). Passing the owning repository's root
+ * URI makes resolution deterministic, so neither branch above can be reached.
+ * When no repository owns the file there is nothing meaningful to refresh, so
+ * the command is skipped rather than left to prompt.
+ * @param {(undefined|!tsickle_vscode_1.Uri)=} targetUri
+ * @return {!Promise<void>}
+ */
+async function refreshGitForUri(targetUri) {
+    /** @type {(undefined|!GitApiRepository)} */
+    const repository = getOwningGitRepository(targetUri);
+    if (!repository) {
+        return;
+    }
+    try {
+        await vscode.commands.executeCommand('git.refresh', repository.rootUri);
+    }
+    catch {
+        // git.refresh may fail if the repository is busy or locked; safe to ignore.
     }
 }
 /**
@@ -1298,6 +1591,25 @@ if (false) {
     NodeFs.prototype.promises;
 }
 /**
+ * Safely extracts the document Uri from a vscode.Tab input.
+ * @param {!tsickle_vscode_1.Tab} tab
+ * @return {(undefined|!tsickle_vscode_1.Uri)}
+ */
+function getTabUri(tab) {
+    if (!tab || !tab.input)
+        return undefined;
+    // Cast untyped tab.input to probe uri/modified properties safely.
+    /** @type {{uri: (undefined|!tsickle_vscode_1.Uri), modified: (undefined|!tsickle_vscode_1.Uri)}} */
+    const input = (/** @type {{uri: (undefined|!tsickle_vscode_1.Uri), modified: (undefined|!tsickle_vscode_1.Uri)}} */ (tab.input));
+    if (input.uri && typeof input.uri.toString === 'function') {
+        return input.uri;
+    }
+    if (input.modified && typeof input.modified.toString === 'function') {
+        return input.modified;
+    }
+    return undefined;
+}
+/**
  * Safely touches a file's access and modification timestamps without opening or
  * truncating the file contents. Gracefully no-ops in non-Node environments.
  * @param {!tsickle_vscode_1.Uri} uri
@@ -1323,8 +1635,10 @@ async function safeTouchFile(uri) {
         // Best-effort timestamp update; ignore if file is inaccessible or locked.
     }
 }
-/** @type {{isGitLensActive: function(): boolean, safeTouchFile: function(!tsickle_vscode_1.Uri): !Promise<void>}} */
+/** @type {{getOwningGitRepository: function((undefined|!tsickle_vscode_1.Uri)=): (undefined|!GitApiRepository), isGitLensActive: function(): boolean, refreshGitForUri: function((undefined|!tsickle_vscode_1.Uri)=): !Promise<void>, safeTouchFile: function(!tsickle_vscode_1.Uri): !Promise<void>}} */
 exports.TEST_ONLY = {
+    getOwningGitRepository,
     isGitLensActive,
+    refreshGitForUri,
     safeTouchFile,
 };

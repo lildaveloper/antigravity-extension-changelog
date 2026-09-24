@@ -152,7 +152,7 @@ if (false) {
 /**
  * @param {!HTMLIFrameElement} element
  * @param {!IframeIntent} intent
- * @param {(string|!tsickle_resource_url_impl_4.TrustedResourceUrl|!tsickle_url_impl_5.SafeUrl)} src
+ * @param {(string|!tsickle_url_impl_5.SafeUrl|!tsickle_resource_url_impl_4.TrustedResourceUrl)} src
  * @return {void}
  */
 function setIframeSrcWithIntent(element, intent, src) {

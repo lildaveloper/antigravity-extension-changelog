@@ -339,6 +339,96 @@ jspb$jetski_memory$MutableMemoryConfig = class extends jspb_internal_public_for_
   }
 
 
+  /**
+   * repeated string force_experiments = 8;
+   * @override
+   * @param {!jspb_internal_public_for_gencode.DoNotFreezeToken=} freezeOptOut
+   * @tsType (freezeOptOut: import('google3/javascript/apps/jspb/internal_public').DoNotFreezeToken): string[]
+   * @tsType (): readonly string[]
+   * @return {!ReadonlyArray<string>}
+   */
+  getForceExperimentsList(freezeOptOut) {
+    return jspb_internal_adapters.getRepeatedStringField(this, 8, jspb_internal_adapters.getRepeatedFieldReturnType(freezeOptOut));
+  }
+
+
+  /**
+   * @param {!ReadonlyArray<string>|null|undefined} value
+   * @return {!jspb$jetski_memory$MutableMemoryConfig} returns this
+   */
+  setForceExperimentsList(value) {
+    return jspb_internal_adapters.setRepeatedStringField(this, 8, value);
+  }
+
+
+  /**
+   * @param {string} value
+   * @param {number=} index
+   * @return {!jspb$jetski_memory$MutableMemoryConfig} returns this
+   */
+  addForceExperiments(value, index) {
+    return jspb_internal_adapters.addToRepeatedStringField(this, 8, value, index);
+  }
+
+
+  /**
+   * @param {!Iterable<string>} values
+   * @return {!jspb$jetski_memory$MutableMemoryConfig} returns this
+   */
+  addAllForceExperiments(values) {
+    return jspb_internal_adapters.addAllToRepeatedStringField(this, 8, values);
+  }
+
+
+  /**
+   * @param {number=} index If not passed, defaults to the end.
+   * @return {!jspb$jetski_memory$MutableMemoryConfig} returns this
+   */
+  removeForceExperiments(index) {
+    return jspb_internal_adapters.removeFromRepeatedStringField(this, 8, index);
+  }
+
+
+  /**
+   * Returns value at `index`.
+   * @override
+   * @param {number} index
+   * @return {string}
+   */
+  getForceExperiments(index) {
+   return jspb_internal_adapters.getRepeatedIndexedStringField(this, 8, index);
+  }
+
+
+  /**
+   * @param {number} index
+   * @param {string} value
+   * @return {!jspb$jetski_memory$MutableMemoryConfig} returns this
+   */
+  setForceExperiments(index, value) {
+    return jspb_internal_adapters.setRepeatedIndexedStringField(this, 8, index, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$jetski_memory$MutableMemoryConfig} returns this
+   */
+  clearForceExperimentsList() {
+    return jspb_internal_adapters.clearField(this, 8);
+  }
+
+
+  /**
+   * Returns the size of this field.
+   * @override
+   * @return {number}
+   */
+  getForceExperimentsCount() {
+    return jspb_internal_adapters.getRepeatedStringCount(this, 8);
+  }
+
+
 };
 
 /**
@@ -370,7 +460,8 @@ jspb$jetski_memory$MutableMemoryConfig.hasInstance = /** @pureOrBreakMyCode */ (
  *  fuse: (?jspb$jetski_memory$MutableFuseConfig.ObjectFormat|undefined),
  *  disableSkills: (?boolean|undefined),
  *  profile: (?string|undefined),
- *  releaseTrack: (?number|undefined)
+ *  releaseTrack: (?number|undefined),
+ *  forceExperimentsList: (?Array<string>|undefined)
  * }}
  */
 jspb$jetski_memory$MutableMemoryConfig.ObjectFormat;
@@ -434,7 +525,8 @@ if (goog.DEBUG && !COMPILED) {
  *  fuse: (!jspb$ro.jetski_memory$ReadonlyFuseConfig|undefined),
  *  disableSkills: (boolean|undefined),
  *  profile: (string|undefined),
- *  releaseTrack: (!jspb$e.jetski_memory$ReleaseTrack|undefined)
+ *  releaseTrack: (!jspb$e.jetski_memory$ReleaseTrack|undefined),
+ *  forceExperimentsList: (!ReadonlyArray<string>|undefined)
  * }}
  */
 jspb$jetski_memory$MutableMemoryConfig.FieldsInterface;

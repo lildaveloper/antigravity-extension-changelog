@@ -102,7 +102,7 @@ class FileUtils {
      * @param {?=} fsModule : instance of fs package
      * @param {?=} processModule
      * @param {?=} osModule
-     * @param {function((string|!URLLike|!tsickle_node_fetch_4.Request), (undefined|!tsickle_node_fetch_4.RequestInit)=): !Promise<!tsickle_node_fetch_4.Response>=} fetchModule
+     * @param {function((string|!tsickle_node_fetch_4.Request|!URLLike), (undefined|!tsickle_node_fetch_4.RequestInit)=): !Promise<!tsickle_node_fetch_4.Response>=} fetchModule
      */
     constructor(context = {
         DIRNAME: exports.CLOUDCODE_DIRNAME,
@@ -351,7 +351,7 @@ class FileUtils {
     /**
      * @public
      * @param {string} path
-     * @param {(string|?|!ArrayBuffer)} content
+     * @param {(string|!ArrayBuffer|?)} content
      * @return {!Promise<void>}
      */
     async writeFileBuffer(path, content) {
@@ -930,7 +930,7 @@ if (false) {
      */
     FileUtils.prototype.osModule;
     /**
-     * @const {function((string|!URLLike|!tsickle_node_fetch_4.Request), (undefined|!tsickle_node_fetch_4.RequestInit)=): !Promise<!tsickle_node_fetch_4.Response>}
+     * @const {function((string|!tsickle_node_fetch_4.Request|!URLLike), (undefined|!tsickle_node_fetch_4.RequestInit)=): !Promise<!tsickle_node_fetch_4.Response>}
      * @private
      */
     FileUtils.prototype.fetchModule;

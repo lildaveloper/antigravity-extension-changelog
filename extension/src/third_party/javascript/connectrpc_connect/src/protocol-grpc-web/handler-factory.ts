@@ -82,7 +82,7 @@ function createHandlerFactory(options) {
     /** @type {!tsickle_serialization_17.Serialization<!Headers>} */
     const trailerSerialization = (0, trailer_js_1.createTrailerSerialization)();
     /**
-     * @param {({kind: string, impl: function(*, !tsickle_implementation_4.HandlerContext): (?|!Promise<?>), method: ?}|{kind: string, impl: function(*, !tsickle_implementation_4.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_4.HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_4.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})} spec
+     * @param {({kind: string, impl: function(*, !tsickle_implementation_4.HandlerContext): (!Promise<?>|?), method: ?}|{kind: string, impl: function(*, !tsickle_implementation_4.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_4.HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_4.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})} spec
      * @return {?}
      */
     function fact(spec) {
@@ -105,7 +105,7 @@ exports.createHandlerFactory = createHandlerFactory;
  * @template I, O
  * @param {!tsickle_universal_handler_18.UniversalHandlerOptions} opt
  * @param {!tsickle_serialization_17.Serialization<!Headers>} trailerSerialization
- * @param {({kind: string, impl: function(?, !tsickle_implementation_4.HandlerContext): (?|!Promise<?>), method: ?}|{kind: string, impl: function(?, !tsickle_implementation_4.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<?, ?, ?>, !tsickle_implementation_4.HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<?, ?, ?>, !tsickle_implementation_4.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})} spec
+ * @param {({kind: string, impl: function(?, !tsickle_implementation_4.HandlerContext): (!Promise<?>|?), method: ?}|{kind: string, impl: function(?, !tsickle_implementation_4.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<?, ?, ?>, !tsickle_implementation_4.HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<?, ?, ?>, !tsickle_implementation_4.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})} spec
  * @return {function(!tsickle_universal_19.UniversalServerRequest): !Promise<!tsickle_universal_19.UniversalServerResponse>}
  */
 function createHandler(opt, trailerSerialization, spec) {

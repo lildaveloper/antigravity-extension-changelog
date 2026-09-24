@@ -107,7 +107,7 @@ if (false) {
 }
 /**
  * @template T
- * @param {(undefined|!ResourceMapKeyFn|!ResourceMap<T>|!ReadonlyArray<!Array<?>>)} arg
+ * @param {(undefined|!ReadonlyArray<!Array<?>>|!ResourceMap<T>|!ResourceMapKeyFn)} arg
  * @return {boolean}
  */
 function isEntries(arg) {
@@ -120,7 +120,7 @@ function isEntries(arg) {
 class ResourceMap {
     /**
      * @public
-     * @param {(undefined|!ResourceMapKeyFn|!ResourceMap|!ReadonlyArray<!Array<?>>)=} arg
+     * @param {(undefined|!ReadonlyArray<!Array<?>>|!ResourceMap|!ResourceMapKeyFn)=} arg
      * @param {(undefined|!ResourceMapKeyFn)=} toKey
      */
     constructor(arg, toKey) {
@@ -283,7 +283,7 @@ if (false) {
 class ResourceSet {
     /**
      * @public
-     * @param {(undefined|!ResourceMapKeyFn|!ReadonlyArray<!tsickle_uri_1.URI>)=} entriesOrKey
+     * @param {(undefined|!ReadonlyArray<!tsickle_uri_1.URI>|!ResourceMapKeyFn)=} entriesOrKey
      * @param {(undefined|!ResourceMapKeyFn)=} toKey
      */
     constructor(entriesOrKey, toKey) {

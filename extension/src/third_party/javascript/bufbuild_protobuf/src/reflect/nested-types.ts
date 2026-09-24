@@ -37,7 +37,7 @@ const tsickle_descriptors_1 = goog.requireType("google3.third_party.javascript.b
  * Iterate over all types - enumerations, extensions, services, messages -
  * and enumerations, extensions and messages nested in messages.
  * @param {(!tsickle_descriptors_1.DescFile|!tsickle_descriptors_1.DescMessage)} desc
- * @return {!Iterable<(!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescEnum|?|!tsickle_descriptors_1.DescService), ?, ?>}
+ * @return {!Iterable<(!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescService|?), ?, ?>}
  */
 function* nestedTypes(desc) {
     switch (desc.kind) {
@@ -83,7 +83,7 @@ exports.nestedTypes = nestedTypes;
  *
  * The message Example references the message Msg, and the enum Level.
  * @param {!tsickle_descriptors_1.DescMessage} descMessage
- * @return {!Iterable<(!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescEnum), ?, ?>}
+ * @return {!Iterable<(!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescMessage), ?, ?>}
  */
 function usedTypes(descMessage) {
     return usedTypesInternal(descMessage, new Set());
@@ -92,11 +92,11 @@ exports.usedTypes = usedTypes;
 /**
  * @param {!tsickle_descriptors_1.DescMessage} descMessage
  * @param {!Set<string>} seen
- * @return {!Iterable<(!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescEnum), ?, ?>}
+ * @return {!Iterable<(!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescMessage), ?, ?>}
  */
 function* usedTypesInternal(descMessage, seen) {
     for (const field of descMessage.fields) {
-        /** @type {(undefined|!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescEnum)} */
+        /** @type {(undefined|!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescMessage)} */
         const ref = field.enum ?? field.message ?? undefined;
         if (!ref || seen.has(ref.typeName)) {
             continue;
@@ -110,14 +110,14 @@ function* usedTypesInternal(descMessage, seen) {
 }
 /**
  * Returns the ancestors of a given Protobuf element, up to the file.
- * @param {(!tsickle_descriptors_1.DescFile|!tsickle_descriptors_1.DescMessage|?|!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescEnumValue|!tsickle_descriptors_1.DescMethod|!tsickle_descriptors_1.DescService|!tsickle_descriptors_1.DescOneof)} desc
- * @return {!Array<(!tsickle_descriptors_1.DescFile|!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescService)>}
+ * @param {(!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescEnumValue|!tsickle_descriptors_1.DescFile|!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescMethod|!tsickle_descriptors_1.DescOneof|!tsickle_descriptors_1.DescService|?)} desc
+ * @return {!Array<(!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescFile|!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescService)>}
  */
 function parentTypes(desc) {
-    /** @type {!Array<(!tsickle_descriptors_1.DescFile|!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescService)>} */
+    /** @type {!Array<(!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescFile|!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescService)>} */
     const parents = [];
     while (desc.kind !== "file") {
-        /** @type {(!tsickle_descriptors_1.DescFile|!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescService)} */
+        /** @type {(!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescFile|!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescService)} */
         const p = parent(desc);
         desc = p;
         parents.push(p);
@@ -125,11 +125,11 @@ function parentTypes(desc) {
     return parents;
 }
 exports.parentTypes = parentTypes;
-/** @typedef {(!tsickle_descriptors_1.DescFile|!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescService)} */
+/** @typedef {(!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescFile|!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescService)} */
 var Parent;
 /**
- * @param {(!tsickle_descriptors_1.DescMessage|?|!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescEnumValue|!tsickle_descriptors_1.DescMethod|!tsickle_descriptors_1.DescService|!tsickle_descriptors_1.DescOneof)} desc
- * @return {(!tsickle_descriptors_1.DescFile|!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescService)}
+ * @param {(!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescEnumValue|!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescMethod|!tsickle_descriptors_1.DescOneof|!tsickle_descriptors_1.DescService|?)} desc
+ * @return {(!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescFile|!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescService)}
  */
 function parent(desc) {
     switch (desc.kind) {
@@ -137,12 +137,12 @@ function parent(desc) {
         case "field":
         case "oneof":
         case "rpc":
-            return (/** @type {(?|!tsickle_descriptors_1.DescEnumValue|!tsickle_descriptors_1.DescMethod|!tsickle_descriptors_1.DescOneof)} */ (desc)).parent;
+            return (/** @type {(!tsickle_descriptors_1.DescEnumValue|!tsickle_descriptors_1.DescMethod|!tsickle_descriptors_1.DescOneof|?)} */ (desc)).parent;
         case "service":
             return (/** @type {!tsickle_descriptors_1.DescService} */ (desc)).file;
         case "extension":
         case "enum":
         case "message":
-            return (/** @type {(!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescEnum|?)} */ (desc)).parent ?? (/** @type {(!tsickle_descriptors_1.DescMessage|!tsickle_descriptors_1.DescEnum|?)} */ (desc)).file;
+            return (/** @type {(!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescMessage|?)} */ (desc)).parent ?? (/** @type {(!tsickle_descriptors_1.DescEnum|!tsickle_descriptors_1.DescMessage|?)} */ (desc)).file;
     }
 }

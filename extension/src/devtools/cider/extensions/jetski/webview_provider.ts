@@ -119,7 +119,7 @@ class JetskiWebviewProvider {
     }
     /**
      * @public
-     * @param {(!tsickle_vscode_1.WebviewView|!tsickle_vscode_1.WebviewPanel)} view
+     * @param {(!tsickle_vscode_1.WebviewPanel|!tsickle_vscode_1.WebviewView)} view
      * @return {!Promise<void>}
      */
     async resolveWebview(view) {
@@ -174,7 +174,7 @@ if (false) {
      */
     JetskiWebviewProvider.prototype.editorPanel;
     /**
-     * @type {(undefined|!tsickle_vscode_1.WebviewView|!tsickle_vscode_1.WebviewPanel)}
+     * @type {(undefined|!tsickle_vscode_1.WebviewPanel|!tsickle_vscode_1.WebviewView)}
      * @private
      */
     JetskiWebviewProvider.prototype.view;

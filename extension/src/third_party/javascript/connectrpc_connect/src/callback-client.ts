@@ -77,7 +77,7 @@ var CancelFn;
 function createCallbackClient(service, transport) {
     return (/** @type {?} */ ((0, any_client_js_1.makeAnyClient)(service, (/**
      * @param {?} method
-     * @return {(null|function(?, function((undefined|!tsickle_connect_error_2.ConnectError), (undefined|*)): void, (undefined|!tsickle_call_options_6.CallOptions)=): function(): void|function(?, function(*): void, function((undefined|!tsickle_connect_error_2.ConnectError)): void, (undefined|!tsickle_call_options_6.CallOptions)=): function(): void)}
+     * @return {(null|function(?, function(*): void, function((undefined|!tsickle_connect_error_2.ConnectError)): void, (undefined|!tsickle_call_options_6.CallOptions)=): function(): void|function(?, function((undefined|!tsickle_connect_error_2.ConnectError), (undefined|*)): void, (undefined|!tsickle_call_options_6.CallOptions)=): function(): void)}
      */
     (method) => {
         switch (method.methodKind) {

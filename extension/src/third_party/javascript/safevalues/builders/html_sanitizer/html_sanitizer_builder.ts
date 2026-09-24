@@ -305,7 +305,7 @@ class BaseSanitizerBuilder {
      * @public
      * @template THIS
      * @this {THIS}
-     * @param {function(!URL, (!StyleElementOrAttributeUrlPolicyHints|!HtmlAttributeUrlPolicyHints)): (null|!URL)} resourceUrlPolicy
+     * @param {function(!URL, (!HtmlAttributeUrlPolicyHints|!StyleElementOrAttributeUrlPolicyHints)): (null|!URL)} resourceUrlPolicy
      * @return {THIS}
      */
     withResourceUrlPolicy(resourceUrlPolicy) {
@@ -353,7 +353,7 @@ class BaseSanitizerBuilder {
      * @public
      * @template THIS
      * @this {THIS}
-     * @param {function(!URL, (!StyleElementOrAttributeUrlPolicyHints|!HtmlAttributeUrlPolicyHints)): (null|!URL)} navigationUrlPolicy
+     * @param {function(!URL, (!HtmlAttributeUrlPolicyHints|!StyleElementOrAttributeUrlPolicyHints)): (null|!URL)} navigationUrlPolicy
      * @return {THIS}
      */
     withNavigationUrlPolicy(navigationUrlPolicy) {
@@ -375,12 +375,12 @@ if (false) {
      */
     BaseSanitizerBuilder.prototype.calledBuild;
     /**
-     * @type {(undefined|function(!URL, (!StyleElementOrAttributeUrlPolicyHints|!HtmlAttributeUrlPolicyHints)): (null|!URL))}
+     * @type {(undefined|function(!URL, (!HtmlAttributeUrlPolicyHints|!StyleElementOrAttributeUrlPolicyHints)): (null|!URL))}
      * @protected
      */
     BaseSanitizerBuilder.prototype.resourceUrlPolicy;
     /**
-     * @type {(undefined|function(!URL, (!StyleElementOrAttributeUrlPolicyHints|!HtmlAttributeUrlPolicyHints)): (null|!URL))}
+     * @type {(undefined|function(!URL, (!HtmlAttributeUrlPolicyHints|!StyleElementOrAttributeUrlPolicyHints)): (null|!URL))}
      * @protected
      */
     BaseSanitizerBuilder.prototype.navigationUrlPolicy;

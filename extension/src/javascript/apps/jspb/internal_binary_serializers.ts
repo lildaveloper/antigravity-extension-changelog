@@ -120,7 +120,7 @@ function serializeBinaryToWriterGenericImpl(messageArray, writer, serializers) {
     (fieldNumber, item) => {
         if (item == null)
             return;
-        /** @type {(undefined|function(!tsickle_writer_1.BinaryWriter, *, ?): void|function(!tsickle_writer_1.BinaryWriter, *, ?, !Array<?>, function(!Array<*>, !tsickle_writer_1.BinaryWriter): void): void)} */
+        /** @type {(undefined|function(!tsickle_writer_1.BinaryWriter, *, ?, !Array<?>, function(!Array<*>, !tsickle_writer_1.BinaryWriter): void): void|function(!tsickle_writer_1.BinaryWriter, *, ?): void)} */
         const writerFn = getWriterFn(serializers, (/** @type {?} */ (fieldNumber)));
         if (!writerFn) {
             (0, internal_unknown_fields_1.recordUnknownFieldDroppedInSerializeBinary)(messageArray, fieldNumber);
@@ -146,10 +146,10 @@ exports.serializeBinaryToWriterGenericImpl = serializeBinaryToWriterGenericImpl;
 /**
  * @param {!tsickle_internal_binary_fields_4.Serializers} serializers
  * @param {?} fieldNumber
- * @return {(undefined|function(!tsickle_writer_1.BinaryWriter, *, ?): void|function(!tsickle_writer_1.BinaryWriter, *, ?, !Array<?>, function(!Array<*>, !tsickle_writer_1.BinaryWriter): void): void)}
+ * @return {(undefined|function(!tsickle_writer_1.BinaryWriter, *, ?, !Array<?>, function(!Array<*>, !tsickle_writer_1.BinaryWriter): void): void|function(!tsickle_writer_1.BinaryWriter, *, ?): void)}
  */
 function getWriterFn(serializers, fieldNumber) {
-    /** @type {(function(!tsickle_writer_1.BinaryWriter, *, ?): void|function(!tsickle_writer_1.BinaryWriter, *, ?, !Array<?>, function(!Array<*>, !tsickle_writer_1.BinaryWriter): void): void)} */
+    /** @type {(function(!tsickle_writer_1.BinaryWriter, *, ?, !Array<?>, function(!Array<*>, !tsickle_writer_1.BinaryWriter): void): void|function(!tsickle_writer_1.BinaryWriter, *, ?): void)} */
     let writerFn = serializers[fieldNumber];
     if (writerFn)
         return writerFn;
@@ -157,7 +157,7 @@ function getWriterFn(serializers, fieldNumber) {
     const extensions = serializers.extensions;
     if (!extensions)
         return undefined;
-    /** @type {(!tsickle_internal_binary_fields_4.ReaderWriterPair|?|function(): ?|!Array<?>)} */
+    /** @type {(function(): ?|!tsickle_internal_binary_fields_4.ReaderWriterPair|!Array<?>|?)} */
     const binaryFieldInfo = extensions[fieldNumber];
     if (!binaryFieldInfo)
         return undefined;
@@ -165,9 +165,9 @@ function getWriterFn(serializers, fieldNumber) {
     const tuple = (0, internal_binary_fields_1.getBinaryExtensionTuple)(binaryFieldInfo);
     /** @type {!tsickle_internal_binary_fields_4.ReaderWriterPair} */
     const readerWriterPair = (0, assert_1.assertInstanceof)(tuple[0], internal_binary_fields_1.ReaderWriterPair);
-    /** @type {(function(!tsickle_writer_1.BinaryWriter, *, ?): void|function(!tsickle_writer_1.BinaryWriter, *, ?, !Array<?>, function(!Array<*>, !tsickle_writer_1.BinaryWriter): void): void)} */
+    /** @type {(function(!tsickle_writer_1.BinaryWriter, *, ?, !Array<?>, function(!Array<*>, !tsickle_writer_1.BinaryWriter): void): void|function(!tsickle_writer_1.BinaryWriter, *, ?): void)} */
     const baseWriterFn = readerWriterPair.$$binaryWriterFn;
-    /** @type {(undefined|?|function(): ?)} */
+    /** @type {(undefined|function(): ?|?)} */
     let binaryFields = tuple[1];
     if (binaryFields) {
         // message valued extension

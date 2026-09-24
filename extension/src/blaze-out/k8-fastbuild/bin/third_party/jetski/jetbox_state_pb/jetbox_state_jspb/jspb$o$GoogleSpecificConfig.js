@@ -8,7 +8,9 @@
 
 goog.provide('jspb$o$jetbox_state_pb$GoogleSpecificConfig');
 
+goog.require('jspb$jetbox_state_pb$MutableCogWorkspaceConfig');
 goog.require('jspb$jetbox_state_pb$MutableGoogleSpecificConfig');
+goog.require('jspb$o$jetbox_state_pb$CogWorkspaceConfig');
 goog.require('jspb_internal_adapters');
 goog.require('jspb_internal_public_for_gencode');
 
@@ -25,6 +27,7 @@ jspb$o$jetbox_state_pb$GoogleSpecificConfig.internal_toObject = function(msg) {
   jspb_internal_public_for_gencode.checkCanCallToObject(msg);
   return /** @type {?} */ (/** @type {!jspb$jetbox_state_pb$MutableGoogleSpecificConfig.ObjectFormat} */ ({
     magicWorkspaceVcs: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getEnumFieldLegacyNullable(msg, 1)),
+    magicWorkspaceCogConfig: jspb$o$jetbox_state_pb$CogWorkspaceConfig.internal_toObject(msg.getMagicWorkspaceCogConfig()),
   }));
 
 };
@@ -64,6 +67,9 @@ if (jspb_internal_public_for_gencode.GENERATE_FROM_OBJECT) {
 jspb$o$jetbox_state_pb$GoogleSpecificConfig.fromObject = function(obj) {
   const msg = new jspb$jetbox_state_pb$MutableGoogleSpecificConfig();
   jspb_internal_adapters.setEnumField(msg, 1, obj.magicWorkspaceVcs);
+  jspb_internal_adapters.setWrapperField(msg,
+      jspb$jetbox_state_pb$MutableCogWorkspaceConfig,
+      2, jspb_internal_public_for_gencode.fromObjectNullable(obj.magicWorkspaceCogConfig, jspb$o$jetbox_state_pb$CogWorkspaceConfig.fromObject));
   return msg;
 };
 }

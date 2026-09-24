@@ -46,8 +46,8 @@ const code_string_js_1 = goog.require('google3.third_party.javascript.connectrpc
  * Parse a Connect error from a JSON value.
  * Will return a ConnectError, and throw the provided fallback if parsing failed.
  *
- * @param {(null|string|number|boolean|!Object<string,?>|!Array<?>)} jsonValue
- * @param {(undefined|!Array<!Array<?>>|?|!Headers)} metadata
+ * @param {(null|string|number|boolean|!Array<?>|!Object<string,?>)} jsonValue
+ * @param {(undefined|!Array<!Array<?>>|!Headers|?)} metadata
  * @param {!tsickle_connect_error_4.ConnectError} fallback
  * @return {!tsickle_connect_error_4.ConnectError}
  */
@@ -67,30 +67,30 @@ function errorFromJson(jsonValue, metadata, fallback) {
     }
     /** @type {!tsickle_code_3.Code} */
     let code = fallback.code;
-    if ("code" in jsonValue && typeof (/** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */ ((/** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */ (jsonValue)).code)) === "string") {
-        code = (0, code_string_js_1.codeFromString)((/** @type {string} */ ((/** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */ (jsonValue)).code))) ?? code;
+    if ("code" in jsonValue && typeof (/** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */ ((/** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */ (jsonValue)).code)) === "string") {
+        code = (0, code_string_js_1.codeFromString)((/** @type {string} */ ((/** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */ (jsonValue)).code))) ?? code;
     }
-    /** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */
-    const message = (/** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */ ((/** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */ (jsonValue)).message));
+    /** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */
+    const message = (/** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */ ((/** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */ (jsonValue)).message));
     if (message != null && typeof message !== "string") {
         throw fallback;
     }
     /** @type {!tsickle_connect_error_4.ConnectError} */
     const error = new connect_error_js_1.ConnectError(message ?? "", code, metadata);
-    if ("details" in jsonValue && Array.isArray((/** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */ ((/** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */ (jsonValue)).details)))) {
-        for (const detail of (/** @type {!Array<(null|string|number|boolean|!Object<string,?>|?)>} */ ((/** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */ (jsonValue)).details))) {
+    if ("details" in jsonValue && Array.isArray((/** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */ ((/** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */ (jsonValue)).details)))) {
+        for (const detail of (/** @type {!Array<(null|string|number|boolean|?|!Object<string,?>)>} */ ((/** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */ (jsonValue)).details))) {
             if (detail === null ||
                 typeof detail != "object" ||
                 Array.isArray(detail) ||
-                typeof (/** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */ ((/** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */ (detail)).type)) != "string" ||
-                typeof (/** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */ ((/** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */ (detail)).value)) != "string") {
+                typeof (/** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */ ((/** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */ (detail)).type)) != "string" ||
+                typeof (/** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */ ((/** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */ (detail)).value)) != "string") {
                 throw fallback;
             }
             try {
                 error.details.push({
-                    type: (/** @type {string} */ ((/** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */ (detail)).type)),
-                    value: (0, wire_1.base64Decode)((/** @type {string} */ ((/** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */ (detail)).value))),
-                    debug: (/** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */ ((/** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */ (detail)).debug)),
+                    type: (/** @type {string} */ ((/** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */ (detail)).type)),
+                    value: (0, wire_1.base64Decode)((/** @type {string} */ ((/** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */ (detail)).value))),
+                    debug: (/** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */ ((/** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */ (detail)).debug)),
                 });
             }
             catch (e) {
@@ -106,15 +106,15 @@ exports.errorFromJson = errorFromJson;
  * Will return a ConnectError, and throw the provided fallback if parsing failed.
  *
  * @param {!Uint8Array} bytes
- * @param {(undefined|!Array<!Array<?>>|?|!Headers)} metadata
+ * @param {(undefined|!Array<!Array<?>>|!Headers|?)} metadata
  * @param {!tsickle_connect_error_4.ConnectError} fallback
  * @return {!tsickle_connect_error_4.ConnectError}
  */
 function errorFromJsonBytes(bytes, metadata, fallback) {
-    /** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */
+    /** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */
     let jsonValue;
     try {
-        jsonValue = (/** @type {(null|string|number|boolean|!Object<string,?>|!Array<?>)} */ (JSON.parse(new TextDecoder().decode(bytes))));
+        jsonValue = (/** @type {(null|string|number|boolean|!Array<?>|!Object<string,?>)} */ (JSON.parse(new TextDecoder().decode(bytes))));
     }
     catch (e) {
         throw fallback;
@@ -134,10 +134,10 @@ exports.errorFromJsonBytes = errorFromJsonBytes;
  *
  * @param {!tsickle_connect_error_4.ConnectError} error
  * @param {(undefined|?)} jsonWriteOptions
- * @return {!Object<string,(null|string|number|boolean|?|!Array<?>)>}
+ * @return {!Object<string,(null|string|number|boolean|!Array<?>|?)>}
  */
 function errorToJson(error, jsonWriteOptions) {
-    /** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */
+    /** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */
     const o = {
         code: (0, code_string_js_1.codeToString)(error.code),
     };
@@ -145,18 +145,18 @@ function errorToJson(error, jsonWriteOptions) {
         o.message = error.rawMessage;
     }
     if (error.details.length > 0) {
-        /** @typedef {{type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>)}} */
+        /** @typedef {{type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)}} */
         var IncomingDetail;
         o.details = error.details
             .map((/**
-         * @param {({desc: !tsickle_protobuf_2.DescMessage, value: ?}|{type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>)})} detail
-         * @return {{type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>)}}
+         * @param {({type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)}|{desc: !tsickle_protobuf_2.DescMessage, value: ?})} detail
+         * @return {{type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)}}
          */
         (detail) => {
             if ("desc" in detail) {
                 /** @type {*} */
                 const msg = (0, protobuf_1.create)((/** @type {{desc: !tsickle_protobuf_2.DescMessage, value: ?}} */ (detail)).desc, (/** @type {{desc: !tsickle_protobuf_2.DescMessage, value: ?}} */ (detail)).value);
-                /** @type {{type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>)}} */
+                /** @type {{type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)}} */
                 const i = {
                     type: (/** @type {{desc: !tsickle_protobuf_2.DescMessage, value: ?}} */ (detail)).desc.typeName,
                     value: (0, protobuf_1.toBinary)((/** @type {{desc: !tsickle_protobuf_2.DescMessage, value: ?}} */ (detail)).desc, msg),
@@ -175,8 +175,8 @@ function errorToJson(error, jsonWriteOptions) {
             return detail;
         }))
             .map((/**
-         * @param {{type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>)}} __0
-         * @return {{value: string, type: string, debug: (undefined|null|string|number|boolean|!Object<string,(null|string|number|boolean|?|!Array<?>)>|!Array<(null|string|number|boolean|!Object<string,?>|?)>)}}
+         * @param {{type: string, value: !Uint8Array, debug: (undefined|null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>)}} __0
+         * @return {{type: string, debug: (undefined|null|string|number|boolean|!Array<(null|string|number|boolean|?|!Object<string,?>)>|!Object<string,(null|string|number|boolean|!Array<?>|?)>), value: string}}
          */
         ({ value, ...rest }) => ({
             ...rest,
@@ -198,7 +198,7 @@ function errorToJsonBytes(error, jsonWriteOptions) {
     /** @type {!TextEncoder} */
     const textEncoder = new TextEncoder();
     try {
-        /** @type {!Object<string,(null|string|number|boolean|?|!Array<?>)>} */
+        /** @type {!Object<string,(null|string|number|boolean|!Array<?>|?)>} */
         const jsonObject = errorToJson(error, jsonWriteOptions);
         /** @type {string} */
         const jsonString = JSON.stringify(jsonObject);

@@ -34,7 +34,7 @@ jspb$b$jetbox_state_pb$CustomThemeSeeds.fields = /** @pureOrBreakMyCode */([
 jspb$jetbox_state_pb$MutableCustomThemeSeeds.prototype.serializeBinary = /** @pureOrBreakMyCode */(jspb_internal_public_for_gencode.makePrototypeSerializeBinaryFunction(jspb$b$jetbox_state_pb$CustomThemeSeeds.fields));
 
 
-var jspb$b$jetbox_state_pb$GoogleSpecificConfig;
-Object.defineProperty(this, 'jspb$b$jetbox_state_pb$GoogleSpecificConfig', {
-  get() { return jspb$b$jetbox_state_pb$GoogleSpecificConfig; },
-  set(v) { jspb$b$jetbox_state_pb$GoogleSpecificConfig = v; },
+var jspb$b$jetbox_state_pb$CogWorkspaceConfig;
+Object.defineProperty(this, 'jspb$b$jetbox_state_pb$CogWorkspaceConfig', {
+  get() { return jspb$b$jetbox_state_pb$CogWorkspaceConfig; },
+  set(v) { jspb$b$jetbox_state_pb$CogWorkspaceConfig = v; },

@@ -82,7 +82,7 @@ function createTransport(opt) {
          * @param {?} method
          * @param {(undefined|!AbortSignal)} signal
          * @param {(undefined|number)} timeoutMs
-         * @param {(undefined|!Array<!Array<?>>|?|!Headers)} header
+         * @param {(undefined|!Array<!Array<?>>|!Headers|?)} header
          * @param {?} message
          * @param {(undefined|!tsickle_context_values_19.ContextValues)=} contextValues
          * @return {!Promise<!tsickle_interceptor_13.UnaryResponse<I, O>>}
@@ -178,7 +178,7 @@ function createTransport(opt) {
          * @param {?} method
          * @param {(undefined|!AbortSignal)} signal
          * @param {(undefined|number)} timeoutMs
-         * @param {(undefined|!Array<!Array<?>>|?|!Headers)} header
+         * @param {(undefined|!Array<!Array<?>>|!Headers|?)} header
          * @param {!AsyncIterable<?, ?, ?>} input
          * @param {(undefined|!tsickle_context_values_19.ContextValues)=} contextValues
          * @return {!Promise<!tsickle_interceptor_13.StreamResponse<I, O>>}

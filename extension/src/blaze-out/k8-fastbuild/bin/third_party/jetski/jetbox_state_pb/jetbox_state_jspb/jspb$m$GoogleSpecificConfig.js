@@ -9,6 +9,7 @@
 goog.provide('jspb$jetbox_state_pb$MutableGoogleSpecificConfig');
 goog.provide('jspb$ro.jetbox_state_pb$ReadonlyGoogleSpecificConfig');
 
+goog.require('jspb$jetbox_state_pb$MutableCogWorkspaceConfig');
 goog.require('jspb_internal_adapters');
 goog.require('jspb_internal_public_for_gencode');
 /** @suppress {extraRequire} */
@@ -17,6 +18,7 @@ goog.requireType('google3.javascript.common.asserts.asserts');
 goog.requireType('jspb$e.exa$vcs_pb$VcsType');
 goog.requireType('jspb$jetbox_state_pb$ImmutableGoogleSpecificConfig');
 goog.requireType('jspb$r$jetbox_state_pb$GoogleSpecificConfig$internalDoNotUseReader');
+goog.requireType('jspb$ro.jetbox_state_pb$ReadonlyCogWorkspaceConfig');
 
 /**
  * @final
@@ -81,6 +83,78 @@ jspb$jetbox_state_pb$MutableGoogleSpecificConfig = class extends jspb_internal_p
   }
 
 
+  /**
+   * optional CogWorkspaceConfig magic_workspace_cog_config = 2;
+   * @override
+   * @return {!jspb$jetbox_state_pb$MutableCogWorkspaceConfig|undefined}
+   */
+  getMagicWorkspaceCogConfig() {
+    return jspb_internal_adapters.getWrapperFieldOrUndefined(this, jspb$jetbox_state_pb$MutableCogWorkspaceConfig, 2);
+  }
+
+
+  /**
+   * optional CogWorkspaceConfig magic_workspace_cog_config = 2;
+   * @override
+   * @return {!jspb$ro.jetbox_state_pb$ReadonlyCogWorkspaceConfig}
+   */
+  getReadonlyMagicWorkspaceCogConfig() {
+    return jspb_internal_adapters.getReadonlyWrapperField(this, jspb$jetbox_state_pb$MutableCogWorkspaceConfig, 2);
+  }
+
+
+  /**
+   * optional CogWorkspaceConfig magic_workspace_cog_config = 2;
+   * @param {!jspb_internal_public_for_gencode.OrUndefinedToken<U>=} legacyOrUndefined
+   * @return {!jspb$jetbox_state_pb$MutableCogWorkspaceConfig|R}
+   * @template U
+   * @template R := cond(eq(U, 'undefined'), 'undefined', 'jspb$jetbox_state_pb$MutableCogWorkspaceConfig') =:
+   * @tsType (legacyOrUndefined: import('google3/javascript/apps/jspb/internal_public').OrUndefinedToken<undefined>): ಠ_ಠ.clutz.jspb$jetbox_state_pb$MutableCogWorkspaceConfig|undefined
+   * @tsType (): ಠ_ಠ.clutz.jspb$jetbox_state_pb$MutableCogWorkspaceConfig
+   */
+  getMutableMagicWorkspaceCogConfig(legacyOrUndefined) {
+    return jspb_internal_adapters.getMutableWrapperField(this, jspb$jetbox_state_pb$MutableCogWorkspaceConfig, 2, legacyOrUndefined);
+  }
+
+
+  /**
+   * @param {!jspb$ro.jetbox_state_pb$ReadonlyCogWorkspaceConfig|null|undefined} value
+   * @return {!jspb$jetbox_state_pb$MutableGoogleSpecificConfig} returns this
+   */
+  setMagicWorkspaceCogConfig(value) {
+    return jspb_internal_adapters.setWrapperField(this, jspb$jetbox_state_pb$MutableCogWorkspaceConfig, 2, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$jetbox_state_pb$MutableGoogleSpecificConfig} returns this
+   */
+  clearMagicWorkspaceCogConfig() {
+    return jspb_internal_adapters.clearField(this, 2);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasMagicWorkspaceCogConfig() {
+    return jspb_internal_adapters.hasWrapperField(this, jspb$jetbox_state_pb$MutableCogWorkspaceConfig, 2);
+  }
+
+
+  /**
+   * optional CogWorkspaceConfig magic_workspace_cog_config = 2;
+   * @override
+   * @return {!jspb$ro.jetbox_state_pb$ReadonlyCogWorkspaceConfig|undefined}
+   */
+  getMagicWorkspaceCogConfigOrUndefined() {
+    return jspb_internal_adapters.getReadonlyWrapperFieldOrUndefined(this, jspb$jetbox_state_pb$MutableCogWorkspaceConfig, 2);
+  }
+
+
 };
 
 /**
@@ -107,7 +181,8 @@ jspb$jetbox_state_pb$MutableGoogleSpecificConfig.hasInstance = /** @pureOrBreakM
 /**
  * Object form of GoogleSpecificConfig as accepted by the `fromObject` method.
  * @typedef {{
- *  magicWorkspaceVcs: (?number|undefined)
+ *  magicWorkspaceVcs: (?number|undefined),
+ *  magicWorkspaceCogConfig: (?jspb$jetbox_state_pb$MutableCogWorkspaceConfig.ObjectFormat|undefined)
  * }}
  */
 jspb$jetbox_state_pb$MutableGoogleSpecificConfig.ObjectFormat;
@@ -166,7 +241,8 @@ if (goog.DEBUG && !COMPILED) {
 /**
  * Interface form of GoogleSpecificConfig as accepted by `fromFields` and produced by `getFields`.
  * @typedef {{
- *  magicWorkspaceVcs: (!jspb$e.exa$vcs_pb$VcsType|undefined)
+ *  magicWorkspaceVcs: (!jspb$e.exa$vcs_pb$VcsType|undefined),
+ *  magicWorkspaceCogConfig: (!jspb$ro.jetbox_state_pb$ReadonlyCogWorkspaceConfig|undefined)
  * }}
  */
 jspb$jetbox_state_pb$MutableGoogleSpecificConfig.FieldsInterface;

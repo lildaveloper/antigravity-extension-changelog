@@ -128,7 +128,7 @@ function getExtensionsInTable(table) {
             continue;
         let [readerWriterPair__tsickle_destructured_1, submessageBinaryFields__tsickle_destructured_2] = (0, internal_binary_fields_1.getBinaryExtensionTuple)(table.extensions[(/** @type {?} */ ((/** @type {*} */ (fieldNumber))))]);
         let readerWriterPair = /** @type {!tsickle_internal_binary_fields_2.ReaderWriterPair} */ (readerWriterPair__tsickle_destructured_1);
-        let submessageBinaryFields = /** @type {(undefined|?|function(): ?)} */ (submessageBinaryFields__tsickle_destructured_2);
+        let submessageBinaryFields = /** @type {(undefined|function(): ?|?)} */ (submessageBinaryFields__tsickle_destructured_2);
         if (submessageBinaryFields) {
             if (typeof submessageBinaryFields === 'function') {
                 submessageBinaryFields = submessageBinaryFields();

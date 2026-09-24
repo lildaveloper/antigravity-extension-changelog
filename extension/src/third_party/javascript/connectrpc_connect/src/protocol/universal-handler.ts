@@ -140,7 +140,7 @@ if (false) {
     /**
      * Interceptors that should be applied to all calls running through
      * this router. See the Interceptor type for details.
-     * @type {!Array<function(function((!tsickle_interceptor_10.UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_10.StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!tsickle_interceptor_10.UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_10.StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>): function((!tsickle_interceptor_10.UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_10.StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!tsickle_interceptor_10.UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_10.StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>>}
+     * @type {!Array<function(function((!tsickle_interceptor_10.StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_10.UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!tsickle_interceptor_10.StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_10.UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>): function((!tsickle_interceptor_10.StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_10.UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!tsickle_interceptor_10.StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_10.UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>>}
      * @public
      */
     UniversalHandlerOptions.prototype.interceptors;
@@ -231,7 +231,7 @@ exports.validateUniversalHandlerOptions = validateUniversalHandlerOptions;
  *
  * At least one protocol is required.
  *
- * @param {{service: !tsickle_protobuf_1.DescService, methods: !Object<string,({kind: string, impl: function(*, !tsickle_implementation_2.HandlerContext): (?|!Promise<?>), method: ?}|{kind: string, impl: function(*, !tsickle_implementation_2.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_2.HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_2.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})>}} spec
+ * @param {{service: !tsickle_protobuf_1.DescService, methods: !Object<string,({kind: string, impl: function(*, !tsickle_implementation_2.HandlerContext): (!Promise<?>|?), method: ?}|{kind: string, impl: function(*, !tsickle_implementation_2.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_2.HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_2.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})>}} spec
  * @param {!Array<!tsickle_protocol_handler_factory_6.ProtocolHandlerFactory>} protocols
  * @return {!Array<!UniversalHandler>}
  */
@@ -241,7 +241,7 @@ function createUniversalServiceHandlers(spec, protocols) {
      * @return {!UniversalHandler}
      */
     ([, implSpec__tsickle_destructured_1]) => {
-        let implSpec = /** @type {({kind: string, impl: function(*, !tsickle_implementation_2.HandlerContext): (?|!Promise<?>), method: ?}|{kind: string, impl: function(*, !tsickle_implementation_2.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_2.HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_2.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})} */ (implSpec__tsickle_destructured_1);
+        let implSpec = /** @type {({kind: string, impl: function(*, !tsickle_implementation_2.HandlerContext): (!Promise<?>|?), method: ?}|{kind: string, impl: function(*, !tsickle_implementation_2.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_2.HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_2.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})} */ (implSpec__tsickle_destructured_1);
         return (createUniversalMethodHandler(implSpec, protocols));
     }));
 }
@@ -252,7 +252,7 @@ exports.createUniversalServiceHandlers = createUniversalServiceHandlers;
  *
  * At least one protocol is required.
  *
- * @param {({kind: string, impl: function(*, !tsickle_implementation_2.HandlerContext): (?|!Promise<?>), method: ?}|{kind: string, impl: function(*, !tsickle_implementation_2.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_2.HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_2.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})} spec
+ * @param {({kind: string, impl: function(*, !tsickle_implementation_2.HandlerContext): (!Promise<?>|?), method: ?}|{kind: string, impl: function(*, !tsickle_implementation_2.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_2.HandlerContext): !Promise<?>, method: ?}|{kind: string, impl: function(!AsyncIterable<*, ?, ?>, !tsickle_implementation_2.HandlerContext): !AsyncIterable<?, ?, ?>, method: ?})} spec
  * @param {!Array<!tsickle_protocol_handler_factory_6.ProtocolHandlerFactory>} protocols
  * @return {!UniversalHandler}
  */

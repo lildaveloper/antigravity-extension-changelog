@@ -34,7 +34,7 @@ jspb$b$jetski_memory$SmithBackendConfig.fields = /** @pureOrBreakMyCode */([
 jspb$jetski_memory$MutableSmithBackendConfig.prototype.serializeBinary = /** @pureOrBreakMyCode */(jspb_internal_public_for_gencode.makePrototypeSerializeBinaryFunction(jspb$b$jetski_memory$SmithBackendConfig.fields));
 
 
-var jspb$b$jetski_memory$MemoryMountConfig;
-Object.defineProperty(this, 'jspb$b$jetski_memory$MemoryMountConfig', {
-  get() { return jspb$b$jetski_memory$MemoryMountConfig; },
-  set(v) { jspb$b$jetski_memory$MemoryMountConfig = v; },
+var jspb$b$jetski_memory$SojoBackendConfig;
+Object.defineProperty(this, 'jspb$b$jetski_memory$SojoBackendConfig', {
+  get() { return jspb$b$jetski_memory$SojoBackendConfig; },
+  set(v) { jspb$b$jetski_memory$SojoBackendConfig = v; },

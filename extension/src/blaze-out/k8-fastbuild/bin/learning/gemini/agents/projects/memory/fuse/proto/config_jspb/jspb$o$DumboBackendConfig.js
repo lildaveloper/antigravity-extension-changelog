@@ -78,7 +78,7 @@ jspb$o$jetski_memory$DumboBackendConfig.fromObject = function(obj) {
 };
 }
 
-var jspb$o$jetski_memory$SkillsBackendConfig;
-Object.defineProperty(this, 'jspb$o$jetski_memory$SkillsBackendConfig', {
-  get() { return jspb$o$jetski_memory$SkillsBackendConfig; },
-  set(v) { jspb$o$jetski_memory$SkillsBackendConfig = v; },
+var jspb$o$jetski_memory$MemoryBankBackendConfig;
+Object.defineProperty(this, 'jspb$o$jetski_memory$MemoryBankBackendConfig', {
+  get() { return jspb$o$jetski_memory$MemoryBankBackendConfig; },
+  set(v) { jspb$o$jetski_memory$MemoryBankBackendConfig = v; },

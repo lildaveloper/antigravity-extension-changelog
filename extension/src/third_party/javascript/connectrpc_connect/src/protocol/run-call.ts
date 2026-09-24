@@ -55,7 +55,7 @@ var UnaryFn;
  * Runs a unary method with the given interceptors. Note that this function
  * is only used when implementing a Transport.
  * @template I, O
- * @param {{req: ?, next: function(!tsickle_interceptor_2.UnaryRequest<I, O>): !Promise<!tsickle_interceptor_2.UnaryResponse<I, O>>, timeoutMs: (undefined|number), signal: (undefined|!AbortSignal), interceptors: (undefined|!Array<function(function((!tsickle_interceptor_2.UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_2.StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!tsickle_interceptor_2.UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_2.StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>): function((!tsickle_interceptor_2.UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_2.StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!tsickle_interceptor_2.UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_2.StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>>)}} opt
+ * @param {{req: ?, next: function(!tsickle_interceptor_2.UnaryRequest<I, O>): !Promise<!tsickle_interceptor_2.UnaryResponse<I, O>>, timeoutMs: (undefined|number), signal: (undefined|!AbortSignal), interceptors: (undefined|!Array<function(function((!tsickle_interceptor_2.StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_2.UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!tsickle_interceptor_2.StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_2.UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>): function((!tsickle_interceptor_2.StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_2.UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!tsickle_interceptor_2.StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_2.UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>>)}} opt
  * @return {!Promise<!tsickle_interceptor_2.UnaryResponse<I, O>>}
  */
 function runUnaryCall(opt) {
@@ -65,7 +65,7 @@ function runUnaryCall(opt) {
     const signal = /** @type {!AbortSignal} */ (signal__tsickle_destructured_1);
     const abort = /** @type {function(*): !Promise<?>} */ (abort__tsickle_destructured_2);
     const done = /** @type {function(): void} */ (done__tsickle_destructured_3);
-    /** @type {{message: ?, signal: !AbortSignal, method: ?, url: string, contextValues: !tsickle_context_values_6.ContextValues, header: !Headers, stream: boolean, service: !tsickle_protobuf_1.DescService, requestMethod: string}} */
+    /** @type {{stream: boolean, method: ?, service: !tsickle_protobuf_1.DescService, requestMethod: string, url: string, header: !Headers, contextValues: !tsickle_context_values_6.ContextValues, message: ?, signal: !AbortSignal}} */
     const req = {
         ...opt.req,
         message: (0, normalize_js_1.normalize)(opt.req.method.input, opt.req.message),
@@ -94,7 +94,7 @@ var StreamingFn;
  * Runs a server-streaming method with the given interceptors. Note that this
  * function is only used when implementing a Transport.
  * @template I, O
- * @param {{req: ?, next: function(!tsickle_interceptor_2.StreamRequest<I, O>): !Promise<!tsickle_interceptor_2.StreamResponse<I, O>>, timeoutMs: (undefined|number), signal: (undefined|!AbortSignal), interceptors: (undefined|!Array<function(function((!tsickle_interceptor_2.UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_2.StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!tsickle_interceptor_2.UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_2.StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>): function((!tsickle_interceptor_2.UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_2.StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!tsickle_interceptor_2.UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_2.StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>>)}} opt
+ * @param {{req: ?, next: function(!tsickle_interceptor_2.StreamRequest<I, O>): !Promise<!tsickle_interceptor_2.StreamResponse<I, O>>, timeoutMs: (undefined|number), signal: (undefined|!AbortSignal), interceptors: (undefined|!Array<function(function((!tsickle_interceptor_2.StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_2.UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!tsickle_interceptor_2.StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_2.UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>): function((!tsickle_interceptor_2.StreamRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_2.UnaryRequest<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)): !Promise<(!tsickle_interceptor_2.StreamResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>|!tsickle_interceptor_2.UnaryResponse<!tsickle_protobuf_1.DescMessage, !tsickle_protobuf_1.DescMessage>)>>)}} opt
  * @return {!Promise<!tsickle_interceptor_2.StreamResponse<I, O>>}
  */
 function runStreamingCall(opt) {
@@ -104,7 +104,7 @@ function runStreamingCall(opt) {
     const signal = /** @type {!AbortSignal} */ (signal__tsickle_destructured_4);
     const abort = /** @type {function(*): !Promise<?>} */ (abort__tsickle_destructured_5);
     const done = /** @type {function(): void} */ (done__tsickle_destructured_6);
-    /** @type {{message: !AsyncIterable<?, ?, ?>, signal: !AbortSignal, method: ?, url: string, contextValues: !tsickle_context_values_6.ContextValues, header: !Headers, stream: boolean, service: !tsickle_protobuf_1.DescService, requestMethod: string}} */
+    /** @type {{stream: boolean, method: ?, service: !tsickle_protobuf_1.DescService, requestMethod: string, url: string, header: !Headers, contextValues: !tsickle_context_values_6.ContextValues, message: !AsyncIterable<?, ?, ?>, signal: !AbortSignal}} */
     const req = {
         ...opt.req,
         message: (0, normalize_js_1.normalizeIterable)(opt.req.method.input, opt.req.message),
@@ -146,7 +146,7 @@ function runStreamingCall(opt) {
     }));
     return next(req).then((/**
      * @param {!tsickle_interceptor_2.StreamResponse<I, O>} res
-     * @return {{message: *, stream: boolean, method: ?, service: !tsickle_protobuf_1.DescService, header: !Headers, trailer: !Headers}}
+     * @return {{stream: boolean, method: ?, service: !tsickle_protobuf_1.DescService, header: !Headers, trailer: !Headers, message: *}}
      */
     (res) => {
         return {

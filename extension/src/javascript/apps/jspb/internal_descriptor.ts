@@ -82,7 +82,7 @@ class DescriptorTypeReferenceImpl extends descriptor_1.DescriptorTypeReference {
      * @param {string} typeName
      * @param {number} fieldPresence
      * @param {string} serializedDescriptorProto
-     * @param {!ReadonlyArray<(undefined|!Map<number, !ExtensionReference<!tsickle_mutable_message_3.MutableMessage<?>>>|function(): !tsickle_descriptor_1.DescriptorTypeReference<?, string>|function(): !tsickle_descriptor_1.EnumDescriptorTypeReference<?>)>} maybeChildTypes
+     * @param {!ReadonlyArray<(undefined|function(): !tsickle_descriptor_1.DescriptorTypeReference<?, string>|function(): !tsickle_descriptor_1.EnumDescriptorTypeReference<?>|!Map<number, !ExtensionReference<!tsickle_mutable_message_3.MutableMessage<?>>>)>} maybeChildTypes
      * @param {!Object} internalArg
      */
     constructor(ctor, typeName, fieldPresence, serializedDescriptorProto, maybeChildTypes, internalArg) {
@@ -354,7 +354,7 @@ var AnyEnumDescriptorTypeReferenceGetter;
  * @param {string} typeName
  * @param {number} fieldPresence
  * @param {string} serializedDescriptor
- * @param {...(undefined|!Map<number, !ExtensionReference<!tsickle_mutable_message_3.MutableMessage<?>>>|function(): !tsickle_descriptor_1.DescriptorTypeReference<?, string>|function(): !tsickle_descriptor_1.EnumDescriptorTypeReference<?>)} maybeChildTypes
+ * @param {...(undefined|function(): !tsickle_descriptor_1.DescriptorTypeReference<?, string>|function(): !tsickle_descriptor_1.EnumDescriptorTypeReference<?>|!Map<number, !ExtensionReference<!tsickle_mutable_message_3.MutableMessage<?>>>)} maybeChildTypes
  * @return {function(): !tsickle_descriptor_1.DescriptorTypeReference<M, string>}
  */
 function makeDescriptorGetter(ctor, typeName, fieldPresence, serializedDescriptor, ...maybeChildTypes) {

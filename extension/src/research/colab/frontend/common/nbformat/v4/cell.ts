@@ -59,7 +59,7 @@ exports.CodeCell = CodeCell;
 if (false) {
     /**
      * @export
-     * @type {!Array<(!tsickle_output_2.Error|!tsickle_output_2.DisplayData|!tsickle_output_2.ExecuteResult|!tsickle_output_2.Stream)>}
+     * @type {!Array<(!tsickle_output_2.DisplayData|!tsickle_output_2.Error|!tsickle_output_2.ExecuteResult|!tsickle_output_2.Stream)>}
      */
     CodeCell.prototype.outputs;
     /**

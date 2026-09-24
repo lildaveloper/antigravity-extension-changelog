@@ -340,7 +340,7 @@ exports.isVoidTag = isVoidTag;
  *   iframe, link, math, meta, object, script, style, svg, and template.
  * @param {string} tagName
  * @param {(undefined|!Object<string,(undefined|string|number|!tsickle_url_impl_6.SafeUrl)>)=} attributes
- * @param {(undefined|string|number|boolean|!tsickle_html_impl_2.SafeHtml|!Array<(string|number|boolean|!tsickle_html_impl_2.SafeHtml)>)=} content
+ * @param {(undefined|string|number|boolean|!Array<(string|number|boolean|!tsickle_html_impl_2.SafeHtml)>|!tsickle_html_impl_2.SafeHtml)=} content
  * @return {!tsickle_html_impl_2.SafeHtml}
  */
 function createHtml(tagName, attributes, content) {
@@ -378,7 +378,7 @@ exports.createHtml = createHtml;
  * to "text/css".
  * @throws {!Error} If invalid attribute name or attribute value is provided or
  *     if attributes contains the type attribute.
- * @param {(!tsickle_style_sheet_impl_5.SafeStyleSheet|!Array<!tsickle_style_sheet_impl_5.SafeStyleSheet>)} styleSheet Content to put inside the tag. Array elements are
+ * @param {(!Array<!tsickle_style_sheet_impl_5.SafeStyleSheet>|!tsickle_style_sheet_impl_5.SafeStyleSheet)} styleSheet Content to put inside the tag. Array elements are
  *     concatenated.
  * @param {(undefined|!Object<string,(undefined|string|number|!tsickle_url_impl_6.SafeUrl)>)=} attributes Mapping from attribute names to their values. Only
  *     attribute names consisting of [a-zA-Z0-9-] are allowed. Value of

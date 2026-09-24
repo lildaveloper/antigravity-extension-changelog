@@ -53,7 +53,8 @@ jspb$b$jetski_memory$FuseConfig.fields = /** @pureOrBreakMyCode */([
       jspb_internal_binary.RStringRequireUtf8WString,
       jspb$b$jetski_memory$MemoryMountConfig.fields),
   jspb_internal_binary.RWInt32,
-  jspb_internal_binary.RWBool
+  jspb_internal_binary.RWBool,
+  jspb_internal_binary.RWInt64
 ]);
 
 /**

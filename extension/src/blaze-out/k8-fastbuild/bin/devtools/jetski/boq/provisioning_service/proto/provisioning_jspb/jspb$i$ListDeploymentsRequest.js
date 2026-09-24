@@ -29,6 +29,7 @@ jspb$devtools_jetski_provisioning$ImmutableListDeploymentsRequest = function() {
    * optional View view = 1;
    * @override
    * @return {!jspb$e.devtools_jetski_provisioning$ListDeploymentsRequest$View}
+   * @deprecated
    * @abstract
    */
   this.getView;
@@ -38,6 +39,7 @@ jspb$devtools_jetski_provisioning$ImmutableListDeploymentsRequest = function() {
    * @override
    * @return {boolean}
    * @abstract
+   * @deprecated
    */
   this.hasView;
 
@@ -45,6 +47,7 @@ jspb$devtools_jetski_provisioning$ImmutableListDeploymentsRequest = function() {
    * optional View view = 1;
    * @override
    * @return {!jspb$e.devtools_jetski_provisioning$ListDeploymentsRequest$View|undefined}
+   * @deprecated
    * @abstract
    */
   this.getViewOrUndefined;

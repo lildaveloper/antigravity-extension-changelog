@@ -33,7 +33,7 @@ if (false) {
      * @public
      * @param {!tsickle_vscode_1.Uri} uri
      * @param {!tsickle_vscode_1.CancellationToken} token
-     * @return {(undefined|null|!Uint8Array|!Thenable<(undefined|null|!Uint8Array)>)}
+     * @return {(undefined|null|!Thenable<(undefined|null|!Uint8Array)>|!Uint8Array)}
      */
     VirtualFilesystemContentProvider.prototype.provideBinaryContent = function (uri, token) { };
     /**

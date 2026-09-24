@@ -243,9 +243,9 @@ function compareBigInt(a, b) {
     /** @type {?} */
     const bAsString = (0, asserts_1.cast)(b, guards_1.isString);
     // String.startsWith is prohibted by GWS conformance: go/gws-inline-js-conformance#string-methods
-    /** @type {(boolean|number)} */
+    /** @type {(number|boolean)} */
     const aIsNegative = aAsString.length && aAsString[0] === '-';
-    /** @type {(boolean|number)} */
+    /** @type {(number|boolean)} */
     const bIsNegative = bAsString.length && bAsString[0] === '-';
     /** @type {number} */
     const aSign = aIsNegative ? -1 : 1;

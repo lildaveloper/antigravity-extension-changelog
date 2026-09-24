@@ -123,8 +123,8 @@ class HtmlSanitizerImpl {
      * @param {!Object} token
      * @param {(undefined|function(string): string)=} styleElementSanitizer
      * @param {(undefined|function(string): string)=} styleAttributeSanitizer
-     * @param {(undefined|function(!URL, (!StyleElementOrAttributeUrlPolicyHints|!HtmlAttributeUrlPolicyHints)): (null|!URL))=} resourceUrlPolicy
-     * @param {(undefined|function(!URL, (!StyleElementOrAttributeUrlPolicyHints|!HtmlAttributeUrlPolicyHints)): (null|!URL))=} navigationUrlPolicy
+     * @param {(undefined|function(!URL, (!HtmlAttributeUrlPolicyHints|!StyleElementOrAttributeUrlPolicyHints)): (null|!URL))=} resourceUrlPolicy
+     * @param {(undefined|function(!URL, (!HtmlAttributeUrlPolicyHints|!StyleElementOrAttributeUrlPolicyHints)): (null|!URL))=} navigationUrlPolicy
      * @param {(undefined|boolean)=} openShadow
      */
     constructor(sanitizerTable, token, styleElementSanitizer, styleAttributeSanitizer, resourceUrlPolicy, navigationUrlPolicy, openShadow) {
@@ -346,7 +346,7 @@ class HtmlSanitizerImpl {
                     break;
                 case sanitizer_table_1.AttributePolicyAction.KEEP_AND_USE_RESOURCE_URL_POLICY:
                     if (this.resourceUrlPolicy) {
-                        /** @type {(!StyleElementOrAttributeUrlPolicyHints|!HtmlAttributeUrlPolicyHints)} */
+                        /** @type {(!HtmlAttributeUrlPolicyHints|!StyleElementOrAttributeUrlPolicyHints)} */
                         const hints = {
                             type: url_policy_1.UrlPolicyHintsType.HTML_ATTRIBUTE,
                             attributeName: name,
@@ -372,7 +372,7 @@ class HtmlSanitizerImpl {
                     break;
                 case sanitizer_table_1.AttributePolicyAction.KEEP_AND_USE_RESOURCE_URL_POLICY_FOR_SRCSET:
                     if (this.resourceUrlPolicy) {
-                        /** @type {(!StyleElementOrAttributeUrlPolicyHints|!HtmlAttributeUrlPolicyHints)} */
+                        /** @type {(!HtmlAttributeUrlPolicyHints|!StyleElementOrAttributeUrlPolicyHints)} */
                         const hints = {
                             type: url_policy_1.UrlPolicyHintsType.HTML_ATTRIBUTE,
                             attributeName: name,
@@ -407,7 +407,7 @@ class HtmlSanitizerImpl {
                     /** @type {string} */
                     let attrUrl = value;
                     if (this.navigationUrlPolicy) {
-                        /** @type {(!StyleElementOrAttributeUrlPolicyHints|!HtmlAttributeUrlPolicyHints)} */
+                        /** @type {(!HtmlAttributeUrlPolicyHints|!StyleElementOrAttributeUrlPolicyHints)} */
                         const hints = {
                             type: url_policy_1.UrlPolicyHintsType.HTML_ATTRIBUTE,
                             attributeName: name,
@@ -526,12 +526,12 @@ if (false) {
      */
     HtmlSanitizerImpl.prototype.styleAttributeSanitizer;
     /**
-     * @const {(undefined|function(!URL, (!StyleElementOrAttributeUrlPolicyHints|!HtmlAttributeUrlPolicyHints)): (null|!URL))}
+     * @const {(undefined|function(!URL, (!HtmlAttributeUrlPolicyHints|!StyleElementOrAttributeUrlPolicyHints)): (null|!URL))}
      * @private
      */
     HtmlSanitizerImpl.prototype.resourceUrlPolicy;
     /**
-     * @const {(undefined|function(!URL, (!StyleElementOrAttributeUrlPolicyHints|!HtmlAttributeUrlPolicyHints)): (null|!URL))}
+     * @const {(undefined|function(!URL, (!HtmlAttributeUrlPolicyHints|!StyleElementOrAttributeUrlPolicyHints)): (null|!URL))}
      * @private
      */
     HtmlSanitizerImpl.prototype.navigationUrlPolicy;

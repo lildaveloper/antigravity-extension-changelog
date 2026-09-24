@@ -6,6 +6,157 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 ---
 
+## [1.5.0] - 2026-09-23
+
+### 🚀 Highlights
+- **Fast-Path Binary Stat-Based Identity Caching (b/561981286)**: Replaced multi-second full-file SHA-256 hash calculations on the ~200 MiB backend binary with lightweight filesystem stat tuples (`path:size:mtimeMs:ctimeMs:ino`), eliminating significant startup lag on Windows and cold starts.
+
+- **Save-Aware Inline Diff Lifecycle**: Inline diff sessions now actively intercept document save events: manual saves (`Cmd+S` / `Ctrl+S`) apply and accept pending modifications, while automatic background saves revert to original text to prevent unreviewed diffs from leaking to disk.
+
+- **Tab Discard & Dirty State Reconciliation**: Integrated tab group change listeners (`onDidChangeTabs`) to detect tab closures where dirty buffer state is discarded without closing the document model, automatically rejecting unapplied diffs and restoring original disk content.
+
+- **Targeted Multi-Repo Git Refresh (b/561494994)**: Scoped Git status refreshes directly to the owning repository root URI via the VS Code Git extension API, eliminating annoying "Choose a repository" quick pick prompts in multi-root workspaces and modal errors in non-Git directories.
+
+- **Autonomous Command Adjudication & Auto-Execution Preset**: Introduced `AgentPermissionPreset.AUTO` and `CommandAssessorConfig`, enabling an adjudicator agent to determine whether unsandboxed terminal commands are reversible before permitting auto-execution.
+
+- **Eager Background Server Pre-warming**: The extension host now eagerly boots and pre-warms the backend language server upon activation with secure CSRF token binding (`--csrf_token`), exposing `AntigravityExtensionApi` with active port and token metadata.
+
+### ✨ Improvements & Features
+- **Manual & Auto-Save Inline Diff Interception**:
+  - Manual saves (`TextDocumentSaveReason.Manual`) synchronously substitute the active buffer with clean modified text via `event.waitUntil` and finalize the diff session as accepted upon save completion.
+  - Auto-saves (`AfterDelay`, `FocusOut`) revert buffer content to `originalText` before disk writes to keep filesystem state clean, tracking pending auto-saves to finalize diffs as rejected.
+  - Added recursive save protection with `internalSaveUris` set.
+
+- **Tab Closure Detection**: Monitored `vscode.window.tabGroups.onDidChangeTabs` to catch when editors are closed with "Don't Save", ensuring discarded buffer edits trigger `rejectAll` and restore clean disk state.
+
+- **Guaranteed Disk Reversion on Rejection**: `rejectAll` directly flushes `originalText` to disk using `vscode.workspace.fs.writeFile`, safeguarding against lost disk state when editor buffers are closed or torn down.
+
+- **Eager Server Startup & API Export**:
+  - `activate()` now returns a typed `AntigravityExtensionApi` contract exposing `csrfToken` and a reactive `port` getter.
+  - Starts the backend server in the background during extension activation if no remote `serverUrl` is configured, reducing first-open latency for the webview.
+  - Added `--csrf_token` argument propagation to `agy --hub` backend invocations.
+
+- **Safe Release Base URL Resolution & Environment Override**:
+  - Added `resolveReleaseBaseUrl` and `validateAndNormalizeReleaseBaseUrl`, supporting `AGY_RELEASE_BASE_URL` environment variable overrides.
+  - Strictly enforces TLS (`https:`) for remote release endpoints (loopback `http://localhost` / `http://127.0.0.1` permitted for local development) to block MITM attacks.
+  - Automatically redirects deprecated release bucket `https://storage.googleapis.com/antigravity-releases` to the official default endpoint.
+
+- **Fail-Fast Integrity & Signature Verification**:
+  - Release manifests lacking cryptographic checksums (`sha512` / `sha256`) fail immediately before multi-hundred-megabyte binary downloads.
+  - Added `verifyBinarySignature` utilizing Node `crypto.verify` directly on `Buffer` without heap reallocation for future Ed25519 signature enforcement.
+
+- **Virtual Diff Document Invalidation (`jetski-diff://`)**:
+  - Implemented `onDidChange` event emitter on `ExtensionApiImpl` complying with `vscode.TextDocumentContentProvider`. Firing content change events forces VS Code to purge cached virtual documents when reopening diffs for the same file.
+  - Added `safeDecodeURIComponent` to prevent URI decoding exceptions on malformed escape sequences.
+
+- **New Conversation Timeout Budget**: Added a bounded 2-second timeout to `newConversation()`; if the main view fails to respond, it automatically resets `lastConversationId` and reconnects to avoid blocking the user.
+
+- **Reset Conversation Command**: Contributed `${prefix}.resetConversation` (`antigravity.resetConversation`) to clear workspace conversation state and trigger reconnect.
+
+- **Webview Instance Isolation**: Replaced global webview object property decoration with a `WeakSet<Webview>` in `DesktopWebviewDelegate`, preventing prototype contamination of third-party extension webviews (e.g. GitLens).
+
+- **Protocol & Schema Expansions**:
+  - `codeium_common_pb.ts`: Added `AgentPermissionPreset.AUTO` (value 6); updated `CascadeCommandsAutoExecution.AUTO` adjudicator semantics; added model mappings for `argon-sum` (1330), `gemini-3.8-flash-cyber-vertex` (1331), `fable-5.1-max-bon-le` (1332), and `gemini-3.8-flash-high-raw-thoughts` (1333); added `ingestion_options` to `Media`.
+  - `cortex_pb.ts`: Added `WorkspaceInitializationDataGitOnBorg` (index 34) for Git-on-Borg/Cog workspaces; added `LoadedCustomizations` and `LoadedCustomizations.LoadedCustomization` (index 342) tracking environment customization snapshots (`BUILTIN`, `GLOBAL`, `WORKSPACE` scopes; `ENABLED`, `DISABLED`, `TRUNCATED` statuses); added `StepRenderInfo.AgentRef` (index 398, 6) for subagent references in step headers; added `rules_token_budget` to `CascadePlannerConfig`; added `CommandAssessorConfig` (Next ID: 7); added `tool_source` to `CortexStepMetadata`.
+  - `hooks_pb.ts`: Added `HookCheckpoint` message (field 9 in `HookInjectedStep`); added `agent_name` and `parent_conversation_id` to `HookArgsCommon`; added `decision`, `reason`, and `permission_overrides` to `PreToolHookResult`; added `overwrite_result` to `PostToolHookResult`.
+  - `jetski_cortex_pb.ts`: Added `ExecutionStatus` for transient execution phase surfacing; added `ModelRequestStatus` for retry-after countdowns; added `PendingAgentMessagesUpdate`.
+  - `MemoryMountConfig` & `FuseConfig`: Added `SojoBackendConfig` (target, agent_id, read_only) and `MemoryBankBackendConfig` (target, parent, agent_id, bundle_type, read_only) oneofs; added `sql_max_ram_mb` (field 30, default 8192) in `FuseConfig`; added `force_experiments` (field 8) in `MemoryConfig`.
+  - `GoogleSpecificConfig`: Added `magic_workspace_cog_config` (`CogWorkspaceConfig` with `repo_name` and `branch_name`).
+
+### 🐛 Fixes & Patches
+- **Binary Identity Hash Latency (b/561981286)**: Eliminated repeated SHA-256 computation over the 200 MiB binary during extension startup, switching to filesystem `stat` metadata keys and cutting seconds off cold boot times.
+
+- **Multi-Repo Git Refresh Prompt Spam (b/561494994)**: Fixed an issue where unqualified `git.refresh` command executions caused VS Code to prompt users with a "Choose a repository" dropdown or show modal errors in non-Git workspaces.
+
+- **File Creation Replay Divergence (b/561515185)**: Corrected divergence evaluation for new file creations with empty original content, preventing replayed edit turns from overwriting subsequent user edits.
+
+- **Resolved Diff Navigation Flashing**: In `AgentEditManager`, checked `hunkStorage.hasAnyResolutions(message)` upfront before attempting inline zone rendering, ensuring files resolved in earlier turns immediately open read-only diffs without UI flicker.
+
+- **Webview PostMessage BigInt Scrubber**: Fixed BigInt JSON serialization sanitization to prevent throwing uncaught exceptions on circular or non-serializable payloads.
+
+---
+
+### ⚙️ Under the Hood (Technical & Internal Intelligence)
+*This section documents exact Google3 monorepo changes, schemas, and build revisions.*
+
+- **Core & Lifecycle (`extension/src/cloud/...`)**:
+  - `binary_downloader.ts`:
+    - Replaced `computeFileSha256` in `binaryVersionCache` with `getBinaryIdentityKey` (`[binaryPath, stats.size, stats.mtimeMs, stats.ctimeMs, stats.ino].join(':')`) to resolve b/561981286.
+    - Added `resolveReleaseBaseUrl()` and `validateAndNormalizeReleaseBaseUrl()` enforcing HTTPS/localhost protocol validation and supporting `AGY_RELEASE_BASE_URL`.
+    - Added `verifyBinarySignature()` performing Ed25519 signature checks using `crypto.verify` directly on Buffer inputs.
+    - Added fail-fast manifest integrity check in `acquireInstalledBinaryPath` rejecting manifests missing both `sha512` and `sha256`.
+  - `extension.ts`:
+    - Exported `AntigravityExtensionApi` record interface (`csrfToken`, `port`).
+    - Made `activate()` async returning `Promise<AntigravityExtensionApi>`.
+    - Added eager server pre-warm via `serverManager.start()` when `ANTIGRAVITY_SERVER_URL` is unset.
+    - Added `getConfiguredServerUrl()` helper.
+  - `server_manager.ts`:
+    - Added `--csrf_token=${this.csrfToken}` to language server startup arguments.
+    - Added `port` and `csrfToken` tracking to `AntigravityServerManager`, resetting state on process exit and startup exceptions.
+  - `desktop_webview_delegate.ts`:
+    - Replaced property mutation `_patchedForBigInt` with `WeakSet<Webview>` (`patchedWebviews`).
+    - Added `DisposableWebview` record type.
+    - Cleaned up BigInt stringifier fallback handling.
+
+- **Jetski & Diff Zones (`extension/src/devtools/cider/...`)**:
+  - `diff_zones/inline_diff_manager.ts`:
+    - Subscribed to `vscode.workspace.onWillSaveTextDocument` (`handleDocumentWillSave`) and `vscode.workspace.onDidSaveTextDocument` (`handleDocumentDidSave`).
+    - Added manual vs. auto-save differentiation (`pendingManualSaveUris`, `pendingAutoSaveUris`, `internalSaveUris`).
+    - Subscribed to `vscode.window.tabGroups.onDidChangeTabs` (`handleTabsChange`) to reject discarded edits upon tab closure.
+    - Implemented `getOwningGitRepository()` and `refreshGitForUri()` resolving repository ownership before executing `git.refresh` (b/561494994).
+    - Hardened `rejectAll()` to write `originalText` directly via `vscode.workspace.fs.writeFile`.
+    - Added `findActiveDiffFuzzy()` with URI normalization.
+  - `diff_zones/agent_edit_manager.ts`:
+    - Fixed empty-original divergence check in `doesDocMatchEdit()` (b/561515185).
+    - Added upfront resolution check `this.hunkStorage.hasAnyResolutions(message)`.
+    - Handled review sidebar navigation (`isNavigationOnly = message?.turnIndex == null && strictNav`).
+    - Added URI normalization and robust index/hash lookup in `handleHunkResolved()`.
+  - `diff_zones/inline_diff_zone_renderer.ts`:
+    - Applied `normalizeUri` when matching resolution events to diff zones.
+  - `extension_api.ts`:
+    - Implemented `onDidChangeTextDocumentContentEmitter` / `onDidChange` on `ExtensionApiImpl` for `TextDocumentContentProvider` cache busting.
+    - Added `safeDecodeURIComponent()` for resilient URI decoding across virtual diff content maps.
+    - Registered `antigravity.resetConversation` command.
+    - Added 2-second timeout race in `newConversation()`.
+    - Refactored `initializeViewAsync()` to await `view.ready` before pushing comments and diff state.
+
+- **Protobuf & IPC Schemas (`extension/src/blaze-out/` & `extension/src/third_party/jetski/`)**:
+  - Reconstructed 921 Google3 Piper monorepo modules (519 Closure, 402 CJS).
+  - New Schemas & Messages:
+    - `WorkspaceInitializationDataGitOnBorg` (schema index 34) in `third_party/jetski/cortex_pb/cortex_pb.ts`.
+    - `LoadedCustomizations` and `LoadedCustomizations.LoadedCustomization` (schema index 342) in `third_party/jetski/cortex_pb/cortex_pb.ts`.
+    - `StepRenderInfo.AgentRef` (schema index 398, 6) in `third_party/jetski/cortex_pb/cortex_pb.ts`.
+    - `ExecutionStatus` (schema index 6) and `ModelRequestStatus` (schema index 7) in `third_party/jetski/jetski_cortex_pb/jetski_cortex_pb.ts`.
+    - `PendingAgentMessagesUpdate` (schema index 24) in `third_party/jetski/jetski_cortex_pb/jetski_cortex_pb.ts`.
+    - `HookCheckpoint` (schema index 5) in `third_party/jetski/hooks_pb/hooks_pb.ts`.
+    - `CogWorkspaceConfig` in `third_party/jetski/jetbox_state_pb/jetbox_state_jspb/jspb$m$CogWorkspaceConfig.js`.
+    - `SojoBackendConfig` and `MemoryBankBackendConfig` in `learning/gemini/agents/projects/memory/fuse/proto/config_jspb/`.
+  - Updated Fields & Enums:
+    - `AgentPermissionPreset`: Added `AGENT_PERMISSION_PRESET_AUTO = 6`.
+    - `Model`: Added placeholders 1330 (`argon-sum`), 1331 (`gemini-3.8-flash-cyber-vertex`), 1332 (`fable-5.1-max-bon-le`), and 1333 (`gemini-3.8-flash-high-raw-thoughts`).
+    - `CascadePlannerConfig`: Added field `rules_token_budget` (Next ID: 60).
+    - `CommandAssessorConfig`: Updated Next ID to 7.
+    - `CortexStepMetadata`: Added field `tool_source` (Next ID: 39).
+    - `CortexStepRunCommand`: Updated Next ID to 36.
+    - `HookArgsCommon`: Added field 9 `agent_name` and field 10 `parent_conversation_id`.
+    - `PreToolHookResult`: Added field 4 `decision`, field 5 `reason`, and field 6 `permission_overrides`.
+    - `PostToolHookResult`: Added field 1 `overwrite_result`.
+    - `MemoryConfig`: Added field 8 `force_experiments` (repeated string).
+    - `FuseConfig`: Added field 30 `sql_max_ram_mb` (optional int64, default 8192).
+    - `MemoryMountConfig`: Added oneof field 7 `sojo` and field 8 `memory_bank`.
+    - `GoogleSpecificConfig`: Added field 2 `magic_workspace_cog_config`.
+
+- **Webview Bridges (`extension/bridge.js`, `extension/loading_bridge.js`)**:
+  - `bridge.js`: Re-bundled with updated protobuf descriptors (`AgentPermissionPreset.AUTO`, `LoadedCustomizations`, `ExecutionStatus`, `ModelRequestStatus`, `CogWorkspaceConfig`).
+
+- **Build Metadata (`extension/package.json`)**:
+  - `BUILD_DEPOT_PATH`: `//depot/branches/antigravity_vscode_extension_release_branch/985059174.1/google3`
+  - `BUILD_BLAZE_RELEASE`: `release blaze-2026.09.11-2 (mainline @979001970)`
+  - `BUILD_EMBED_LABEL`: `antigravity_vscode_extension_1.5.0_RC02`
+  - `BUILD_HOSTNAME`: `jgbho14.prod.google.com`
+
+---
+
 ## [1.4.0] - 2026-09-17
 
 ### 🚀 Highlights
