@@ -18,11 +18,13 @@ const tsickle_ReadonlyWorkspaceId_1 = goog.requireType("devtools.sourcerers.Read
 const tsickle_WorkspaceId_2 = goog.requireType("devtools.sourcerers.WorkspaceId");
 const tsickle_resources_3 = goog.requireType("google3.third_party.antigravity.src.vs.base.common.resources");
 const tsickle_uri_4 = goog.requireType("google3.third_party.antigravity.src.vs.base.common.uri");
+const tsickle_converters_5 = goog.requireType("google3.devtools.cider.webclient.citc.converters");
 const goog_devtools_sourcerers_WorkspaceId_1 = goog.require('devtools.sourcerers.WorkspaceId');
 const workspace_id_proto_1 = {};
 /** @const */ workspace_id_proto_1.WorkspaceId = goog_devtools_sourcerers_WorkspaceId_1;
 const resources_1 = goog.require('google3.third_party.antigravity.src.vs.base.common.resources');
 const uri_1 = goog.require('google3.third_party.antigravity.src.vs.base.common.uri');
+const converters_1 = goog.require('google3.devtools.cider.webclient.citc.converters');
 /**
  * Produces the citc workspace id, like owner/123.
  * @param {(!jspb$devtools$sourcerers$ImmutableWorkspaceId|!tsickle_WorkspaceId_2)} id
@@ -47,44 +49,32 @@ exports.workspaceIdToPiperId = workspaceIdToPiperId;
  * @return {string}
  */
 function workspaceIdToVcsId(id) {
-    /** @type {(undefined|string)} */
-    const suffix = id.getVcs() === workspace_id_proto_1.WorkspaceId.Vcs.UNKNOWN
-        ? 'citc'
-        : exports.VCS_CONTEXT_NAMES.get(id.getVcs());
+    /** @type {string} */
+    const suffix = (0, converters_1.convertVcsToString)(id.getVcs()) ?? 'citc';
     return `${id.getOwner()}:${id.getName()}:${id.getCitcId()}:${suffix}`;
 }
 exports.workspaceIdToVcsId = workspaceIdToVcsId;
+/**
+ * Returns the workspace name, or the stringified CitC ID if the name is empty.
+ * @param {(undefined|null|!jspb$devtools$sourcerers$ImmutableWorkspaceId|!tsickle_WorkspaceId_2)} workspaceId
+ * @return {(undefined|string)}
+ */
+function getNameOrCitcId(workspaceId) {
+    if (!workspaceId)
+        return undefined;
+    return (workspaceId.getName() ||
+        (workspaceId.getCitcId() ? String(workspaceId.getCitcId()) : undefined));
+}
+exports.getNameOrCitcId = getNameOrCitcId;
 /**
  * Returns the workspace ID in the human-readable form owner/alias.
  * @param {(!jspb$devtools$sourcerers$ImmutableWorkspaceId|!tsickle_WorkspaceId_2)} id
  * @return {string}
  */
 function workspaceIdToString(id) {
-    /** @type {string} */
-    let workspaceFragment = id.getOwner() + '/';
-    if (id.getName()) {
-        workspaceFragment += id.getName();
-    }
-    else {
-        // If the workspace doesn't have an alias, put the citc id in the fragment.
-        // If used in a URL, reloading Cider will keep the same workspace.
-        workspaceFragment += String(id.getCitcId());
-    }
-    return workspaceFragment;
+    return `${id.getOwner()}/${getNameOrCitcId(id) || ''}`;
 }
 exports.workspaceIdToString = workspaceIdToString;
-/**
- * Returns the human-readable name of the VCS.
- * @type {!Map<!jspb$e.devtools$sourcerers$WorkspaceId$Vcs, string>}
- */
-exports.VCS_CONTEXT_NAMES = new Map([
-    [workspace_id_proto_1.WorkspaceId.Vcs.UNKNOWN, 'unknown'],
-    [workspace_id_proto_1.WorkspaceId.Vcs.PIPER, 'piper'],
-    [workspace_id_proto_1.WorkspaceId.Vcs.FIG, 'fig'],
-    [workspace_id_proto_1.WorkspaceId.Vcs.COG, 'cog'],
-    [workspace_id_proto_1.WorkspaceId.Vcs.JJ, 'jj'],
-    [workspace_id_proto_1.WorkspaceId.Vcs.REMOTE, 'remote'],
-]);
 /**
  * Key for storing the last used workspace in storage service / user data.
  * @type {string}
@@ -109,7 +99,7 @@ function getPrefix(vcs) {
  * @return {!tsickle_uri_4.URI}
  */
 function getWorkspaceRoot(workspaceId) {
-    return (0, resources_1.joinPath)(getPrefix(workspaceId.getVcs()), workspaceId.getOwner(), workspaceId.getName());
+    return (0, resources_1.joinPath)(getPrefix(workspaceId.getVcs()), workspaceId.getOwner(), getNameOrCitcId(workspaceId) || '');
 }
 exports.getWorkspaceRoot = getWorkspaceRoot;
 /**
@@ -122,7 +112,7 @@ exports.getWorkspaceRoot = getWorkspaceRoot;
 function getWorkspaceQueryParams(workspaceId, scmExtensionConfig) {
     /** @type {!URLSearchParams} */
     const searchParams = new URLSearchParams(window.location.search);
-    searchParams.set('ws', `${workspaceId.getOwner()}/${workspaceId.getName()}`);
+    searchParams.set('ws', workspaceIdToString(workspaceId));
     if (workspaceId.getVcs() === workspace_id_proto_1.WorkspaceId.Vcs.COG) {
         searchParams.set('vcs', 'cog');
         if (!!scmExtensionConfig) {

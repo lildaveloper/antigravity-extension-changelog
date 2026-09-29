@@ -280,7 +280,7 @@ jspb$jetbox_state_pb$MutableGoogleSpecificConfig.fromFields = /** @pureOrBreakMy
  */
 jspb$jetbox_state_pb$MutableGoogleSpecificConfig.getFields = /** @pureOrBreakMyCode */ (jspb_internal_public_for_gencode.makeGetFieldsForTesting());
 
-var jspb$jetbox_state_pb$MutableUserSettings;
-Object.defineProperty(this, 'jspb$jetbox_state_pb$MutableUserSettings', {
-  get() { return jspb$jetbox_state_pb$MutableUserSettings; },
-  set(v) { jspb$jetbox_state_pb$MutableUserSettings = v; },
+var jspb$jetbox_state_pb$UserSettings$SandboxProxy$MutableHttp;
+Object.defineProperty(this, 'jspb$jetbox_state_pb$UserSettings$SandboxProxy$MutableHttp', {
+  get() { return jspb$jetbox_state_pb$UserSettings$SandboxProxy$MutableHttp; },
+  set(v) { jspb$jetbox_state_pb$UserSettings$SandboxProxy$MutableHttp = v; },

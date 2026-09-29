@@ -27,6 +27,8 @@ class MessageNotifierImpl {
     constructor() {
         this.retryEmitter = new vscode.EventEmitter();
         this.onRetry = this.retryEmitter.event;
+        this.reportIssueEmitter = new vscode.EventEmitter();
+        this.onReportIssue = this.reportIssueEmitter.event;
         this.hostSubmitEmitter = new vscode.EventEmitter();
         this.onHostSubmit = this.hostSubmitEmitter.event;
         this.webviewReady = Promise.withResolvers();
@@ -43,13 +45,16 @@ class MessageNotifierImpl {
         this.view = webviewView;
         this.webviewReady = Promise.withResolvers();
         this.disposable = webviewView.webview.onDidReceiveMessage((/**
-         * @param {(!ReadyMessage|!RetryMessage|!SubmitHostMessage)} message
+         * @param {(!ReadyMessage|!ReportIssueMessage|!RetryMessage|!SubmitHostMessage)} message
          * @return {!Promise<void>}
          */
         async (message) => {
             switch (message.type) {
                 case 'retry':
                     this.retryEmitter.fire();
+                    break;
+                case 'reportIssue':
+                    this.reportIssueEmitter.fire();
                     break;
                 case 'submitHost':
                     this.hostSubmitEmitter.fire((/** @type {!SubmitHostMessage} */ (message)).host);
@@ -58,7 +63,7 @@ class MessageNotifierImpl {
                     this.webviewReady.resolve();
                     break;
                 default:
-                    (0, check_1.checkExhaustive)(message, `Unknown message type: ${((/** @type {(!ReadyMessage|!RetryMessage|!SubmitHostMessage)} */ (message))).type}`);
+                    (0, check_1.checkExhaustive)(message, `Unknown message type: ${((/** @type {(!ReadyMessage|!ReportIssueMessage|!RetryMessage|!SubmitHostMessage)} */ (message))).type}`);
             }
         }));
     }
@@ -145,6 +150,16 @@ if (false) {
      * @public
      */
     MessageNotifierImpl.prototype.onRetry;
+    /**
+     * @const {!tsickle_vscode_2.EventEmitter<void>}
+     * @private
+     */
+    MessageNotifierImpl.prototype.reportIssueEmitter;
+    /**
+     * @const {!tsickle_vscode_2.Event<void>}
+     * @public
+     */
+    MessageNotifierImpl.prototype.onReportIssue;
     /**
      * @const {!tsickle_vscode_2.EventEmitter<string>}
      * @private

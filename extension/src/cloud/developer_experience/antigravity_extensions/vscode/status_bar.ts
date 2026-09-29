@@ -16,9 +16,13 @@ var module = module || { id: 'cloud/developer_experience/antigravity_extensions/
 goog.require('google3.third_party.javascript.tslib.tslib');
 const tsickle_settings_editor_provider_1 = goog.requireType("google3.devtools.cider.extensions.jetski.settings_editor_provider");
 const tsickle_vscode_2 = goog.requireType("vscode");
+const tsickle_feedback_3 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.feedback");
+const tsickle_server_manager_4 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.server_manager");
 const settings_editor_provider_1 = goog.require('google3.devtools.cider.extensions.jetski.settings_editor_provider');
 const vscode = goog.require('vscode'); // from //third_party/javascript/typings/vscode
 // from //third_party/javascript/typings/vscode
+const feedback_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.feedback');
+const server_manager_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.server_manager');
 /**
  * Opens the Antigravity Settings editor with an optional target screen.
  * @param {(undefined|string)=} targetScreen
@@ -59,11 +63,74 @@ function registerAntigravityStatusBar(context) {
         await openAntigravitySettings(targetScreen);
     })));
     context.subscriptions.push(vscode.commands.registerCommand('antigravity.feedback', (/**
+     * @param {(undefined|!ProvideFeedbackOptions)=} options
      * @return {!Promise<void>}
      */
-    async () => {
-        await openAntigravitySettings('Provide Feedback');
+    async (options) => {
+        await provideFeedback(context, undefined, options);
     })));
     return statusBarItem;
 }
 exports.registerAntigravityStatusBar = registerAntigravityStatusBar;
+/**
+ * Optional parameters for triggering the Provide Feedback command.
+ * @record
+ */
+function ProvideFeedbackOptions() { }
+exports.ProvideFeedbackOptions = ProvideFeedbackOptions;
+/* istanbul ignore if */
+if (false) {
+    /**
+     * @const {(undefined|boolean)}
+     * @public
+     */
+    ProvideFeedbackOptions.prototype.skipHealthCheck;
+    /**
+     * @const {(undefined|string)}
+     * @public
+     */
+    ProvideFeedbackOptions.prototype.detail;
+    /**
+     * @const {(undefined|string)}
+     * @public
+     */
+    ProvideFeedbackOptions.prototype.title;
+    /**
+     * @const {(undefined|string)}
+     * @public
+     */
+    ProvideFeedbackOptions.prototype.description;
+}
+/**
+ * Opens the "Provide Feedback" experience, preferring the CLI-served feedback
+ * screen when the backend is healthy and falling back to one-click feedback
+ * submission otherwise (e.g. on CLI loading failure or backend crash).
+ * @param {!tsickle_vscode_2.ExtensionContext} context
+ * @param {!tsickle_server_manager_4.AntigravityServerManager=} serverManager
+ * @param {(undefined|!ProvideFeedbackOptions)=} options
+ * @return {!Promise<void>}
+ */
+async function provideFeedback(context, serverManager = server_manager_1.AntigravityServerManager.getInstance(), options) {
+    if (!options?.skipHealthCheck) {
+        /** @type {boolean} */
+        let healthy = false;
+        try {
+            healthy = await serverManager.isServerHealthy();
+        }
+        catch {
+            healthy = false;
+        }
+        if (healthy) {
+            await openAntigravitySettings('Provide Feedback');
+            return;
+        }
+    }
+    /** @type {(undefined|string)} */
+    const lastStartupError = serverManager.getLastStartupError?.();
+    /** @type {(undefined|string)} */
+    const detail = options?.detail ??
+        options?.description ??
+        (lastStartupError ? `CLI failed to load: ${lastStartupError}` : undefined);
+    await (0, feedback_1.sendFeedback)(context, serverManager, detail ? { detail } : undefined);
+}
+exports.provideFeedback = provideFeedback;

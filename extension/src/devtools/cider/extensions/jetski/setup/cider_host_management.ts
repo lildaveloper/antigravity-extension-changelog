@@ -450,7 +450,7 @@ async function getActiveDeployments() {
     }
     try {
         /** @type {!tsickle_ListDeploymentsRequest_3} */
-        const req = new provisioning_proto_1.ListDeploymentsRequest();
+        const req = new provisioning_proto_1.ListDeploymentsRequest().setTagsList(['JetskiWeb']);
         /** @type {!tsickle_ListDeploymentsResponse_4} */
         const resp = await cider_1.cider.fe.call('jetski/listDeployments', provisioning_proto_1.ListDeploymentsResponse, req);
         /** @type {string} */

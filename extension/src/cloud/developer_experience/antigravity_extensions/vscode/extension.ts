@@ -23,10 +23,11 @@ const tsickle_inline_diff_zone_renderer_6 = goog.requireType("google3.devtools.c
 const tsickle_side_by_side_diff_zone_renderer_7 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.side_by_side_diff_zone_renderer");
 const tsickle_loading_message_impl_8 = goog.requireType("google3.devtools.cider.extensions.jetski.loading.loading_message_impl");
 const tsickle_export_symbol_9 = goog.requireType("google3.javascript.tools.nodejs.export_symbol");
-const tsickle_desktop_webview_delegate_10 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.desktop_webview_delegate");
-const tsickle_server_manager_11 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.server_manager");
-const tsickle_status_bar_12 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.status_bar");
-const tsickle_telemetry_service_13 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.telemetry_service");
+const tsickle_server_manager_10 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.server_manager");
+const tsickle_status_bar_11 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.status_bar");
+const tsickle_telemetry_service_12 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.telemetry_service");
+const tsickle_vscode_notification_delegate_13 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.vscode_notification_delegate");
+const tsickle_webview_delegate_14 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.webview_delegate");
 const vscode = goog.require('vscode'); // from //third_party/javascript/typings/vscode
 // from //third_party/javascript/typings/vscode
 const core_activation_1 = goog.require('google3.devtools.cider.extensions.jetski.core_activation');
@@ -35,10 +36,11 @@ const hunk_storage_1 = goog.require('google3.devtools.cider.extensions.jetski.di
 const inline_diff_zone_renderer_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_zone_renderer');
 const side_by_side_diff_zone_renderer_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.side_by_side_diff_zone_renderer');
 const export_symbol_1 = goog.require('google3.javascript.tools.nodejs.export_symbol');
-const desktop_webview_delegate_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.desktop_webview_delegate');
 const server_manager_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.server_manager');
 const status_bar_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.status_bar');
 const telemetry_service_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.telemetry_service');
+const vscode_notification_delegate_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.vscode_notification_delegate');
+const webview_delegate_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.webview_delegate');
 /**
  * Public API exposed by the Antigravity extension upon activation.
  * @record
@@ -113,7 +115,7 @@ async function desktopSetup(context, messageNotifier, telemetry) {
         humanReadable = `Remote Antigravity server`;
     }
     else {
-        /** @type {!tsickle_server_manager_11.AntigravityServerManager} */
+        /** @type {!tsickle_server_manager_10.AntigravityServerManager} */
         const serverManager = server_manager_1.AntigravityServerManager.getInstance();
         // Wrap server acquisition in a recovery loop. If automatic retries exhaust (e.g. on first-time install
         // when offline), display the error in the sidebar webview with a "Retry" button via messageNotifier
@@ -130,8 +132,9 @@ async function desktopSetup(context, messageNotifier, telemetry) {
             catch (e) {
                 /** @type {string} */
                 const errorMsg = e instanceof Error ? (/** @type {!Error} */ (e)).message : String(e);
+                serverManager.setLastStartupError(errorMsg);
                 messageNotifier.notifyError(errorMsg);
-                // Suspend until the user clicks the "Retry" button in the webview sidebar,
+                // Suspend until the user clicks the "Try again" button in the webview sidebar,
                 // which triggers onRetry and restarts the installation attempt.
                 await new Promise((/**
                  * @param {function((void|!PromiseLike<void>)): void} resolve
@@ -144,6 +147,7 @@ async function desktopSetup(context, messageNotifier, telemetry) {
                      */
                     () => {
                         disposable.dispose();
+                        serverManager.setLastStartupError(undefined);
                         resolve();
                     }));
                 }));
@@ -231,8 +235,8 @@ async function activate(context) {
     const { telemetry } = (0, telemetry_service_1.initTelemetry)(context);
     /** @type {!DesktopWorkspaceManager} */
     const workspaceManager = new DesktopWorkspaceManager(context);
-    /** @type {!tsickle_desktop_webview_delegate_10.DesktopWebviewDelegate} */
-    const webviewDelegate = new desktop_webview_delegate_1.DesktopWebviewDelegate(context);
+    /** @type {!tsickle_delegate_interfaces_3.WebviewDelegate} */
+    const webviewDelegate = (0, webview_delegate_1.createWebviewDelegate)(context);
     context.subscriptions.push(vscode.window.registerUriHandler({
         /**
          * @public
@@ -251,7 +255,7 @@ async function activate(context) {
             }
         },
     }));
-    /** @type {!tsickle_server_manager_11.AntigravityServerManager} */
+    /** @type {!tsickle_server_manager_10.AntigravityServerManager} */
     const serverManager = server_manager_1.AntigravityServerManager.getInstance();
     context.subscriptions.push({
         dispose: (/**
@@ -272,6 +276,8 @@ async function activate(context) {
         logChannelName: 'Antigravity LS',
         viewLocation: 'sidebar',
     };
+    /** @type {!tsickle_vscode_1.WorkspaceConfiguration} */
+    const antigravityConfig = vscode.workspace.getConfiguration('antigravity');
     /** @type {!tsickle_agent_edit_manager_4.AgentEditManager} */
     const agentEditManager = new agent_edit_manager_1.AgentEditManager(context, (/**
      * @return {(!tsickle_inline_diff_zone_renderer_6.InlineDiffZoneRenderer|!tsickle_side_by_side_diff_zone_renderer_7.SideBySideDiffZoneRenderer)}
@@ -283,7 +289,7 @@ async function activate(context) {
             ? new inline_diff_zone_renderer_1.InlineDiffZoneRenderer()
             : new side_by_side_diff_zone_renderer_1.SideBySideDiffZoneRenderer();
     }), {
-        autoAcceptOnChat: false,
+        autoAcceptOnChat: antigravityConfig.get('autoAcceptOnChat', true),
         ageOutThreshold: 5,
     });
     context.subscriptions.push(agentEditManager);
@@ -295,6 +301,11 @@ async function activate(context) {
         if (e.affectsConfiguration('antigravity.enableInlineDiff')) {
             agentEditManager.updateDiffZoneRenderer();
         }
+        if (e.affectsConfiguration('antigravity.autoAcceptOnChat')) {
+            /** @type {!tsickle_vscode_1.WorkspaceConfiguration} */
+            const config = vscode.workspace.getConfiguration('antigravity');
+            agentEditManager.setAutoAcceptOnChat(config.get('autoAcceptOnChat', true));
+        }
         if (e.affectsConfiguration('antigravity.serverPort')) {
             /** @type {(undefined|string)} */
             const action = await vscode.window.showInformationMessage('Changing the Antigravity server port requires reloading the window to take effect.', 'Reload Window');
@@ -303,8 +314,9 @@ async function activate(context) {
             }
         }
     })));
-    (0, core_activation_1.activateWithDependencies)(context, {
+    const { apiImpl } = (0, core_activation_1.activateWithDependencies)(context, {
         agentEditManager,
+        browserNotificationDelegate: new vscode_notification_delegate_1.VscodeNotificationDelegate(context.extensionUri?.fsPath),
         telemetry,
         workspaceManager,
         webviewDelegate,
@@ -316,6 +328,17 @@ async function activate(context) {
          */
         (ctx, notifier) => desktopSetup(ctx, notifier, telemetry)),
     }, desktopNaming);
+    // When the backend crashes or stops unexpectedly mid-session, flip every open
+    // surface into the in-surface error component and record the crash detail for
+    // the "Report issue" action.
+    context.subscriptions.push(serverManager.onServerCrash((/**
+     * @param {{code: (null|number), signal: (null|string), reason: string}} info
+     * @return {void}
+     */
+    (info) => {
+        serverManager.setLastStartupError(`Backend stopped unexpectedly: ${info.reason}`);
+        apiImpl.broadcastServerError(`The Antigravity backend stopped unexpectedly (${info.reason}).`);
+    })));
     if (!getConfiguredServerUrl()) {
         try {
             await serverManager.start({ context, telemetry });
@@ -347,3 +370,5 @@ async function deactivate() {
 exports.deactivate = deactivate;
 (0, export_symbol_1.exportNodejsSymbol)('activate', activate);
 (0, export_symbol_1.exportNodejsSymbol)('deactivate', deactivate);
+/** @type {{desktopSetup: function(!tsickle_vscode_1.ExtensionContext, !tsickle_loading_message_impl_8.MessageNotifierImpl, (undefined|!tsickle_delegate_interfaces_3.Telemetry)=): !Promise<{effectiveUrl: string, humanReadable: string}>}} */
+exports.TEST_ONLY = { desktopSetup };

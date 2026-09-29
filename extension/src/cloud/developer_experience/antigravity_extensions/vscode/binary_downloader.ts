@@ -312,12 +312,23 @@ if (false) {
      */
     RetryOptions.prototype.maxDelayMs;
     /**
-     * Timeout in milliseconds for each network attempt. Default: 120000ms (2 minutes)
+     * Timeout in milliseconds for each network attempt (or stream chunk inactivity for downloads).
      * @const {(undefined|number)}
      * @public
      */
     RetryOptions.prototype.timeoutMs;
+    /**
+     * Whether to keep partially downloaded bytes on disk if downloadFile fails so an outer retry loop can resume via HTTP Range. Default: false
+     * @const {(undefined|boolean)}
+     * @public
+     */
+    RetryOptions.prototype.preservePartialOnError;
 }
+/**
+ * Default stream chunk-inactivity (stall) timeout for binary downloads (30 seconds).
+ * @type {number}
+ */
+exports.DEFAULT_DOWNLOAD_INACTIVITY_TIMEOUT_MS = 30000;
 /**
  * Default retry settings for network operations (3 attempts with 500ms initial delay).
  * @type {?}
@@ -328,6 +339,7 @@ exports.DEFAULT_RETRY_OPTIONS = {
     backoffFactor: 2,
     maxDelayMs: 3000,
     timeoutMs: 120000,
+    preservePartialOnError: false,
 };
 /**
  * Executes an asynchronous operation with exponential backoff retry logic.
@@ -580,13 +592,391 @@ async function verifyBinaryVersion(binaryPath, minVersion, outputChannel) {
 }
 exports.verifyBinaryVersion = verifyBinaryVersion;
 /**
- * Downloads a file from URL to destPath with HTTP/HTTPS redirect following, progress reporting, and retry logic.
+ * Per-destination HTTP validator (`ETag`, falling back to `Last-Modified`) captured from the most
+ * recent response, used to attach `If-Range` to a resume request.
  *
- * Retry policy:
- * - Automatically cleans up any partially downloaded file before starting each attempt.
- * - Retries transient connection drops, stream timeouts, and 5xx server errors with exponential backoff.
- * - Immediately aborts on non-retryable 4xx client errors (e.g. 400 Bad Request, 401/403 Auth, 404 Not Found)
- *   since repeating identical requests will not resolve client-side errors.
+ * This is deliberately in-memory only. In production a download is resumed across *separate*
+ * `downloadFile` calls (the inner retry runs with `maxAttempts: 1`; the outer `withRetry` in
+ * `acquireInstalledBinaryPath` drives the retries), so the state must outlive a single call but
+ * never needs to outlive the process: each extension activation stages into a fresh
+ * `agy.tmp.<uuid>` path, so a partial file left behind by a previous process is never resumed.
+ * @type {!Map<string, {url: string, validator: string}>}
+ */
+const downloadResumeValidators = new Map();
+/**
+ * Drops any retained resume validator for `destPath`. Call this once a staging path is finished
+ * with (success, or abandoned) so entries do not accumulate for the life of the process.
+ * @param {string} destPath
+ * @return {void}
+ */
+function clearDownloadResumeState(destPath) {
+    downloadResumeValidators.delete(destPath);
+}
+exports.clearDownloadResumeState = clearDownloadResumeState;
+/**
+ * Removes a partial download along with the resume state that describes it.
+ *
+ * Deliberately separate from `clearDownloadResumeState`: that function is also called on the
+ * *success* path, where `destPath` holds the completed download and must not be deleted. Only
+ * callers that have decided the bytes are unusable should reach for this.
+ * @param {string} destPath
+ * @return {!Promise<void>}
+ */
+async function discardPartialDownload(destPath) {
+    await fs_1.promises.unlink(destPath).catch((/**
+     * @return {void}
+     */
+    () => { }));
+    clearDownloadResumeState(destPath);
+}
+/**
+ * Tears down a staging path once the install that owns it has finished, successfully or not:
+ * removes the file if it is still there and forgets the bookkeeping keyed to it.
+ * @param {string} destPath
+ * @return {!Promise<void>}
+ */
+async function discardStagedDownload(destPath) {
+    if (await pathExists(destPath)) {
+        await fs_1.promises.unlink(destPath).catch((/**
+         * @return {void}
+         */
+        () => { }));
+    }
+    clearDownloadResumeState(destPath);
+}
+exports.discardStagedDownload = discardStagedDownload;
+/**
+ * Watches a download for inactivity, aborting the request and tearing down the response stream
+ * once no data has arrived for `timeoutMs`.
+ *
+ * This is a rolling window rather than a total deadline: every sign of life (response headers, a
+ * body chunk) restarts it, so a slow-but-healthy link finishes while a dead socket fails fast.
+ * @record
+ */
+function StallGuard() { }
+/* istanbul ignore if */
+if (false) {
+    /**
+     * Pass to `fetch` so a stall aborts the in-flight request.
+     * @const {!AbortSignal}
+     * @public
+     */
+    StallGuard.prototype.signal;
+    /**
+     * Restarts the inactivity window. Call on every sign of life.
+     * @public
+     * @return {void}
+     */
+    StallGuard.prototype.reset = function () { };
+    /**
+     * Adopts the response stream so a stall can tear it down too.
+     * @public
+     * @param {?} readable
+     * @return {void}
+     */
+    StallGuard.prototype.watch = function (readable) { };
+    /**
+     * Stops the timer. Safe to call more than once.
+     * @public
+     * @return {void}
+     */
+    StallGuard.prototype.dispose = function () { };
+}
+/**
+ * @param {string} url
+ * @param {number} timeoutMs
+ * @return {!StallGuard}
+ */
+function createStallGuard(url, timeoutMs) {
+    /** @type {!AbortController} */
+    const abortController = new AbortController();
+    /** @type {(undefined|?)} */
+    let activeReadable;
+    /** @type {(undefined|?)} */
+    let timer;
+    /** @type {function(): void} */
+    const reset = (/**
+     * @return {void}
+     */
+    () => {
+        if (timer !== undefined) {
+            clearTimeout(timer);
+        }
+        timer = setTimeout((/**
+         * @return {void}
+         */
+        () => {
+            /** @type {!Error} */
+            const timeoutErr = new Error(`Download stalled after ${timeoutMs}ms without receiving data from ${url}`);
+            timeoutErr.name = 'TimeoutError';
+            abortController.abort(timeoutErr);
+            // `destroy()` is idempotent in Node, so a second call is a no-op rather than an error. The
+            // guard is here to keep the intent explicit and to avoid re-entering teardown on a stream
+            // that `pipeline` has already destroyed.
+            if (activeReadable && !activeReadable.destroyed) {
+                activeReadable.destroy(timeoutErr);
+            }
+        }), timeoutMs);
+        // Do not hold the event loop open purely for this timer; a live socket keeps it alive anyway.
+        timer.unref?.();
+    });
+    return {
+        signal: abortController.signal,
+        reset,
+        watch: (/**
+         * @param {?} readable
+         * @return {void}
+         */
+        (readable) => {
+            activeReadable = readable;
+        }),
+        dispose: (/**
+         * @return {void}
+         */
+        () => {
+            if (timer !== undefined) {
+                clearTimeout(timer);
+                timer = undefined;
+            }
+        }),
+    };
+}
+/**
+ * Normalizes the chunk shapes a Node stream can yield into a `Buffer`.
+ * @param {*} chunk
+ * @return {?}
+ */
+function toBuffer(chunk) {
+    if (Buffer.isBuffer(chunk)) {
+        return chunk;
+    }
+    if (chunk instanceof Uint8Array) {
+        return Buffer.from((/** @type {!Uint8Array} */ (chunk)).buffer, (/** @type {!Uint8Array} */ (chunk)).byteOffset, (/** @type {!Uint8Array} */ (chunk)).byteLength);
+    }
+    if (typeof chunk === 'string') {
+        return Buffer.from(chunk);
+    }
+    if (chunk instanceof ArrayBuffer) {
+        return Buffer.from(chunk);
+    }
+    throw new Error('Unsupported stream chunk type');
+}
+/**
+ * Pipes `readable` into `destPath`, restarting the stall guard on every chunk and reporting
+ * cumulative progress (including bytes already on disk from an earlier attempt).
+ * @param {{readable: ?, destPath: string, append: boolean, initialBytes: number, totalBytes: (undefined|number), stallGuard: !StallGuard, progressCallback: (undefined|function(number, (undefined|number)=): void)}} options
+ * @return {!Promise<void>}
+ */
+async function writeStreamToFile(options) {
+    const { readable, destPath, append, initialBytes, totalBytes, stallGuard, progressCallback, } = options;
+    const fileStream = (0, fs_1.createWriteStream)(destPath, { flags: append ? 'a' : 'w' });
+    /**
+     * @return {!AsyncGenerator<?, void, *>}
+     */
+    async function* trackProgress() {
+        /** @type {number} */
+        let downloadedBytes = initialBytes;
+        for await (const chunk of readable) {
+            stallGuard.reset();
+            const buffer = toBuffer(chunk);
+            downloadedBytes += buffer.length;
+            progressCallback?.(downloadedBytes, totalBytes);
+            yield buffer;
+        }
+    }
+    // pipeline handles clean closure, error propagation, and stream destruction.
+    await (0, promises_1.pipeline)(trackProgress(), fileStream);
+}
+/**
+ * Returns how many bytes already at `destPath` may be reused, discarding the file when they cannot.
+ *
+ * Bytes are only reusable when they are known to belong to this download: either a previous attempt
+ * within the same call wrote them, or the caller owns the partial file across calls via
+ * `preservePartialOnError`. Appending to an unowned, stale file would silently produce a corrupt
+ * result whose only symptom is a downstream checksum mismatch.
+ * @param {string} destPath
+ * @param {boolean} canResume
+ * @return {!Promise<number>}
+ */
+async function resolveResumeOffset(destPath, canResume) {
+    if (!(await pathExists(destPath))) {
+        return 0;
+    }
+    if (!canResume) {
+        await fs_1.promises.unlink(destPath).catch((/**
+         * @return {void}
+         */
+        () => { }));
+        return 0;
+    }
+    try {
+        const stats = await fs_1.promises.stat(destPath);
+        return stats.size > 0 ? stats.size : 0;
+    }
+    catch {
+        return 0;
+    }
+}
+/**
+ * Builds request headers for a download, adding `Range`/`If-Range` when resuming.
+ * @param {string} url
+ * @param {string} destPath
+ * @param {number} existingBytes
+ * @return {?}
+ */
+function buildDownloadHeaders(url, destPath, existingBytes) {
+    /** @type {?} */
+    const headers = {};
+    if (existingBytes <= 0) {
+        return headers;
+    }
+    headers['Range'] = `bytes=${existingBytes}-`;
+    /** @type {(undefined|{url: string, validator: string})} */
+    const priorState = downloadResumeValidators.get(destPath);
+    if (priorState?.url === url) {
+        // Honor the Range only while the resource is still byte-for-byte the one we started
+        // downloading. If the build rotated underneath us the server replies 200 with the full new
+        // body, and the overwrite path restarts cleanly instead of splicing two builds.
+        headers['If-Range'] = priorState.validator;
+    }
+    return headers;
+}
+/**
+ * Throws unless a `206` response really begins at `existingBytes`, discarding the partial download
+ * first so the next attempt restarts from byte 0.
+ *
+ * A proxy or CDN that echoes `206` without honoring the range would otherwise splice unrelated
+ * bytes into the file, and the only symptom would be a checksum mismatch.
+ * @param {!Response} response
+ * @param {string} destPath
+ * @param {number} existingBytes
+ * @return {!Promise<void>}
+ */
+async function assertResumableContentRange(response, destPath, existingBytes) {
+    /** @type {(null|string)} */
+    const contentRange = response.headers?.get?.('content-range');
+    /** @type {(undefined|null|!RegExpMatchArray)} */
+    const rangeMatch = contentRange?.match(/^bytes\s+(\d+)-\d+\/(?:\d+|\*)$/i);
+    if (!rangeMatch || Number(rangeMatch[1]) !== existingBytes) {
+        await discardPartialDownload(destPath);
+        throw new Error(`Resume rejected: server returned HTTP 206 with Content-Range "${contentRange ?? 'absent'}" but bytes ${existingBytes}- were requested. Discarded the partial file; the next attempt restarts from byte 0.`);
+    }
+}
+/**
+ * Records the response validator so a later attempt can send `If-Range`.
+ * @param {!Response} response
+ * @param {string} url
+ * @param {string} destPath
+ * @param {boolean} isPartialContent
+ * @return {void}
+ */
+function rememberResumeValidator(response, url, destPath, isPartialContent) {
+    /** @type {(null|string)} */
+    const validator = response.headers?.get?.('etag') ?? response.headers?.get?.('last-modified');
+    if (validator) {
+        downloadResumeValidators.set(destPath, { url, validator });
+    }
+    else if (!isPartialContent) {
+        downloadResumeValidators.delete(destPath);
+    }
+}
+/**
+ * Resolves the full expected size, accounting for a `206` whose length covers only the remainder.
+ * @param {!Response} response
+ * @param {boolean} isPartialContent
+ * @param {number} existingBytes
+ * @return {(undefined|number)}
+ */
+function resolveTotalBytes(response, isPartialContent, existingBytes) {
+    /** @type {(null|string)} */
+    const totalBytesStr = response.headers?.get?.('content-length');
+    if (!totalBytesStr) {
+        return undefined;
+    }
+    /** @type {number} */
+    const parsedBytes = Number(totalBytesStr);
+    if (isNaN(parsedBytes)) {
+        return undefined;
+    }
+    return isPartialContent ? existingBytes + parsedBytes : parsedBytes;
+}
+/**
+ * A single download attempt: resolve the resume offset, fetch, validate, and stream to disk.
+ * @param {{url: string, destPath: string, attempt: number, inactivityTimeoutMs: number, preservePartialOnError: boolean, progressCallback: (undefined|function(number, (undefined|number)=): void)}} options
+ * @return {!Promise<void>}
+ */
+async function attemptDownload(options) {
+    const { url, destPath, attempt, inactivityTimeoutMs, preservePartialOnError, progressCallback, } = options;
+    /** @type {boolean} */
+    const canResume = attempt > 1 || preservePartialOnError;
+    /** @type {number} */
+    const existingBytes = await resolveResumeOffset(destPath, canResume);
+    /** @type {!StallGuard} */
+    const stallGuard = createStallGuard(url, inactivityTimeoutMs);
+    stallGuard.reset();
+    try {
+        /** @type {?} */
+        const headers = buildDownloadHeaders(url, destPath, existingBytes);
+        /** @type {!Response} */
+        const response = await fetch(url, {
+            signal: stallGuard.signal,
+            ...(Object.keys(headers).length > 0 ? { headers } : {}),
+        });
+        stallGuard.reset();
+        /** @type {boolean} */
+        const isPartialContent = existingBytes > 0 && response.status === 206;
+        /** @type {boolean} */
+        const isOk = response.ok ||
+            isPartialContent ||
+            (response.status >= 200 && response.status < 300);
+        if (!isOk) {
+            if (response.status === 416 && existingBytes > 0) {
+                await discardPartialDownload(destPath);
+                throw new Error(`Range request bytes=${existingBytes}- not satisfiable (HTTP 416); restarting download from byte 0`);
+            }
+            throw HttpError.fromResponse(response, `Failed to download ${url}: HTTP status ${response.status}`);
+        }
+        if (isPartialContent) {
+            await assertResumableContentRange(response, destPath, existingBytes);
+        }
+        rememberResumeValidator(response, url, destPath, isPartialContent);
+        if (!response.body) {
+            throw new Error('Response body is empty');
+        }
+        // Convert Web ReadableStream to Node.js Readable stream using safe cast.
+        const nodeReadable = stream_1.Readable.fromWeb((/** @type {?} */ ((/** @type {*} */ (response.body)))));
+        stallGuard.watch(nodeReadable);
+        await writeStreamToFile({
+            readable: nodeReadable,
+            destPath,
+            append: isPartialContent,
+            initialBytes: isPartialContent ? existingBytes : 0,
+            totalBytes: resolveTotalBytes(response, isPartialContent, existingBytes),
+            stallGuard,
+            progressCallback,
+        });
+    }
+    finally {
+        stallGuard.dispose();
+    }
+}
+/**
+ * Downloads a file from URL to destPath with HTTP/HTTPS redirect following, progress reporting,
+ * rolling chunk-inactivity timeout, and HTTP Range resume across retries.
+ *
+ * Retry & timeout policy:
+ * - Enforces a rolling chunk-inactivity (stall) timeout (default 30s) rather than a fixed total
+ *   wall-clock deadline, allowing large binaries (~115 MB) to complete over slower links as long
+ *   as data continues arriving while aborting stalled connections in 30s instead of 120s.
+ * - Preserves partially downloaded bytes across retry attempts and sends `Range: bytes=<offset>-`
+ *   to resume from the byte offset when the server responds with `206 Partial Content` (or
+ *   transparently overwrites from byte 0 if the server responds with `200 OK`).
+ * - Guards resumption against artifact rotation: the resume request carries `If-Range` with the
+ *   `ETag`/`Last-Modified` observed earlier, so a server whose copy changed replies `200` with the
+ *   full new body instead of a `206` that would splice two different builds together. A `206` is
+ *   additionally only appended once its `Content-Range` confirms the body starts at the requested
+ *   offset; otherwise the partial file is discarded and the next attempt restarts from byte 0.
+ * - Immediately aborts on non-retryable 4xx client errors (e.g. 400 Bad Request, 401/403 Auth, 404 Not Found).
  * @param {string} url
  * @param {string} destPath
  * @param {(undefined|function(number, (undefined|number)=): void)=} progressCallback
@@ -596,93 +986,32 @@ exports.verifyBinaryVersion = verifyBinaryVersion;
  */
 async function downloadFile(url, destPath, progressCallback, retryOptions, onRetry) {
     /** @type {number} */
-    const timeoutMs = retryOptions?.timeoutMs ?? exports.DEFAULT_RETRY_OPTIONS.timeoutMs;
-    /** @type {function(): !Promise<void>} */
-    const singleAttempt = (/**
-     * @return {!Promise<void>}
-     */
-    async () => {
-        if (await pathExists(destPath)) {
-            await fs_1.promises.unlink(destPath).catch((/**
-             * @return {void}
-             */
-            () => { }));
-        }
-        /** @type {!Response} */
-        const response = await fetch(url, {
-            signal: AbortSignal.timeout(timeoutMs),
-        });
-        if (!response.ok) {
-            throw HttpError.fromResponse(response, `Failed to download ${url}: HTTP status ${response.status}`);
-        }
-        /** @type {(null|string)} */
-        const totalBytesStr = response.headers.get('content-length');
-        /** @type {(undefined|number)} */
-        let totalBytes;
-        if (totalBytesStr) {
-            /** @type {number} */
-            const parsedBytes = Number(totalBytesStr);
-            if (!isNaN(parsedBytes)) {
-                totalBytes = parsedBytes;
-            }
-        }
-        if (!response.body) {
-            throw new Error('Response body is empty');
-        }
-        // Convert Web ReadableStream to Node.js Readable stream using safe cast
-        const nodeReadable = stream_1.Readable.fromWeb((/** @type {?} */ ((/** @type {*} */ (response.body)))));
-        const fileStream = (0, fs_1.createWriteStream)(destPath);
-        // Async generator to intercept chunks and track progress in-flight
-        /**
-         * @return {!AsyncGenerator<?, void, *>}
+    const inactivityTimeoutMs = retryOptions?.timeoutMs ?? exports.DEFAULT_DOWNLOAD_INACTIVITY_TIMEOUT_MS;
+    /** @type {boolean} */
+    const preservePartialOnError = retryOptions?.preservePartialOnError === true;
+    try {
+        await withRetry((/**
+         * @param {number} attempt
+         * @return {!Promise<void>}
          */
-        async function* progressTracker() {
-            /** @type {number} */
-            let downloadedBytes = 0;
-            for await (const chunk of nodeReadable) {
-                /** @type {?} */
-                let buffer;
-                if (Buffer.isBuffer(chunk)) {
-                    buffer = chunk;
-                }
-                else if (chunk instanceof Uint8Array) {
-                    buffer = Buffer.from((/** @type {!Uint8Array} */ (chunk)).buffer, (/** @type {!Uint8Array} */ (chunk)).byteOffset, (/** @type {!Uint8Array} */ (chunk)).byteLength);
-                }
-                else if (typeof chunk === 'string') {
-                    buffer = Buffer.from(chunk);
-                }
-                else if (chunk instanceof ArrayBuffer) {
-                    buffer = Buffer.from(chunk);
-                }
-                else {
-                    throw new Error('Unsupported stream chunk type');
-                }
-                downloadedBytes += buffer.length;
-                if (progressCallback) {
-                    progressCallback(downloadedBytes, totalBytes);
-                }
-                yield buffer;
-            }
+        (attempt) => attemptDownload({
+            url,
+            destPath,
+            attempt,
+            inactivityTimeoutMs,
+            preservePartialOnError,
+            progressCallback,
+        })), retryOptions, onRetry, isRetryableError);
+        clearDownloadResumeState(destPath);
+    }
+    catch (error) {
+        // When the caller opted into `preservePartialOnError` it owns the partial file across calls,
+        // so both the bytes and the validator that describes them must survive for the next attempt.
+        if (!preservePartialOnError) {
+            await discardPartialDownload(destPath);
         }
-        try {
-            // pipeline handles clean closure, error propagation, and stream destruction
-            await (0, promises_1.pipeline)(progressTracker(), fileStream);
-        }
-        catch (error) {
-            // Clean up partially downloaded file on failure
-            if (await pathExists(destPath)) {
-                await fs_1.promises.unlink(destPath).catch((/**
-                 * @return {void}
-                 */
-                () => { }));
-            }
-            throw error;
-        }
-    });
-    await withRetry((/**
-     * @return {!Promise<void>}
-     */
-    () => singleAttempt()), retryOptions, onRetry, isRetryableError);
+        throw error;
+    }
 }
 exports.downloadFile = downloadFile;
 /**
@@ -827,6 +1156,7 @@ async function fetchReleaseManifest(releaseBaseUrl, retryOptions, outputChannel)
         backoffFactor: retryOptions?.backoffFactor ?? 2,
         maxDelayMs: retryOptions?.maxDelayMs ?? 3000,
         timeoutMs: retryOptions?.timeoutMs ?? 5000,
+        preservePartialOnError: retryOptions?.preservePartialOnError ?? false,
     };
     /** @type {boolean} */
     let isJsonManifest = false;
@@ -934,6 +1264,110 @@ function getInstalledTargetPath() {
 }
 exports.getInstalledTargetPath = getInstalledTargetPath;
 /**
+ * Minimum percentage-point gap between two consecutive download progress reports.
+ *
+ * This is a *threshold*, not an exact multiple: with a ~115 MB archive a single chunk callback can
+ * easily move the computed percentage from 18% to 23%, so testing `percent % 10 === 0` silently
+ * skips most reports and leaves the notification frozen.
+ * @type {number}
+ */
+const DOWNLOAD_PROGRESS_STEP_PERCENT = 10;
+/**
+ * Highest download percentage already contributed to a given `vscode.Progress` instance.
+ *
+ * `vscode.Progress` increments are additive and cannot be revoked, so the 0->100% invariant belongs
+ * to the `vscode.Progress` object itself. Keying a `WeakMap` by `progress` rather than a local
+ * variable or `destPath` solves both directions cleanly:
+ * - In `acquireInstalledBinaryPath`, `vscode.window.withProgress` creates one `installProgress`
+ *   instance for the whole install and passes that same object reference into every outer
+ *   `withRetry` call to `downloadWithProgress` (including checksum-mismatch redownloads), so the
+ *   high-water mark persists across retries without double-counting.
+ * - Any subsequent install or direct caller passes a fresh `progress` object, starting cleanly at 0
+ *   even if `destPath` is reused, and entries are garbage-collected automatically when the
+ *   notification closes without requiring manual teardown.
+ * @type {!WeakMap<!tsickle_vscode_11.Progress<{message: (undefined|string), increment: (undefined|number)}>, number>}
+ */
+const downloadProgressHighWater = new WeakMap();
+/**
+ * Builds the `onChunk` and `onRetry` callbacks for `downloadWithProgress`, keeping per-attempt
+ * threshold state (`lastMessagePercent`) and cross-attempt high-water tracking encapsulated.
+ * @param {!tsickle_vscode_11.OutputChannel} outputChannel
+ * @param {(undefined|!tsickle_vscode_11.Progress<{message: (undefined|string), increment: (undefined|number)}>)=} progress
+ * @return {{onChunk: function(number, (undefined|number)=): void, onRetry: function(*, number, number): void}}
+ */
+function createDownloadProgressReporter(outputChannel, progress) {
+    // Percentage of the *current* attempt that was last surfaced in the message. Reset per attempt so
+    // the user keeps seeing live movement in the text even while the bar itself is parked at the
+    // high-water mark. Starts at 0 rather than -1 so the first report lands on a round 10%.
+    /** @type {number} */
+    let lastMessagePercent = 0;
+    /** @type {number} */
+    let fallbackHighWater = 0;
+    return {
+        onChunk: (/**
+         * @param {number} downloaded
+         * @param {(undefined|number)=} total
+         * @return {void}
+         */
+        (downloaded, total) => {
+            if (!total || total <= 0) {
+                return;
+            }
+            /** @type {number} */
+            const percent = Math.min(100, Math.floor((downloaded / total) * 100));
+            /** @type {boolean} */
+            const isStepCrossing = percent >= lastMessagePercent + DOWNLOAD_PROGRESS_STEP_PERCENT;
+            /** @type {boolean} */
+            const isCompletion = percent === 100 && lastMessagePercent !== 100;
+            if (!isStepCrossing && !isCompletion) {
+                return;
+            }
+            lastMessagePercent = percent;
+            /** @type {number} */
+            const reportedPercent = progress
+                ? (downloadProgressHighWater.get(progress) ?? 0)
+                : fallbackHighWater;
+            /** @type {number} */
+            const increment = percent > reportedPercent ? percent - reportedPercent : 0;
+            if (increment > 0) {
+                if (progress) {
+                    downloadProgressHighWater.set(progress, percent);
+                }
+                else {
+                    fallbackHighWater = percent;
+                }
+            }
+            progress?.report({
+                message: `Downloading Antigravity Backend (${percent}%)...`,
+                increment,
+            });
+            outputChannel.appendLine(`[INSTALL] Download progress: ${percent}% (${downloaded}/${total} bytes)`);
+        }),
+        onRetry: (/**
+         * @param {*} error
+         * @param {number} attempt
+         * @param {number} delayMs
+         * @return {void}
+         */
+        (error, attempt, delayMs) => {
+            /** @type {string} */
+            const errMsg = error instanceof Error ? (/** @type {!Error} */ (error)).message : String(error);
+            outputChannel.appendLine(`[INSTALL] Download attempt ${attempt} failed: ${errMsg}. Retrying in ${delayMs}ms...`);
+            progress?.report({
+                message: `Download attempt ${attempt} failed, retrying in ${delayMs}ms...`,
+            });
+            // Only the per-attempt message cursor is reset. The high-water mark is deliberately retained:
+            // the next attempt either resumes (so it immediately reports a percentage at or above the
+            // mark) or restarts from byte 0 (in which case the bar correctly holds position until the
+            // re-download catches up) — never double-counts.
+            lastMessagePercent = 0;
+        }),
+    };
+}
+/**
+ * Downloads `url` to `destPath`, surfacing progress on `progress` and `outputChannel`.
+ *
+ * Exported for testing; production callers go through `acquireInstalledBinaryPath`.
  * @param {string} url
  * @param {string} destPath
  * @param {!tsickle_vscode_11.OutputChannel} outputChannel
@@ -942,42 +1376,11 @@ exports.getInstalledTargetPath = getInstalledTargetPath;
  * @return {!Promise<void>}
  */
 async function downloadWithProgress(url, destPath, outputChannel, progress, retryOptions) {
-    /** @type {number} */
-    let lastPercent = 0;
-    await downloadFile(url, destPath, (/**
-     * @param {number} downloaded
-     * @param {(undefined|number)} total
-     * @return {void}
-     */
-    (downloaded, total) => {
-        if (total && total > 0) {
-            /** @type {number} */
-            const percent = Math.floor((downloaded / total) * 100);
-            if (percent > lastPercent && percent % 10 === 0) {
-                progress?.report({
-                    message: `Downloading Antigravity Backend (${percent}%)...`,
-                    increment: percent - lastPercent,
-                });
-                outputChannel.appendLine(`[INSTALL] Download progress: ${percent}% (${downloaded}/${total} bytes)`);
-                lastPercent = percent;
-            }
-        }
-    }), retryOptions, (/**
-     * @param {*} error
-     * @param {number} attempt
-     * @param {number} delayMs
-     * @return {void}
-     */
-    (error, attempt, delayMs) => {
-        /** @type {string} */
-        const errMsg = error instanceof Error ? (/** @type {!Error} */ (error)).message : String(error);
-        outputChannel.appendLine(`[INSTALL] Download attempt ${attempt} failed: ${errMsg}. Retrying in ${delayMs}ms...`);
-        progress?.report({
-            message: `Download attempt ${attempt} failed, retrying in ${delayMs}ms...`,
-        });
-        lastPercent = 0;
-    }));
+    /** @type {{onChunk: function(number, (undefined|number)=): void, onRetry: function(*, number, number): void}} */
+    const reporter = createDownloadProgressReporter(outputChannel, progress);
+    await downloadFile(url, destPath, reporter.onChunk, retryOptions, reporter.onRetry);
 }
+exports.downloadWithProgress = downloadWithProgress;
 /**
  * Verifies the SHA-512 or SHA-256 cryptographic checksum of a downloaded binary.
  * Rejects manifest entries without checksums, safely unlinks the file on mismatch,
@@ -1214,6 +1617,121 @@ async function cleanupStaleOldBinaries(installDir, outputChannel, options) {
 }
 exports.cleanupStaleOldBinaries = cleanupStaleOldBinaries;
 /**
+ * Filenames of abandoned download staging files, e.g. `agy.tmp.<uuid>` or `agy.tmp.<uuid>.tar.gz`.
+ * Deliberately anchored and strict: this pattern authorizes deletion, so it must only ever match
+ * names this module itself produces in `acquireInstalledBinaryPath`.
+ * @type {!RegExp}
+ */
+const STAGING_FILE_PATTERN = /^agy\.tmp\.[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\.tar\.gz)?$/i;
+/**
+ * Directory names of abandoned tar.gz extraction scratch dirs, e.g. `.unpack_1a2b3c4d`.
+ * @type {!RegExp}
+ */
+const UNPACK_DIR_PATTERN = /^\.unpack_[0-9a-f]{8}$/i;
+/**
+ * Minimum age before an `agy.tmp.*` file or `.unpack_*` directory is considered abandoned.
+ *
+ * The age check is what makes this sweep safe against concurrency. Several VS Code windows can run
+ * the install path at once, and a live download continuously writes to its staging file, so its
+ * mtime stays recent. Anything older than this window cannot belong to an in-flight download.
+ * @type {number}
+ */
+exports.STALE_DOWNLOAD_ARTIFACT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+/**
+ * Options for `cleanupStaleDownloadArtifacts`. Primarily a testing seam.
+ * @record
+ */
+function CleanupDownloadArtifactsOptions() { }
+exports.CleanupDownloadArtifactsOptions = CleanupDownloadArtifactsOptions;
+/* istanbul ignore if */
+if (false) {
+    /**
+     * @const {(undefined|number)}
+     * @public
+     */
+    CleanupDownloadArtifactsOptions.prototype.maxAgeMs;
+    /**
+     * @const {(undefined|function(): number)}
+     * @public
+     */
+    CleanupDownloadArtifactsOptions.prototype.now;
+    /**
+     * @const {(undefined|function(string, (undefined|{recursive: (undefined|boolean), force: (undefined|boolean)})=): !Promise<void>)}
+     * @public
+     */
+    CleanupDownloadArtifactsOptions.prototype.fsRm;
+    /**
+     * @const {(undefined|?)}
+     * @public
+     */
+    CleanupDownloadArtifactsOptions.prototype.fsReaddir;
+}
+/**
+ * Deletes abandoned download staging files (`agy.tmp.*`) and tar.gz extraction directories
+ * (`.unpack_*`) left in the install directory.
+ *
+ * Both are normally removed by the `finally` blocks that create them, but a hard kill of the
+ * extension host (user quit, OOM, machine sleep or crash) mid-download skips those. Nothing else
+ * reclaims them: `cleanupStaleOldBinaries` only matches `*.old.<hex>` backups, and each activation
+ * generates a fresh UUID, so an orphan is never reused or overwritten. The backend archive is
+ * ~115 MB, so a user who repeatedly fails to install - exactly the population reporting install
+ * failures - accumulates hundreds of megabytes of permanently dead files.
+ *
+ * Failures are non-fatal and never block startup; anything that cannot be deleted now is simply
+ * retried on the next activation.
+ * @param {string} installDir
+ * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
+ * @param {(undefined|!CleanupDownloadArtifactsOptions)=} options
+ * @return {!Promise<void>}
+ */
+async function cleanupStaleDownloadArtifacts(installDir, outputChannel, options) {
+    /** @type {number} */
+    const maxAgeMs = options?.maxAgeMs ?? exports.STALE_DOWNLOAD_ARTIFACT_MAX_AGE_MS;
+    /** @type {number} */
+    const now = options?.now?.() ?? Date.now();
+    /** @type {(?|function(string, (undefined|{recursive: (undefined|boolean), force: (undefined|boolean)})=): !Promise<void>)} */
+    const fsRm = options?.fsRm ?? fs_1.promises.rm;
+    const fsReaddir = options?.fsReaddir ?? fs_1.promises.readdir;
+    try {
+        if (!(await pathExists(installDir))) {
+            return;
+        }
+        /** @type {!Array<?>} */
+        const entries = await fsReaddir(installDir, {
+            withFileTypes: true,
+        });
+        for (const entry of entries) {
+            /** @type {boolean} */
+            const isStagingFile = entry.isFile() && STAGING_FILE_PATTERN.test(entry.name);
+            /** @type {boolean} */
+            const isUnpackDir = entry.isDirectory() && UNPACK_DIR_PATTERN.test(entry.name);
+            if (!isStagingFile && !isUnpackDir) {
+                continue;
+            }
+            /** @type {string} */
+            const artifactPath = (0, path_1.join)(installDir, entry.name);
+            try {
+                const stats = await fs_1.promises.stat(artifactPath);
+                /** @type {number} */
+                const ageMs = now - stats.mtimeMs;
+                if (ageMs < maxAgeMs) {
+                    // Recent enough that it may be an in-flight download owned by another window.
+                    continue;
+                }
+                await fsRm(artifactPath, { recursive: true, force: true });
+                outputChannel?.appendLine(`[INSTALL] Cleaned up abandoned download artifact: ${artifactPath}`);
+            }
+            catch (err) {
+                outputChannel?.appendLine(`[INSTALL] Could not delete abandoned download artifact ${artifactPath}: ${err}`);
+            }
+        }
+    }
+    catch (err) {
+        outputChannel?.appendLine(`[INSTALL WARNING] Failed to clean up abandoned download artifacts in ${installDir}: ${err}`);
+    }
+}
+exports.cleanupStaleDownloadArtifacts = cleanupStaleDownloadArtifacts;
+/**
  * Promotes a newly extracted or downloaded binary to the destination path safely across platforms.
  *
  * Windows File Locking Handling:
@@ -1261,13 +1779,40 @@ async function promoteBinarySafely(sourcePath, installPath, outputChannel, optio
             stagedOldPath = undefined;
         }
     }
-    // Promote the new binary to installPath with lock retry
-    await retryOnLock((/**
-     * @return {!Promise<void>}
-     */
-    async () => {
-        await fsRename(sourcePath, installPath);
-    }), { maxAttempts, initialDelayMs, outputChannel });
+    // Promote the new binary to installPath with lock retry.
+    try {
+        await retryOnLock((/**
+         * @return {!Promise<void>}
+         */
+        async () => {
+            await fsRename(sourcePath, installPath);
+        }), { maxAttempts, initialDelayMs, outputChannel });
+    }
+    catch (err) {
+        if (stagedOldPath) {
+            try {
+                // Retry the rollback under the same lock policy as the promotion
+                // itself. The promotion failing means something transiently holds a
+                // lock affecting `installPath`, and the rollback targets that very same
+                // path, so a single unretried rename would very likely hit the
+                // identical lock. Failing to restore here is not recoverable later:
+                // `cleanupStaleOldBinaries` deletes every `*.old.<hex>` backup on the
+                // next startup, which would destroy the only remaining copy of the
+                // binary and leave the extension with no executable at all.
+                await retryOnLock((/**
+                 * @return {!Promise<void>}
+                 */
+                async () => {
+                    await fsRename((/** @type {string} */ (stagedOldPath)), installPath);
+                }), { maxAttempts, initialDelayMs, outputChannel });
+                outputChannel?.appendLine(`[INSTALL] Promotion failed (${err}); rolled back to previous binary from ${stagedOldPath}.`);
+            }
+            catch (rollbackErr) {
+                outputChannel?.appendLine(`[INSTALL ERROR] Promotion failed (${err}) and could not restore ${stagedOldPath}: ${rollbackErr}. The previous binary is still present at ${stagedOldPath} and must be restored manually.`);
+            }
+        }
+        throw err;
+    }
     // Clean up the staged old binary and any leftover stale backups in the install directory.
     await cleanupStaleOldBinaries((0, path_1.dirname)(installPath), outputChannel, resolved);
 }
@@ -1439,6 +1984,144 @@ async function unpackAndPromote(options) {
     }
 }
 /**
+ * True when `url` points at a gzipped tar archive rather than a bare executable.
+ * @param {string} url
+ * @return {boolean}
+ */
+function isTarGzUrl(url) {
+    /** @type {string} */
+    const urlPath = new URL(url).pathname.toLowerCase();
+    return urlPath.endsWith('.tar.gz') || urlPath.endsWith('.tgz');
+}
+/**
+ * Resolves the entry for the current platform from `manifest` and asserts it is installable.
+ *
+ * Both conditions are manifest defects rather than transient faults, so they are checked before
+ * (and outside) the download retry loop: re-downloading a multi-hundred-megabyte archive cannot
+ * make a missing platform entry or a missing checksum appear. A checksum *mismatch* is a different
+ * matter and is still verified inside the retry loop, since that can be transient corruption which
+ * a retry legitimately repairs.
+ */
+/**
+ * Resolves the current platform's entry from `manifest` if and only if the entry exists and carries
+ * at least one cryptographic checksum (`sha512` or `sha256`). Shared by the initial resolve and the
+ * pre-retry refresh so both enforce the same validity criteria.
+ * @param {!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest} manifest
+ * @return {(undefined|!PlatformBinaryInfo)}
+ */
+function resolveVerifiedBinaryInfo(manifest) {
+    /** @type {(undefined|!PlatformBinaryInfo)} */
+    const binaryInfo = resolvePlatformBinaryInfo(manifest, process.platform, process.arch);
+    if (!binaryInfo || (!binaryInfo.sha512 && !binaryInfo.sha256)) {
+        return undefined;
+    }
+    return binaryInfo;
+}
+/**
+ * @param {!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest} manifest
+ * @param {!tsickle_vscode_11.OutputChannel} outputChannel
+ * @return {!PlatformBinaryInfo}
+ */
+function requireVerifiedBinaryInfo(manifest, outputChannel) {
+    /** @type {(undefined|!PlatformBinaryInfo)} */
+    const binaryInfo = resolvePlatformBinaryInfo(manifest, process.platform, process.arch);
+    if (!binaryInfo) {
+        /** @type {string} */
+        const errorText = `No compatible Antigravity binary found in release manifest for platform ${process.platform}-${process.arch}`;
+        outputChannel.appendLine(`[INSTALL ERROR] ${errorText}`);
+        throw new Error(errorText);
+    }
+    /** @type {(undefined|!PlatformBinaryInfo)} */
+    const verified = resolveVerifiedBinaryInfo(manifest);
+    if (!verified) {
+        /** @type {string} */
+        const errorText = 'Integrity verification failed: release manifest does not contain a sha512 or sha256 checksum.';
+        outputChannel.appendLine(`[INSTALL ERROR] ${errorText}`);
+        throw new Error(errorText);
+    }
+    return verified;
+}
+/**
+ * Snapshot of the resolved release metadata used by an active install attempt.
+ * @record
+ */
+function ResolvedInstallTarget() { }
+/* istanbul ignore if */
+if (false) {
+    /**
+     * @const {!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest}
+     * @public
+     */
+    ResolvedInstallTarget.prototype.manifest;
+    /**
+     * @const {!PlatformBinaryInfo}
+     * @public
+     */
+    ResolvedInstallTarget.prototype.binaryInfo;
+    /**
+     * @const {boolean}
+     * @public
+     */
+    ResolvedInstallTarget.prototype.isTarGz;
+    /**
+     * @const {string}
+     * @public
+     */
+    ResolvedInstallTarget.prototype.targetVersion;
+}
+/**
+ * Re-fetches the release manifest before a retry and, if the artifact rotated, discards the
+ * partial download via `discardPartialDownload` so the next attempt starts from byte 0 against the
+ * new release.
+ * @param {{attempt: number, releaseBaseUrl: string, stagingPath: string, currentTarget: !ResolvedInstallTarget, retryOptions: (undefined|!RetryOptions), outputChannel: !tsickle_vscode_11.OutputChannel}} options
+ * @return {!Promise<!ResolvedInstallTarget>}
+ */
+async function refreshReleaseMetadata(options) {
+    const { attempt, releaseBaseUrl, stagingPath, currentTarget, retryOptions, outputChannel, } = options;
+    /** @type {string} */
+    const previousUrl = currentTarget.binaryInfo.url;
+    /** @type {(undefined|string)} */
+    const previousHash = currentTarget.binaryInfo.sha512 ?? currentTarget.binaryInfo.sha256;
+    /** @type {string} */
+    const previousVersion = currentTarget.manifest.version;
+    /** @type {!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest} */
+    let refreshed;
+    try {
+        // maxAttempts: 1 -- the surrounding withRetry already provides the retry budget, and a
+        // flaky manifest endpoint must not multiply the cost of each binary attempt.
+        /** @type {!RetryOptions} */
+        const refreshRetryOptions = Object.assign({}, retryOptions, {
+            maxAttempts: 1,
+        });
+        refreshed = await fetchReleaseManifest(releaseBaseUrl, refreshRetryOptions, outputChannel);
+    }
+    catch (err) {
+        outputChannel.appendLine(`[INSTALL] Could not refresh release manifest before attempt ${attempt}: ${err}. Continuing with the previously resolved release v${previousVersion}.`);
+        return currentTarget;
+    }
+    /** @type {(undefined|!PlatformBinaryInfo)} */
+    const refreshedInfo = resolveVerifiedBinaryInfo(refreshed);
+    if (!refreshedInfo) {
+        outputChannel.appendLine(`[INSTALL] Refreshed manifest has no usable entry for ${process.platform}-${process.arch}. Continuing with the previously resolved release v${previousVersion}.`);
+        return currentTarget;
+    }
+    /** @type {(undefined|string)} */
+    const refreshedHash = refreshedInfo.sha512 ?? refreshedInfo.sha256;
+    if (refreshedInfo.url !== previousUrl || refreshedHash !== previousHash) {
+        outputChannel.appendLine(`[INSTALL] Release rotated mid-install (v${previousVersion} -> v${refreshed.version}). Discarding the partial download and restarting from byte 0.`);
+        // The bytes on disk belong to the previous artifact. Resuming across a rotation is the
+        // exact splice that the If-Range guard in downloadFile exists to prevent, so drop both
+        // the partial file and the resume validator that describes it.
+        await discardPartialDownload(stagingPath);
+    }
+    return {
+        manifest: refreshed,
+        binaryInfo: refreshedInfo,
+        isTarGz: isTarGzUrl(refreshedInfo.url),
+        targetVersion: refreshed.version ?? currentTarget.targetVersion,
+    };
+}
+/**
  * Options for acquiring the Antigravity binary.
  * @record
  */
@@ -1490,6 +2173,7 @@ async function acquireInstalledBinaryPath(options) {
     /** @type {string} */
     const installDir = (0, path_1.dirname)(installPath);
     await cleanupStaleOldBinaries(installDir, outputChannel);
+    await cleanupStaleDownloadArtifacts(installDir, outputChannel);
     /** @type {?} */
     const extVersion = context?.extension?.packageJSON?.version ?? 'unknown';
     outputChannel.appendLine(`[INSTALL] Initializing update check. Platform: ${process.platform}-${process.arch}, Extension Version: ${extVersion}`);
@@ -1599,72 +2283,84 @@ async function acquireInstalledBinaryPath(options) {
             const releaseBaseUrl = resolveReleaseBaseUrl(config, outputChannel);
             outputChannel.appendLine(`[INSTALL] Fetching manifest from releaseBaseUrl=${releaseBaseUrl}...`);
             /** @type {!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest} */
-            const manifest = await fetchReleaseManifest(releaseBaseUrl, retryOptions, outputChannel);
-            /** @type {(undefined|!PlatformBinaryInfo)} */
-            const binaryInfo = resolvePlatformBinaryInfo(manifest, process.platform, process.arch);
-            if (!binaryInfo) {
-                /** @type {string} */
-                const errorText = `No compatible Antigravity binary found in release manifest for platform ${process.platform}-${process.arch}`;
-                outputChannel.appendLine(`[INSTALL ERROR] ${errorText}`);
-                throw new Error(errorText);
-            }
-            outputChannel.appendLine(`[INSTALL] Found release v${manifest.version} (${process.platform}-${process.arch}): ${binaryInfo.url}`);
-            // Fail fast when the manifest carries no checksum. This is a manifest defect rather than a
-            // transient fault, so re-downloading the binary cannot resolve it. Checking here (instead of
-            // only inside verifyBinaryChecksum, which runs within withRetry) avoids repeatedly
-            // re-downloading a multi-hundred-megabyte archive to rediscover the same missing metadata.
-            // A checksum *mismatch* is still verified inside the retry loop, since that can be transient
-            // corruption which a retry legitimately repairs.
-            if (!binaryInfo.sha512 && !binaryInfo.sha256) {
-                /** @type {string} */
-                const errorText = 'Integrity verification failed: release manifest does not contain a sha512 or sha256 checksum.';
-                outputChannel.appendLine(`[INSTALL ERROR] ${errorText}`);
-                throw new Error(errorText);
-            }
+            const initialManifest = await fetchReleaseManifest(releaseBaseUrl, retryOptions, outputChannel);
+            /** @type {!PlatformBinaryInfo} */
+            const initialBinaryInfo = requireVerifiedBinaryInfo(initialManifest, outputChannel);
+            outputChannel.appendLine(`[INSTALL] Found release v${initialManifest.version} (${process.platform}-${process.arch}): ${initialBinaryInfo.url}`);
             /** @type {string} */
             const installDir = (0, path_1.dirname)(installPath);
             await fs_1.promises.mkdir(installDir, { recursive: true });
+            /** @type {!ResolvedInstallTarget} */
+            let installTarget = {
+                manifest: initialManifest,
+                binaryInfo: initialBinaryInfo,
+                isTarGz: isTarGzUrl(initialBinaryInfo.url),
+                targetVersion: initialManifest.version ?? targetVersion,
+            };
             /** @type {string} */
-            const urlPath = new URL(binaryInfo.url).pathname.toLowerCase();
-            /** @type {boolean} */
-            const isTarGz = urlPath.endsWith('.tar.gz') || urlPath.endsWith('.tgz');
-            /** @type {string} */
-            const stagingPath = (0, path_1.join)(installDir, `agy.tmp.${(0, crypto_1.randomUUID)()}${isTarGz ? '.tar.gz' : ''}`);
+            const stagingPath = (0, path_1.join)(installDir, `agy.tmp.${(0, crypto_1.randomUUID)()}${installTarget.isTarGz ? '.tar.gz' : ''}`);
             installProgress?.report({
                 message: `Downloading Antigravity Backend (${process.platform}-${process.arch})...`,
             });
             outputChannel.appendLine(`[INSTALL] Downloading Antigravity Backend to temporary path ${stagingPath}...`);
             // Download the platform binary and verify its cryptographic hash and signature.
-            // Both download and verification are wrapped in withRetry: if a network dropout or corruption
-            // causes verification to fail, the invalid staging file is unlinked and the download is cleanly retried.
-            await withRetry((/**
-             * @param {number} attempt
-             * @return {!Promise<void>}
-             */
-            async (attempt) => {
-                if (attempt > 1) {
-                    outputChannel.appendLine(`[INSTALL] Retrying backend binary download and verification (attempt ${attempt})...`);
-                }
-                await downloadWithProgress(binaryInfo.url, stagingPath, outputChannel, installProgress, { ...retryOptions, maxAttempts: 1 });
-                await verifyBinaryChecksum(stagingPath, binaryInfo, outputChannel, installProgress);
-            }), retryOptions, (/**
-             * @param {*} error
-             * @param {number} attempt
-             * @param {number} delayMs
-             * @return {void}
-             */
-            (error, attempt, delayMs) => {
-                /** @type {string} */
-                const errMsg = error instanceof Error ? (/** @type {!Error} */ (error)).message : String(error);
-                outputChannel.appendLine(`[INSTALL] Binary acquisition attempt ${attempt} failed: ${errMsg}. Retrying in ${delayMs}ms...`);
-            }));
-            await unpackAndPromote({
-                stagingPath,
-                installPath,
-                isTarGz,
-                outputChannel,
-                progress: installProgress,
-            });
+            // Both download and verification are wrapped in withRetry: if a stream stall or transient
+            // network drop interrupts downloadWithProgress, stagingPath is preserved so the next attempt
+            // can resume via HTTP Range; if checksum verification fails, verifyBinaryChecksum unlinks
+            // stagingPath so the retry re-downloads from byte 0.
+            try {
+                await withRetry((/**
+                 * @param {number} attempt
+                 * @return {!Promise<void>}
+                 */
+                async (attempt) => {
+                    if (attempt > 1) {
+                        // Re-resolve the release before retrying. `binaryInfo` (and with it the expected
+                        // checksum) was captured before the first attempt, so if the release rotated in the
+                        // meantime every retry would download the *new* artifact and compare it against the
+                        // *old* hash. That fails identically forever: the loop exhausts its attempts, each
+                        // one paying a full ~115 MB download, and the user stays broken until VS Code is
+                        // restarted because the stale manifest lives for the lifetime of this call.
+                        installTarget = await refreshReleaseMetadata({
+                            attempt,
+                            releaseBaseUrl,
+                            stagingPath,
+                            currentTarget: installTarget,
+                            retryOptions,
+                            outputChannel,
+                        });
+                        targetVersion = installTarget.targetVersion;
+                        outputChannel.appendLine(`[INSTALL] Retrying backend binary download and verification (attempt ${attempt})...`);
+                    }
+                    /** @type {!RetryOptions} */
+                    const downloadOptions = Object.assign({}, retryOptions, {
+                        maxAttempts: 1,
+                        preservePartialOnError: true,
+                    });
+                    await downloadWithProgress(installTarget.binaryInfo.url, stagingPath, outputChannel, installProgress, downloadOptions);
+                    await verifyBinaryChecksum(stagingPath, installTarget.binaryInfo, outputChannel, installProgress);
+                }), retryOptions, (/**
+                 * @param {*} error
+                 * @param {number} attempt
+                 * @param {number} delayMs
+                 * @return {void}
+                 */
+                (error, attempt, delayMs) => {
+                    /** @type {string} */
+                    const errMsg = error instanceof Error ? (/** @type {!Error} */ (error)).message : String(error);
+                    outputChannel.appendLine(`[INSTALL] Binary acquisition attempt ${attempt} failed: ${errMsg}. Retrying in ${delayMs}ms...`);
+                }));
+                await unpackAndPromote({
+                    stagingPath,
+                    installPath,
+                    isTarGz: installTarget.isTarGz,
+                    outputChannel,
+                    progress: installProgress,
+                });
+            }
+            finally {
+                await discardStagedDownload(stagingPath);
+            }
             outputChannel.appendLine(`[INSTALL] Antigravity Backend successfully installed to ${installPath}.`);
             await context.globalState.update('antigravity.lastInstalledReleaseBaseUrl', releaseBaseUrl);
             try {

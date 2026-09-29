@@ -11,6 +11,7 @@ goog.provide('jspb$b$jetbox_state_pb$UserSettings');
 goog.require('jspb$b$exa$codeium_common_pb$PermissionGrantsConfig');
 goog.require('jspb$b$jetbox_state_pb$CustomThemeSeeds');
 goog.require('jspb$b$jetbox_state_pb$GoogleSpecificConfig');
+goog.require('jspb$b$jetbox_state_pb$UserSettings$SandboxProxy');
 goog.require('jspb$jetbox_state_pb$MutableUserSettings');
 goog.require('jspb_internal_binary');
 goog.require('jspb_internal_public_for_gencode');
@@ -65,7 +66,8 @@ jspb$b$jetbox_state_pb$UserSettings.fields = /** @pureOrBreakMyCode */([
   jspb_internal_binary.RStringRequireUtf8WString,
   jspb_internal_binary.RWBool,
   -2,
-  jspb_internal_binary.RStringRequireUtf8WString
+  jspb_internal_binary.RStringRequireUtf8WString,
+  jspb$b$jetbox_state_pb$UserSettings$SandboxProxy.fields
 ]);
 
 /**

@@ -15,7 +15,6 @@ goog.require('jspb$jetski_memory$MutableFakeMemoryBackendConfig');
 goog.require('jspb$jetski_memory$MutableMemoryBankBackendConfig');
 goog.require('jspb$jetski_memory$MutableSkillsBackendConfig');
 goog.require('jspb$jetski_memory$MutableSmithBackendConfig');
-goog.require('jspb$jetski_memory$MutableSojoBackendConfig');
 goog.require('jspb_internal_adapters');
 goog.require('jspb_internal_public_for_gencode');
 /** @suppress {extraRequire} */
@@ -30,7 +29,6 @@ goog.requireType('jspb$ro.jetski_memory$ReadonlyFakeMemoryBackendConfig');
 goog.requireType('jspb$ro.jetski_memory$ReadonlyMemoryBankBackendConfig');
 goog.requireType('jspb$ro.jetski_memory$ReadonlySkillsBackendConfig');
 goog.requireType('jspb$ro.jetski_memory$ReadonlySmithBackendConfig');
-goog.requireType('jspb$ro.jetski_memory$ReadonlySojoBackendConfig');
 
 /**
  * @final
@@ -360,78 +358,6 @@ jspb$jetski_memory$MutableMemoryMountConfig = class extends jspb_internal_public
 
 
   /**
-   * optional SojoBackendConfig sojo = 7;
-   * @override
-   * @return {!jspb$jetski_memory$MutableSojoBackendConfig|undefined}
-   */
-  getSojo() {
-    return jspb_internal_adapters.getOneofWrapperFieldOrUndefined(this, jspb$jetski_memory$MutableSojoBackendConfig, 7, jspb$jetski_memory$MutableMemoryMountConfig.oneofGroup_backend_config_);
-  }
-
-
-  /**
-   * optional SojoBackendConfig sojo = 7;
-   * @override
-   * @return {!jspb$ro.jetski_memory$ReadonlySojoBackendConfig}
-   */
-  getReadonlySojo() {
-    return jspb_internal_adapters.getReadonlyOneofWrapperField(this, jspb$jetski_memory$MutableSojoBackendConfig, 7, jspb$jetski_memory$MutableMemoryMountConfig.oneofGroup_backend_config_);
-  }
-
-
-  /**
-   * optional SojoBackendConfig sojo = 7;
-   * @param {!jspb_internal_public_for_gencode.OrUndefinedToken<U>=} legacyOrUndefined
-   * @return {!jspb$jetski_memory$MutableSojoBackendConfig|R}
-   * @template U
-   * @template R := cond(eq(U, 'undefined'), 'undefined', 'jspb$jetski_memory$MutableSojoBackendConfig') =:
-   * @tsType (legacyOrUndefined: import('google3/javascript/apps/jspb/internal_public').OrUndefinedToken<undefined>): ಠ_ಠ.clutz.jspb$jetski_memory$MutableSojoBackendConfig|undefined
-   * @tsType (): ಠ_ಠ.clutz.jspb$jetski_memory$MutableSojoBackendConfig
-   */
-  getMutableSojo(legacyOrUndefined) {
-    return jspb_internal_adapters.getMutableOneofWrapperField(this, jspb$jetski_memory$MutableSojoBackendConfig, 7, jspb$jetski_memory$MutableMemoryMountConfig.oneofGroup_backend_config_, legacyOrUndefined);
-  }
-
-
-  /**
-   * @param {!jspb$ro.jetski_memory$ReadonlySojoBackendConfig|null|undefined} value
-   * @return {!jspb$jetski_memory$MutableMemoryMountConfig} returns this
-   */
-  setSojo(value) {
-    return jspb_internal_adapters.setOneofWrapperField(this, jspb$jetski_memory$MutableSojoBackendConfig, 7, jspb$jetski_memory$MutableMemoryMountConfig.oneofGroup_backend_config_, value);
-  }
-
-
-  /**
-   * Clears the field.
-   * @return {!jspb$jetski_memory$MutableMemoryMountConfig} returns this
-   */
-  clearSojo() {
-    return jspb_internal_adapters.clearOneofField(this, 7, jspb$jetski_memory$MutableMemoryMountConfig.oneofGroup_backend_config_);
-  }
-
-
-  /**
-   * Returns whether this field is set.
-   * @override
-   * @return {boolean}
-   */
-  hasSojo() {
-    return jspb_internal_adapters.hasOneofWrapperField(this, jspb$jetski_memory$MutableSojoBackendConfig, 7, jspb$jetski_memory$MutableMemoryMountConfig.oneofGroup_backend_config_);
-  }
-
-
-  /**
-   * optional SojoBackendConfig sojo = 7;
-   * @override
-   * @return {!jspb$ro.jetski_memory$ReadonlySojoBackendConfig|undefined}
-   */
-  getSojoOrUndefined() {
-    return jspb_internal_adapters.getReadonlyOneofWrapperFieldOrUndefined(this, jspb$jetski_memory$MutableSojoBackendConfig, 7, jspb$jetski_memory$MutableMemoryMountConfig.oneofGroup_backend_config_);
-  }
-
-
-  /**
    * optional MemoryBankBackendConfig memory_bank = 8;
    * @override
    * @return {!jspb$jetski_memory$MutableMemoryBankBackendConfig|undefined}
@@ -658,7 +584,6 @@ jspb$jetski_memory$MutableMemoryMountConfig.hasInstance = /** @pureOrBreakMyCode
  *  dumbo: (?jspb$jetski_memory$MutableDumboBackendConfig.ObjectFormat|undefined),
  *  fake: (?jspb$jetski_memory$MutableFakeMemoryBackendConfig.ObjectFormat|undefined),
  *  skills: (?jspb$jetski_memory$MutableSkillsBackendConfig.ObjectFormat|undefined),
- *  sojo: (?jspb$jetski_memory$MutableSojoBackendConfig.ObjectFormat|undefined),
  *  memoryBank: (?jspb$jetski_memory$MutableMemoryBankBackendConfig.ObjectFormat|undefined),
  *  eagerCacheWarming: (?boolean|undefined),
  *  pollChangesPeriod: (?jspb$google$protobuf$MutableDuration.ObjectFormat|undefined)
@@ -715,7 +640,7 @@ if (goog.DEBUG && !COMPILED) {
  * @const
  * @nodts
  */
-jspb$jetski_memory$MutableMemoryMountConfig.oneofGroup_backend_config_ = [1,2,3,5,7,8];
+jspb$jetski_memory$MutableMemoryMountConfig.oneofGroup_backend_config_ = [1,2,3,5,8];
 
 if (goog.DEBUG && !COMPILED) {
   /**
@@ -732,7 +657,6 @@ if (goog.DEBUG && !COMPILED) {
  *  dumbo: (!jspb$ro.jetski_memory$ReadonlyDumboBackendConfig|undefined),
  *  fake: (!jspb$ro.jetski_memory$ReadonlyFakeMemoryBackendConfig|undefined),
  *  skills: (!jspb$ro.jetski_memory$ReadonlySkillsBackendConfig|undefined),
- *  sojo: (!jspb$ro.jetski_memory$ReadonlySojoBackendConfig|undefined),
  *  memoryBank: (!jspb$ro.jetski_memory$ReadonlyMemoryBankBackendConfig|undefined),
  *  eagerCacheWarming: (boolean|undefined),
  *  pollChangesPeriod: (!jspb$ro.google$protobuf$ReadonlyDuration|undefined)

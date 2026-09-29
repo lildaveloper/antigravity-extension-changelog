@@ -20,6 +20,20 @@ const tsickle_vscode_2 = goog.requireType("vscode");
 const vscode = goog.require('vscode'); // from //devtools/cider/extensions:vscode
 // from //devtools/cider/extensions:vscode
 /**
+ * End character of a hunk's last line: the document line if it exists,
+ * otherwise the hunk line without its +/- marker.
+ * @param {!tsickle_vscode_2.TextDocument} document
+ * @param {number} line
+ * @param {string} hunkLine
+ * @return {number}
+ */
+function lineEndChar(document, line, hunkLine) {
+    if (line < document.lineCount) {
+        return document.lineAt(line).text.length;
+    }
+    return /^[+-]/.test(hunkLine) ? hunkLine.length - 1 : hunkLine.length;
+}
+/**
  * Represents a single contiguous block of changes (hunk) in the inline diff view.
  * Stores range coordinates for additions and deletions within the document buffer.
  */
@@ -121,12 +135,12 @@ class InlineDiffChangeRange {
         if (firstDeletionIndex !== -1) {
             range.deletionStart = startLineOffset + firstDeletionIndex;
             range.deletionEnd = startLineOffset + lastDeletionIndex;
-            range.deletionRange = new vscode.Range(new vscode.Position(range.deletionStart, 0), new vscode.Position(range.deletionEnd, document.lineAt(range.deletionEnd).text.length));
+            range.deletionRange = new vscode.Range(new vscode.Position(range.deletionStart, 0), new vscode.Position(range.deletionEnd, lineEndChar(document, range.deletionEnd, hunkLines[lastDeletionIndex])));
         }
         if (firstAdditionIndex !== -1) {
             range.additionStart = startLineOffset + firstAdditionIndex;
             range.additionEnd = startLineOffset + lastAdditionIndex;
-            range.additionRange = new vscode.Range(new vscode.Position(range.additionStart, 0), new vscode.Position(range.additionEnd, document.lineAt(range.additionEnd).text.length));
+            range.additionRange = new vscode.Range(new vscode.Position(range.additionStart, 0), new vscode.Position(range.additionEnd, lineEndChar(document, range.additionEnd, hunkLines[lastAdditionIndex])));
         }
         return range;
     }

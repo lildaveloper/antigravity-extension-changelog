@@ -17,12 +17,15 @@ goog.require('google3.third_party.javascript.tslib.tslib');
 const tsickle_cider_1 = goog.requireType("google3.devtools.cider.extensions.cider");
 const tsickle_workspace_2 = goog.requireType("google3.devtools.cider.extensionutils.workspace");
 const tsickle_vscode_3 = goog.requireType("vscode");
-const tsickle_diff_zone_renderer_4 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.diff_zone_renderer");
-const tsickle_hunk_storage_5 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.hunk_storage");
-const tsickle_utils_6 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.utils");
+const tsickle_diff_helper_4 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.diff_helper");
+const tsickle_diff_zone_renderer_5 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.diff_zone_renderer");
+const tsickle_hunk_storage_6 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.hunk_storage");
+const tsickle_utils_7 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.utils");
 const cider_1 = goog.require('google3.devtools.cider.extensions.cider');
 const workspace_1 = goog.require('google3.devtools.cider.extensionutils.workspace');
 const vscode = goog.require('vscode'); // from //devtools/cider/extensions:vscode
+// from //devtools/cider/extensions:vscode
+const diff_helper_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.diff_helper');
 const hunk_storage_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.hunk_storage');
 const utils_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.utils');
 const diff_zone_renderer_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.diff_zone_renderer');
@@ -152,7 +155,7 @@ class AgentEditManager {
     /**
      * @public
      * @param {!tsickle_vscode_3.ExtensionContext} context Extension context for state persistence.
-     * @param {function(): (undefined|!tsickle_diff_zone_renderer_4.DiffZoneRenderer)} createDiffZoneRenderer Factory method returning the active DiffZoneRenderer strategy.
+     * @param {function(): (undefined|!tsickle_diff_zone_renderer_5.DiffZoneRenderer)} createDiffZoneRenderer Factory method returning the active DiffZoneRenderer strategy.
      * @param {(undefined|!AgentEditManagerOptions)=} options Options bucket for settings such as autoAcceptOnChat and ageOutThreshold.
      * @param {(undefined|function(string, string, string): !Promise<void>)=} openStandardDiff Optional callback for opening standard resolved diff views.
      */
@@ -160,6 +163,10 @@ class AgentEditManager {
         this.createDiffZoneRenderer = createDiffZoneRenderer;
         this.openStandardDiff = openStandardDiff;
         this.activeDiffZoneDetails = new Map();
+        /**
+         * Prior-turn texts per URI; stale buffers aren't formatter edits.
+         */
+        this.priorTurnContents = new Map();
         /**
          * Per-file insertion/deletion counts.
          */
@@ -219,7 +226,7 @@ class AgentEditManager {
      * @return {void}
      */
     updateDiffZoneRenderer() {
-        /** @type {(undefined|!tsickle_diff_zone_renderer_4.DiffZoneRenderer)} */
+        /** @type {(undefined|!tsickle_diff_zone_renderer_5.DiffZoneRenderer)} */
         const newRenderer = this.createDiffZoneRenderer();
         if (newRenderer?.type !== this.renderer?.type) {
             this.renderer?.dispose();
@@ -263,7 +270,7 @@ class AgentEditManager {
     hasUnresolvedHunks(fileUri) {
         /** @type {string} */
         const normalizedUri = (0, utils_1.normalizeUri)(fileUri);
-        /** @type {(undefined|{originalContents: string, modifiedContents: string, hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)})} */
+        /** @type {(undefined|{originalContents: string, modifiedContents: string, rawModifiedContents: (undefined|string), hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)})} */
         const details = this.activeDiffZoneDetails.get(normalizedUri);
         return !!(details?.hunkHashes && details.hunkHashes.length > 0);
     }
@@ -312,7 +319,7 @@ class AgentEditManager {
         if (message.fileUri) {
             /** @type {string} */
             const normalizedUri = (0, utils_1.normalizeUri)(message.fileUri);
-            /** @type {(undefined|{originalContents: string, modifiedContents: string, hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)})} */
+            /** @type {(undefined|{originalContents: string, modifiedContents: string, rawModifiedContents: (undefined|string), hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)})} */
             const existingDetails = this.activeDiffZoneDetails.get(normalizedUri);
             if (existingDetails?.modifiedContents !== undefined) {
                 /** @type {string} */
@@ -349,18 +356,25 @@ class AgentEditManager {
             /** @type {string} */
             const normalizedUri = (0, utils_1.normalizeUri)(message.fileUri);
             if (message.turnIndex !== undefined) {
-                await this.handleResolveStaleAgentEdits(message.turnIndex);
+                // Inline only: skip the target file; its zone is recreated below.
+                await this.handleResolveStaleAgentEdits(message.turnIndex, this.renderer?.type === 'inline' ? normalizedUri : undefined);
             }
-            // Wait to acquire exclusive ownership of this file's processing.
-            // Multiple waiters may resume simultaneously when a promise resolves,
-            // but only one will find the map entry cleared and proceed past the
-            // loop; the others will re-wait on the new owner's promise.
-            while (this.processingFiles.has(normalizedUri)) {
-                await this.processingFiles.get(normalizedUri);
+            // Inline only: serialize globally, since inline edits share the buffer.
+            /** @type {boolean} */
+            const useGlobalLock = this.renderer?.type === 'inline';
+            while ((useGlobalLock && this.globalProcessingLock) ||
+                this.processingFiles.has(normalizedUri)) {
+                await ((useGlobalLock ? this.globalProcessingLock : undefined) ??
+                    this.processingFiles.get(normalizedUri));
             }
             const { promise, resolve } = Promise.withResolvers();
             this.processingFiles.set(normalizedUri, promise);
+            if (useGlobalLock) {
+                this.globalProcessingLock = promise;
+            }
             try {
+                /** @type {string} */
+                const rawModifiedContents = message.modifiedContents;
                 /** @type {string} */
                 const normalizedModifiedContents = (0, utils_1.normalizeLineEndings)(message.modifiedContents);
                 /** @type {boolean} */
@@ -368,23 +382,61 @@ class AgentEditManager {
                 if (hasExistingZoneWithSameContent) {
                     return;
                 }
-                if (this.activeDiffZoneDetails.has(normalizedUri)) {
+                /** @type {(undefined|{originalContents: string, modifiedContents: string, rawModifiedContents: (undefined|string), hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)})} */
+                const existingDetails = this.activeDiffZoneDetails.get(normalizedUri);
+                /** @type {boolean} */
+                const isInlineRenderer = this.renderer?.type === 'inline';
+                /** @type {boolean} */
+                const isSameTurnStreaming = isInlineRenderer &&
+                    existingDetails !== undefined &&
+                    ((message.turnIndex === undefined &&
+                        existingDetails.turnIndex === undefined) ||
+                        (message.turnIndex !== undefined &&
+                            existingDetails.turnIndex !== undefined &&
+                            message.turnIndex === existingDetails.turnIndex &&
+                            message.conversationId === existingDetails.conversationId));
+                if (existingDetails && !isInlineRenderer) {
+                    // Non-inline: accept the outgoing zone as before.
                     await this.renderer.closeDiffZone(normalizedUri, true);
+                }
+                else if (existingDetails) {
+                    this.recordPriorTurnContents(normalizedUri, existingDetails.originalContents, existingDetails.modifiedContents);
+                    if (isSameTurnStreaming) {
+                        message = {
+                            ...message,
+                            originalContents: existingDetails.originalContents,
+                        };
+                    }
+                    else if (existingDetails.hunkHashes) {
+                        for (const hash of existingDetails.hunkHashes) {
+                            await this.hunkStorage.recordResolution({
+                                conversationId: existingDetails.conversationId,
+                                turnIndex: existingDetails.turnIndex,
+                                fileUri: normalizedUri,
+                            }, hash, hunk_storage_1.HunkResolutionAction.ACCEPT);
+                        }
+                    }
+                    if (typeof this.renderer.disposeDiffZone === 'function') {
+                        await this.renderer.disposeDiffZone(normalizedUri);
+                    }
+                    else {
+                        await this.renderer.closeDiffZone(normalizedUri, true);
+                    }
                 }
                 /** @type {!tsickle_vscode_3.Uri} */
                 const uri = vscode.Uri.parse(normalizedUri);
-                /** @type {function(!tsickle_diff_zone_renderer_4.HunkResolutionEvent): !Promise<void>} */
+                /** @type {function(!tsickle_diff_zone_renderer_5.HunkResolutionEvent): !Promise<void>} */
                 const onHunkResolved = (/**
-                 * @param {!tsickle_diff_zone_renderer_4.HunkResolutionEvent} event
+                 * @param {!tsickle_diff_zone_renderer_5.HunkResolutionEvent} event
                  * @return {!Promise<void>}
                  */
                 async (event) => {
                     await this.handleHunkResolved(message, event);
                 });
-                /** @type {function(string): (undefined|!tsickle_hunk_storage_5.HunkResolutionAction)} */
+                /** @type {function(string): (undefined|!tsickle_hunk_storage_6.HunkResolutionAction)} */
                 const getStoredResolution = (/**
                  * @param {string} hash
-                 * @return {(undefined|!tsickle_hunk_storage_5.HunkResolutionAction)}
+                 * @return {(undefined|!tsickle_hunk_storage_6.HunkResolutionAction)}
                  */
                 (hash) => this.hunkStorage.getResolution(message, hash));
                 // If all hunks for this edit were already resolved, or if navigating from
@@ -393,7 +445,7 @@ class AgentEditManager {
                     await this.handleFullyResolvedEdit(message);
                     return;
                 }
-                /** @type {!tsickle_diff_zone_renderer_4.RenderTextEditResult} */
+                /** @type {!tsickle_diff_zone_renderer_5.RenderTextEditResult} */
                 let result;
                 if ((0, utils_1.isNotebook)(normalizedUri)) {
                     // If the notebook is already open in an editor, force reload it from
@@ -401,7 +453,13 @@ class AgentEditManager {
                     // on-disk writes before creating the diff zone. If the document was
                     // dirty from concurrent edits, this reverts to disk so the DiffZone
                     // accurately presents the agent's proposed turn diff.
-                    await cider_1.cider.ai.forceResolveFromFile(uri);
+                    // Non-inline: call directly so a rejection still aborts the edit.
+                    if (this.renderer?.type === 'inline') {
+                        await this.forceResolveFromFile(uri);
+                    }
+                    else {
+                        await cider_1.cider.ai.forceResolveFromFile(uri);
+                    }
                     /** @type {!tsickle_vscode_3.NotebookDocument} */
                     const doc = await vscode.workspace.openNotebookDocument(uri);
                     result = await this.renderer.renderNotebookEdit(uri, doc, message, getStoredResolution, onHunkResolved);
@@ -436,15 +494,35 @@ class AgentEditManager {
                         await this.handleFullyResolvedEdit(message);
                         return;
                     }
+                    // Only used by the inline-gated checks below.
+                    /** @type {string} */
+                    const currentContent = isInlineRenderer
+                        ? (0, utils_1.normalizeLineEndings)(doc.getText())
+                        : '';
+                    /** @type {(undefined|!Set<string>)} */
+                    const priorContents = isInlineRenderer
+                        ? this.priorTurnContents.get(normalizedUri)
+                        : undefined;
+                    /** @type {boolean} */
+                    const isPriorInlineCombinedText = this.renderer.type === 'inline' &&
+                        ((priorContents !== undefined &&
+                            priorContents.has(currentContent)) ||
+                            (existingDetails !== undefined &&
+                                (currentContent ===
+                                    (0, utils_1.normalizeLineEndings)(existingDetails.originalContents) ||
+                                    currentContent ===
+                                        (0, utils_1.normalizeLineEndings)(existingDetails.modifiedContents) ||
+                                    currentContent ===
+                                        (0, utils_1.normalizeLineEndings)((0, diff_helper_1.getTextWithHunks)(existingDetails.originalContents, (0, diff_helper_1.getDiffHunks)(existingDetails.originalContents, existingDetails.modifiedContents))))));
                     // When using inline diff zones, check if on-disk content diverged due to
                     // formatters or commands running during the turn. If the document on disk
                     // differs from both original and modified, but has been changed from original,
                     // adopt the on-disk content as the modified content so the inline diff displays
                     // the true state of the workspace rather than falsely reporting divergence.
                     if (this.renderer.type === 'inline' &&
+                        !doc.isDirty &&
+                        !isPriorInlineCombinedText &&
                         this.hasContentDiverged(doc, message)) {
-                        /** @type {string} */
-                        const currentContent = (0, utils_1.normalizeLineEndings)(doc.getText());
                         /** @type {string} */
                         const normalizedOriginal = (0, utils_1.normalizeLineEndings)(message.originalContents ?? '');
                         if (currentContent !== normalizedOriginal) {
@@ -454,10 +532,25 @@ class AgentEditManager {
                             };
                         }
                     }
-                    if (this.hasContentDiverged(doc, message)) {
+                    if (!isPriorInlineCombinedText &&
+                        this.hasContentDiverged(doc, message)) {
                         console.info(`[Jetski] File content has diverged for ${message.fileUri}, showing read-only diff.`);
                         await this.handleFullyResolvedEdit(message);
                         return;
+                    }
+                    if (this.renderer.type === 'inline' &&
+                        isPriorInlineCombinedText &&
+                        vscode.workspace?.fs &&
+                        currentContent !==
+                            (0, utils_1.normalizeLineEndings)(message.modifiedContents ?? '')) {
+                        try {
+                            /** @type {!Uint8Array} */
+                            const encoded = new TextEncoder().encode(message.modifiedContents ?? '');
+                            await vscode.workspace.fs.writeFile(uri, encoded);
+                        }
+                        catch {
+                            // Best-effort sync of modifiedContents to disk
+                        }
                     }
                     result = await this.renderer.renderTextEdit(uri, doc, message, getStoredResolution, onHunkResolved);
                 }
@@ -470,10 +563,12 @@ class AgentEditManager {
                 if (autoOpenAll && message.skipOpen !== true) {
                     await this.revealDocument(normalizedUri, false);
                 }
+                this.recordPriorTurnContents(normalizedUri, (/** @type {string} */ (message.originalContents)), (/** @type {string} */ (message.modifiedContents)));
                 this.activeDiffZoneDetails.set(normalizedUri, {
                     ...message,
                     originalContents: (/** @type {string} */ (message.originalContents)),
                     modifiedContents: (/** @type {string} */ (message.modifiedContents)),
+                    rawModifiedContents,
                     hunkHashes: result.hunkHashes ?? [],
                 });
                 /** @type {number} */
@@ -493,6 +588,9 @@ class AgentEditManager {
             finally {
                 resolve();
                 this.processingFiles.delete(normalizedUri);
+                if (this.globalProcessingLock === promise) {
+                    this.globalProcessingLock = undefined;
+                }
             }
         }
         catch (e) {
@@ -502,7 +600,7 @@ class AgentEditManager {
     /**
      * @private
      * @param {!AddAgentEditMessage} message
-     * @param {!tsickle_diff_zone_renderer_4.HunkResolutionEvent} event
+     * @param {!tsickle_diff_zone_renderer_5.HunkResolutionEvent} event
      * @return {!Promise<void>}
      */
     async handleHunkResolved(message, event) {
@@ -510,8 +608,15 @@ class AgentEditManager {
         const fileUri = event.fileUri;
         /** @type {string} */
         const normalizedUri = (0, utils_1.normalizeUri)(fileUri);
-        /** @type {(undefined|{originalContents: string, modifiedContents: string, hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)})} */
+        /** @type {(undefined|{originalContents: string, modifiedContents: string, rawModifiedContents: (undefined|string), hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)})} */
         const details = this.activeDiffZoneDetails.get(normalizedUri);
+        // Inline only: ignore resolutions from a superseded turn.
+        if (this.renderer?.type === 'inline' &&
+            details &&
+            (details.conversationId !== message.conversationId ||
+                details.turnIndex !== message.turnIndex)) {
+            return;
+        }
         if (details && details.hunkHashes) {
             /** @type {(undefined|boolean)} */
             const isBulkResolution = event.final && event.hunkIndex == null && event.hunkHash == null;
@@ -547,9 +652,20 @@ class AgentEditManager {
                 }
             }
         }
-        if (!details ||
-            !details.hunkHashes ||
-            details.hunkHashes.length === 0 ||
+        // Inline only: re-read, since a newer zone may have replaced this one.
+        /** @type {(undefined|{originalContents: string, modifiedContents: string, rawModifiedContents: (undefined|string), hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)})} */
+        const currentDetails = this.renderer?.type === 'inline'
+            ? this.activeDiffZoneDetails.get(normalizedUri)
+            : details;
+        if (this.renderer?.type === 'inline' &&
+            currentDetails &&
+            (currentDetails.conversationId !== message.conversationId ||
+                currentDetails.turnIndex !== message.turnIndex)) {
+            return;
+        }
+        if (!currentDetails ||
+            !currentDetails.hunkHashes ||
+            currentDetails.hunkHashes.length === 0 ||
             (event.final && event.hunkIndex == null && event.hunkHash == null)) {
             this.activeDiffZoneDetails.delete(normalizedUri);
             this.fileDiffStats.delete(normalizedUri);
@@ -570,7 +686,7 @@ class AgentEditManager {
      * @return {!Promise<boolean>}
      */
     async handleExistingDiffZone(normalizedUri, normalizedModifiedContents, skipOpen, strictNav = false, message) {
-        /** @type {(undefined|{originalContents: string, modifiedContents: string, hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)})} */
+        /** @type {(undefined|{originalContents: string, modifiedContents: string, rawModifiedContents: (undefined|string), hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)})} */
         const existingDetails = this.activeDiffZoneDetails.get(normalizedUri);
         if (!existingDetails) {
             return false;
@@ -587,7 +703,11 @@ class AgentEditManager {
             message?.conversationId !== undefined &&
             message?.turnIndex !== undefined &&
             existingDetails.conversationId === message.conversationId &&
-            existingDetails.turnIndex === message.turnIndex;
+            existingDetails.turnIndex === message.turnIndex &&
+            (strictNav ||
+                (0, utils_1.normalizeLineEndings)(existingDetails.rawModifiedContents ??
+                    existingDetails.modifiedContents ??
+                    '') === normalizedModifiedContents);
         // Explicit user navigation from review sidebar without turnIndex (e.g. clicking
         // an unresolved file in Files Changed). Do not compare modifiedContents here
         // since the sidebar passes trajectory diffs which may differ from turn diffs.
@@ -652,7 +772,7 @@ class AgentEditManager {
         }
         for (const [uri__tsickle_destructured_1, details__tsickle_destructured_2] of this.activeDiffZoneDetails.entries()) {
             const uri = /** @type {string} */ (uri__tsickle_destructured_1);
-            const details = /** @type {{originalContents: string, modifiedContents: string, hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)}} */ (details__tsickle_destructured_2);
+            const details = /** @type {{originalContents: string, modifiedContents: string, rawModifiedContents: (undefined|string), hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)}} */ (details__tsickle_destructured_2);
             if (details.conversationId === conversationId &&
                 details.turnIndex === turnIndex &&
                 details.hunkHashes &&
@@ -677,7 +797,7 @@ class AgentEditManager {
         }
         for (const [uri__tsickle_destructured_3, details__tsickle_destructured_4] of this.activeDiffZoneDetails.entries()) {
             const uri = /** @type {string} */ (uri__tsickle_destructured_3);
-            const details = /** @type {{originalContents: string, modifiedContents: string, hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)}} */ (details__tsickle_destructured_4);
+            const details = /** @type {{originalContents: string, modifiedContents: string, rawModifiedContents: (undefined|string), hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)}} */ (details__tsickle_destructured_4);
             if (uri === currentFileUri) {
                 continue;
             }
@@ -710,7 +830,7 @@ class AgentEditManager {
         // correctly show a read-only diff instead of destructively recreating.
         for (const [uri__tsickle_destructured_5, details__tsickle_destructured_6] of this.activeDiffZoneDetails.entries()) {
             const uri = /** @type {string} */ (uri__tsickle_destructured_5);
-            const details = /** @type {{originalContents: string, modifiedContents: string, hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)}} */ (details__tsickle_destructured_6);
+            const details = /** @type {{originalContents: string, modifiedContents: string, rawModifiedContents: (undefined|string), hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)}} */ (details__tsickle_destructured_6);
             if (details.conversationId !== undefined &&
                 details.turnIndex !== undefined &&
                 !(0, utils_1.isNotebook)(uri)) {
@@ -756,19 +876,31 @@ class AgentEditManager {
     }
     /**
      * Auto-accepts stale agent edits based on turn index.
+     *
+     * `excludeUri` is never aged out; its zone is about to be replaced.
      * @public
      * @param {number} currentTurnIndex
+     * @param {(undefined|string)=} excludeUri
      * @return {!Promise<void>}
      */
-    async handleResolveStaleAgentEdits(currentTurnIndex) {
+    async handleResolveStaleAgentEdits(currentTurnIndex, excludeUri) {
         if (this.ageOutThreshold <= 0)
             return;
+        // Inline only: onChatSent already accepts background files, and turnIndex
+        // can jump past the threshold in one message, accepting the active review.
+        if (this.autoAcceptOnChat && this.renderer?.type === 'inline')
+            return;
+        /** @type {(undefined|string)} */
+        const normalizedExcludeUri = excludeUri
+            ? (0, utils_1.normalizeUri)(excludeUri)
+            : undefined;
         /** @type {!Set<string>} */
         const staleFiles = new Set();
         for (const [uri__tsickle_destructured_7, details__tsickle_destructured_8] of this.activeDiffZoneDetails.entries()) {
             const uri = /** @type {string} */ (uri__tsickle_destructured_7);
-            const details = /** @type {{originalContents: string, modifiedContents: string, hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)}} */ (details__tsickle_destructured_8);
-            if (details.turnIndex !== undefined &&
+            const details = /** @type {{originalContents: string, modifiedContents: string, rawModifiedContents: (undefined|string), hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)}} */ (details__tsickle_destructured_8);
+            if (uri !== normalizedExcludeUri &&
+                details.turnIndex !== undefined &&
                 details.turnIndex < currentTurnIndex - this.ageOutThreshold) {
                 staleFiles.add(uri);
             }
@@ -799,18 +931,43 @@ class AgentEditManager {
         /** @type {!Set<string>} */
         const filesToAccept = new Set();
         for (const uri of this.activeDiffZoneDetails.keys()) {
-            if (uri !== normalizedActiveUri) {
+            if (uri !== normalizedActiveUri ||
+                (this.renderer?.type === 'inline' &&
+                    this.renderer.hasUserEditedZone?.(uri) === true)) {
                 filesToAccept.add(uri);
             }
         }
         if (filesToAccept.size > 0) {
             console.info(`[Jetski] Auto-accepting edits in background files: ${Array.from(filesToAccept).join(', ')}`);
-            await Promise.all(Array.from(filesToAccept).flatMap((/**
-             * @param {string} fileUri
-             * @return {!Array<!Promise<*>>}
-             */
-            (fileUri) => this.resolveEditsInFile(fileUri, true))));
+            if (this.renderer?.type === 'inline') {
+                // Inline only: drain one at a time; the buffer is shared.
+                for (const fileUri of filesToAccept) {
+                    await Promise.all(this.resolveEditsInFile(fileUri, true));
+                }
+            }
+            else {
+                await Promise.all(Array.from(filesToAccept).flatMap((/**
+                 * @param {string} fileUri
+                 * @return {!Array<!Promise<*>>}
+                 */
+                (fileUri) => this.resolveEditsInFile(fileUri, true))));
+            }
             this.fireAgentEditsChanged();
+        }
+        // Inline only: flush unsaved user edits so the backend reads them from disk.
+        if (this.renderer?.type === 'inline') {
+            for (const doc of vscode.workspace.textDocuments ?? []) {
+                if (doc.isDirty &&
+                    doc.uri.scheme === 'file' &&
+                    !this.activeDiffZoneDetails.has((0, utils_1.normalizeUri)(doc.uri.toString()))) {
+                    try {
+                        await doc.save();
+                    }
+                    catch (e) {
+                        console.warn(`[Jetski] Failed to save ${doc.uri.toString()}:`, e);
+                    }
+                }
+            }
         }
     }
     /**
@@ -835,15 +992,20 @@ class AgentEditManager {
     resolveEditsInFile(fileUri, accept) {
         /** @type {!Array<!Promise<*>>} */
         const promises = [];
-        /** @type {(undefined|{originalContents: string, modifiedContents: string, hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)})} */
+        /** @type {(undefined|{originalContents: string, modifiedContents: string, rawModifiedContents: (undefined|string), hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)})} */
         const details = this.activeDiffZoneDetails.get(fileUri);
-        if (details && details.hunkHashes) {
-            for (const hash of details.hunkHashes) {
-                promises.push(this.hunkStorage.recordResolution({
-                    conversationId: details.conversationId,
-                    turnIndex: details.turnIndex,
-                    fileUri,
-                }, hash, accept ? hunk_storage_1.HunkResolutionAction.ACCEPT : hunk_storage_1.HunkResolutionAction.REJECT));
+        if (details) {
+            this.recordPriorTurnContents(fileUri, details.originalContents, details.modifiedContents);
+            if (details.hunkHashes) {
+                for (const hash of details.hunkHashes) {
+                    promises.push(this.hunkStorage.recordResolution({
+                        conversationId: details.conversationId,
+                        turnIndex: details.turnIndex,
+                        fileUri,
+                    }, hash, accept
+                        ? hunk_storage_1.HunkResolutionAction.ACCEPT
+                        : hunk_storage_1.HunkResolutionAction.REJECT));
+                }
             }
         }
         if (this.renderer) {
@@ -852,6 +1014,25 @@ class AgentEditManager {
         this.activeDiffZoneDetails.delete(fileUri);
         this.fileDiffStats.delete(fileUri);
         return promises;
+    }
+    /**
+     * @private
+     * @param {string} normalizedUri
+     * @param {string} originalContents
+     * @param {string} modifiedContents
+     * @return {void}
+     */
+    recordPriorTurnContents(normalizedUri, originalContents, modifiedContents) {
+        // Only inline reads `priorTurnContents`; skip it for other renderers.
+        if (this.renderer?.type !== 'inline') {
+            return;
+        }
+        /** @type {!Set<string>} */
+        const set = new Set();
+        set.add((0, utils_1.normalizeLineEndings)(originalContents));
+        set.add((0, utils_1.normalizeLineEndings)(modifiedContents));
+        set.add((0, utils_1.normalizeLineEndings)((0, diff_helper_1.getTextWithHunks)(originalContents, (0, diff_helper_1.getDiffHunks)(originalContents, modifiedContents))));
+        this.priorTurnContents.set(normalizedUri, set);
     }
     /**
      * Focuses the next or previous hunk in the diff zone for the specified file.
@@ -982,20 +1163,55 @@ class AgentEditManager {
             console.error(`[Jetski] Failed to reveal file ${uriStr}`, e);
         }
     }
+    /**
+     * @private
+     * @param {!tsickle_vscode_3.Uri} uri
+     * @return {!Promise<void>}
+     */
+    async forceResolveFromFile(uri) {
+        try {
+            if ((0, utils_1.hasCiderForceResolveFromFile)()) {
+                await cider_1.cider.ai.forceResolveFromFile(uri);
+                return;
+            }
+            // Inline: registerDiff sets the buffer; skip focus-stealing revert.
+            if (this.renderer?.type === 'inline' && !(0, utils_1.isNotebook)(uri.toString())) {
+                return;
+            }
+            /** @type {!tsickle_vscode_3.TextDocument} */
+            const doc = await vscode.workspace.openTextDocument(uri);
+            if (doc.isDirty) {
+                await vscode.window.showTextDocument(doc, {
+                    preview: false,
+                    preserveFocus: false,
+                });
+                await vscode.commands.executeCommand('workbench.action.files.revert');
+            }
+        }
+        catch (e) {
+            console.warn(`[Jetski] forceResolveFromFile failed for ${uri.toString()}`, e);
+        }
+    }
 }
 exports.AgentEditManager = AgentEditManager;
 /* istanbul ignore if */
 if (false) {
     /**
-     * @type {(undefined|!tsickle_diff_zone_renderer_4.DiffZoneRenderer)}
+     * @type {(undefined|!tsickle_diff_zone_renderer_5.DiffZoneRenderer)}
      * @private
      */
     AgentEditManager.prototype.renderer;
     /**
-     * @const {!Map<string, {originalContents: string, modifiedContents: string, hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)}>}
+     * @const {!Map<string, {originalContents: string, modifiedContents: string, rawModifiedContents: (undefined|string), hunkHashes: (undefined|!Array<string>), conversationId: (undefined|string), turnIndex: (undefined|number)}>}
      * @private
      */
     AgentEditManager.prototype.activeDiffZoneDetails;
+    /**
+     * Prior-turn texts per URI; stale buffers aren't formatter edits.
+     * @const {!Map<string, !Set<string>>}
+     * @private
+     */
+    AgentEditManager.prototype.priorTurnContents;
     /**
      * Per-file insertion/deletion counts.
      * @const {!Map<string, {numLinesInserted: number, numLinesDeleted: number}>}
@@ -1021,7 +1237,12 @@ if (false) {
      */
     AgentEditManager.prototype.processingFiles;
     /**
-     * @const {!tsickle_hunk_storage_5.HunkStorage}
+     * @type {(undefined|!Promise<void>)}
+     * @private
+     */
+    AgentEditManager.prototype.globalProcessingLock;
+    /**
+     * @const {!tsickle_hunk_storage_6.HunkStorage}
      * @private
      */
     AgentEditManager.prototype.hunkStorage;
@@ -1036,7 +1257,7 @@ if (false) {
      */
     AgentEditManager.prototype.ageOutThreshold;
     /**
-     * @const {function(): (undefined|!tsickle_diff_zone_renderer_4.DiffZoneRenderer)}
+     * @const {function(): (undefined|!tsickle_diff_zone_renderer_5.DiffZoneRenderer)}
      * @private
      */
     AgentEditManager.prototype.createDiffZoneRenderer;

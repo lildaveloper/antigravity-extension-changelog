@@ -6,6 +6,197 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 ---
 
+## [1.6.0] - 2026-09-29
+
+### 🚀 Highlights
+- **Terminal Context Integration & `@terminal` Mentions**: Introduced the integrated `TerminalStateTracker` and contributed `antigravity.insertTerminalSnippet` ("Add Terminal Selection or Output to Chat"), allowing users to add active terminal selections or recent terminal execution output directly into chat context via context menus or `@terminal` mention pills.
+
+- **Resumable HTTP Range Downloads & Stall Inactivity Guard**: Upgraded the CLI binary downloader with HTTP `Range` and `If-Range` resumption (validated via `ETag` and `Last-Modified`), chunk-inactivity stall timeouts (`DEFAULT_DOWNLOAD_INACTIVITY_TIMEOUT_MS = 30000`), and automatic 24-hour cleanup of abandoned staging artifacts (`agy.tmp.<uuid>` / `.unpack_<hex>`).
+
+- **In-Surface Webview Error Screen & Mid-Session Crash Recovery**: Added a unified error component (`webview_error_component.ts`) with "Try again" and "Report issue" controls. Paired with `serverManager.onServerCrash`, unexpected process terminations immediately flip active webviews into an error state instead of hanging on dead loopback ports.
+
+- **Cloud Developer Environments (CDE) Authentication & Web UI**: Introduced `CdeAuthService` and `WebUiWebviewDelegate` for browser-hosted VS Code (Cloud Workstations and Cloud Shell), automating gateway access token parameter injection (`_workstationAccessToken`, `_cloudshellAccessToken`) and token redaction in logs.
+
+- **Focus-Safe Inline Diff Lifecycle & Streaming Edit Serialization**: Enhanced inline diff management to ignore `FocusOut` auto-saves, preventing editor tab navigation or window defocusing from prematurely rejecting diffs; introduced global edit locks (`globalProcessingLock`) to serialize streaming edits across multiple files and turns cleanly.
+
+- **In-IDE Native Toast & OS Notifications**: Implemented `VscodeNotificationDelegate` bridging webview agent completions and `/grill-me` interactive questions to native VS Code toasts with "Open Chat" actions and desktop OS notification banners.
+
+### ✨ Improvements & Features
+- **Terminal Shell Integration & Context Category Provider**:
+  - Connected `TerminalStateTracker` to VS Code's Shell Integration API (`TerminalShellExecution`, `onDidStartTerminalShellExecution`, `onDidEndTerminalShellExecution`).
+  - Buffers up to 8,192 characters of recent terminal output per terminal with ANSI escape sequence scrubbing (`stripAnsiCodes`).
+  - Contributed `antigravity.insertTerminalSnippet` command to command palette and `terminal/context` menu group.
+  - Fallback logic checks active selection, bounces through clipboard (`workbench.action.terminal.copySelection`), or captures recent buffer output.
+  - Registered dynamic `@terminal` context category provider with `TERMINAL_CATEGORY_ICON_URI`.
+
+- **Resumable Binary Downloads & Artifact Hygiene**:
+  - Added HTTP `Range` request support in `downloadFile` using `If-Range` matching against in-memory `downloadResumeValidators`.
+  - Added `StallGuard` monitoring stream chunk inactivity and aborting stalled connections after 30 seconds.
+  - Implemented `cleanupStaleDownloadArtifacts` purging staging files (`agy.tmp.<uuid>`, `agy.tmp.<uuid>.tar.gz`) and unpack directories (`.unpack_<hex>`) older than 24 hours (`STALE_DOWNLOAD_ARTIFACT_MAX_AGE_MS`).
+  - Non-monotonic progress reporter via `WeakMap<Progress, number>` preventing progress bar double-counting across retry attempts.
+
+- **Mid-Session Server Crash Recovery & Error Surface**:
+  - `AntigravityServerManager` now emits `onServerCrash` for unexpected mid-session process terminations (non-zero exits or signals such as SIGTERM/SIGKILL).
+  - Webview renderer flips active iframe surfaces into `webview_error_component` on backend disconnect.
+  - "Report issue" action bypasses server health checks (`skipHealthCheck: true`) to immediately present the offline feedback form (`antigravity.feedback`).
+
+- **Cloud Developer Environments (CDE) Architecture**:
+  - Added `CdeAuthService` detecting Cloud Workstations (`CLOUD_WORKSTATIONS=true`) and Cloud Shell (`CLOUD_SHELL=true`) or the companion `google.cloud-developer-environments-auth` extension.
+  - Automatically exports `ANTIGRAVITY_CDE=true` into the language server spawn environment.
+  - Added `WebUiWebviewDelegate` instantiated when `vscode.env.uiKind === vscode.UIKind.Web`.
+  - Appends gateway HTTP access tokens (`urlParameter=token`) for remote iframe loading and redacts sensitive tokens from console logs.
+
+- **Inline Diff Save & Lifecycle Enhancements**:
+  - Filtered out `TextDocumentSaveReason.FocusOut` from auto-save rejection hooks, preventing window switching from discarding pending diffs.
+  - Disk byte snapshotting (`preFocusOutDiskBytes`) restores modified content if a focus-out save flushes combined text.
+  - Tab closure listener now awaits active finalizations (`finalizingUris`) before evaluating rejection.
+  - Buffer dirty detection sets `hasUserEdits = true` and dynamically recalculates modified/original texts by stripping hunk lines.
+  - Added `lineEndChar` boundary safety function in `inline_diff_change_range.ts` preventing document line out-of-bounds exceptions.
+  - Added global mutex `globalProcessingLock` for inline diff zone creation to eliminate race conditions between streaming edit chunks across turns.
+
+- **Configurable Settings**:
+  - Contributed `antigravity.serverStartupTimeoutMs` (number, default 30,000ms): timeout waiting for backend health check.
+  - Contributed `antigravity.autoAcceptOnChat` (boolean, default true): auto-accept background pending edits upon sending a new chat prompt.
+  - Contributed `antigravity.releaseBaseUrl` (string, default ""): base URL override for CLI downloads.
+  - Contributed `antigravity.serverArgs` (array of strings, default []): additional command-line arguments passed to `agy --hub`.
+
+- **CitC & Workspace Identifier Converters**:
+  - Added `devtools/cider/webclient/citc/converters.ts` with `convertStringToVcs`, `convertVcsToString`, and `convertVcsToContextName`.
+  - Supported CitC workspaces without aliases via `getNameOrCitcId()`.
+  - Added `CITC = 6` to `WorkspaceId.Vcs`.
+
+- **Protocol & Schema Additions**:
+  - `codeium_common_pb.ts`: Added dynamic custom-gateway model placeholders `MODEL_PLACEHOLDER_M334` through `MODEL_PLACEHOLDER_M365` (values 1334–1365); added `opus-5.5` variants (`dropdown` 1366, `medium` 1367, `max-bon-le` 1368, `low` 1369, `high` 1370, `max` 1371); added `lsp-slot1-lc-jetski` (1372) and `barium-b-tool-leakage-fix-tf` (1373); added `CASCADE_NUX_LOCATION_SERVICE_ANNOUNCEMENT_BANNER = 16`.
+  - `cortex_pb.ts`: Added `RunCommandToolConfig.SandboxProxy` and `Http` message schemas; added `LoadedCustomization.Status.STATUS_ERROR = 4`; added `StepRenderInfo.StepBlock`, `ContentBlock`, and `Badge` message descriptors; added `CortexTrajectorySource` enum entries (`CIDER = 20`, `GEMINI_APP = 21`, `VSCODE = 22`, and `VISUAL_STUDIO = 23`); added `SensitivityLevel` enum (`UNSPECIFIED = 0`, `STANDARD = 1`, `REDACTED = 2`).
+  - `UserSettings`: Added `SandboxProxy` with `Http` (`address`, `cert_file`).
+  - `DeploymentConfig`: Added `x20_gemini_dir_prefix` (field 32).
+  - `MemoryMountConfig`: Removed `SojoBackendConfig` (oneof `backend_config_` fields updated to `[1, 2, 3, 5, 8]`).
+  - `SemanticType`: Added `ST_ADS_SAFETY_ID = 1129`.
+  - `DataCloudMetadataKey`: Added metrics keys for selected services, API enablement, and missing IAM permissions.
+
+- **Dependency Upgrades**:
+  - Upgraded `gaxios` from `v6_7_1` to `v7_1_1`.
+  - Removed obsolete `is_stream` package.
+
+### 🐛 Fixes & Patches
+- **Focus-Out Diff Discard Regression**: Fixed an issue where editor window focus loss or switching tabs triggered `FocusOut` auto-saves that erroneously reverted unreviewed inline diffs and closed diff sessions.
+
+- **Mid-Session Language Server Crash Blank Screen**: Prevented extension webviews from hanging indefinitely on dead HTTP ports when the language server process exits prematurely, immediately rendering an in-surface retry and diagnostic reporting screen.
+
+- **Terminal Selection Capture Fallback**: Resolved issues where `terminal.selection` returned undefined on desktop hosts by routing selection capture through temporary clipboard synchronization and falling back to the recent execution output buffer.
+
+- **Inline Diff Multi-File Race Conditions**: Eliminated race conditions when streaming edits arrive simultaneously across multiple files by introducing a global processing lock for inline diff zones.
+
+- **Per-File Diff Listener Leakage**: Fixed subscription accumulation in `InlineDiffZoneRenderer` by managing disposables in a dedicated `fileSubscriptions` map keyed by normalized file URI.
+
+- **Hunk Line End Boundary Protection**: Prevented out-of-range index crashes when resolving diff hunks whose additions or deletions touch the end of a truncated document buffer via `lineEndChar`.
+
+---
+
+### ⚙️ Under the Hood (Technical & Internal Intelligence)
+*This section documents exact Google3 monorepo changes, schemas, and build revisions.*
+
+- **Core & Lifecycle (`extension/src/cloud/...`)**:
+  - `binary_downloader.ts`:
+    - Added `StallGuard` and `createStallGuard` with `DEFAULT_DOWNLOAD_INACTIVITY_TIMEOUT_MS = 30000`.
+    - Added HTTP Range resumption: `downloadResumeValidators`, `resolveResumeOffset`, `buildDownloadHeaders`, `assertResumableContentRange`, `rememberResumeValidator`, and `clearDownloadResumeState`.
+    - Added `cleanupStaleDownloadArtifacts` with `STAGING_FILE_PATTERN` (`/^agy\.tmp\.[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\.tar\.gz)?$/i`), `UNPACK_DIR_PATTERN`, and `STALE_DOWNLOAD_ARTIFACT_MAX_AGE_MS` (24h).
+    - Added `downloadProgressHighWater` `WeakMap` enforcing monotonically increasing progress reports.
+  - `server_manager.ts`:
+    - Added `onServerCrash` event emitter and `serverCrashEmitter.fire({ code, signal, reason })`.
+    - Added `ensureLoopbackNoProxy` ensuring `localhost` and `127.0.0.1` are appended to `NO_PROXY` / `no_proxy`.
+    - Added `resolveActiveCwd` picking first existing workspace folder, falling back to extension directory or `os.homedir()`.
+    - Added `resolveServerStartupTimeoutMs` resolving `serverStartupTimeoutMs` config or `ANTIGRAVITY_SERVER_READY_TIMEOUT_MS`.
+    - Added `isDownloadTimeoutError` detecting DOM `TimeoutError` and download stall messages.
+    - Updated `waitForServerReady` to alternatingly probe `${url}/healthz` and root `${url}` with `{ agent: false }`, validating process liveness via `isProcessAlive`.
+    - Added fallback regex parsing of CLI version from output channel logs in `getHostDiagnostics`.
+  - `extension.ts`:
+    - Replaced `DesktopWebviewDelegate` instantiation with `createWebviewDelegate(context)`.
+    - Registered `vscode_notification_delegate.VscodeNotificationDelegate`.
+    - Wired `antigravity.autoAcceptOnChat` configuration listener to `agentEditManager.setAutoAcceptOnChat()`.
+    - Listened to `serverManager.onServerCrash` to broadcast `apiImpl.broadcastServerError()`.
+    - Exported `TEST_ONLY = { desktopSetup }`.
+  - `cde_auth_service.ts`:
+    - New singleton service `CdeAuthService` detecting Cloud Workstations and Cloud Shell.
+    - Interacts with companion extension `google.cloud-developer-environments-auth` (`DeveloperEnvironmentsAuthApi`) to fetch `EnvironmentHttpAccessToken`.
+  - `vscode_notification_delegate.ts`:
+    - New class `VscodeNotificationDelegate` implementing `BrowserNotificationDelegate`.
+    - Displays VS Code toast with "Open Chat" / "Dismiss" buttons and triggers Linux `notify-send`.
+  - `webview_delegate.ts`:
+    - Replaced old delegate with factory `createWebviewDelegate(context)` returning `WebUiWebviewDelegate` for web environments and `DesktopWebviewDelegate` for desktop.
+    - Resolves CDE iframe gateway URLs with `_workstationAccessToken` / `_cloudshellAccessToken` query params.
+    - SVG animation phase alignment with `getProgressPhaseDelay()`.
+  - `webview_error_component.ts`:
+    - In-surface error UI templates (`getErrorContentHtml`, `getLoadingErrorContentHtml`) with error icon, "Try again", and "Report issue".
+    - Client-side connectivity watcher script (`getErrorWatcherScript`) polling iframe health.
+  - `feedback.ts`:
+    - Refactored feedback submission flow with gzip compression (`zlib.gzipSync`) and host diagnostics attachment.
+  - `status_bar.ts`:
+    - Updated `antigravity.feedback` to accept `ProvideFeedbackOptions` (`skipHealthCheck`, `detail`, `title`, `description`).
+
+- **Jetski & Diff Zones (`extension/src/devtools/cider/...`)**:
+  - `terminal_state_tracker.ts`:
+    - New class `TerminalStateTracker` listening to `onDidOpenTerminal`, `onDidCloseTerminal`, `onDidStartTerminalShellExecution`, `onDidEndTerminalShellExecution`.
+    - Buffers terminal output up to 8KB per terminal and strips ANSI codes via `stripAnsiCodes`.
+    - Exports `TERMINAL_CATEGORY_ICON_URI` and provides context items for `@terminal`.
+  - `extension_api.ts`:
+    - Instantiated and registered `TerminalStateTracker`.
+    - Contributed `insertTerminalSnippet` command with clipboard fallback and terminal output capture.
+    - Contributed `openConversation` command accepting `cascadeId` and `path`.
+    - Added `broadcastServerError(detail)` and `broadcastServerRecover()`.
+    - Used `{ preserveFocus: true }` when ensuring main instance.
+  - `diff_zones/inline_diff_manager.ts`:
+    - Added `finalizingUris` map to serialize save-driven finalization against tab closures.
+    - Added `preFocusOutDiskBytes` map to preserve unreviewed disk bytes across FocusOut saves.
+    - Added `applyingDiffUris` set to prevent change listener recursion during diff application.
+    - Filtered out `TextDocumentSaveReason.FocusOut` from auto-save rejection.
+    - Added `hasUserEdits` boolean flag on `ActiveDiff`.
+    - Hardened `rejectAll()` to check for superseded diffs before writing original text.
+  - `diff_zones/agent_edit_manager.ts`:
+    - Added `globalProcessingLock` to serialize inline diff zone creation globally across files.
+    - Added `priorTurnContents` map to preserve previous turn buffer texts.
+    - Handled `isSameTurnStreaming` for streaming inline edits.
+    - Added `setAutoAcceptOnChat` and `setAgeOutThreshold`.
+  - `diff_zones/inline_diff_zone_renderer.ts`:
+    - Replaced global subscriptions array with `fileSubscriptions` map keyed by normalized file URI.
+    - Added `disposeDiffZone(fileUri)` and `hasUserEditedZone(fileUri)`.
+  - `diff_zones/inline_diff_change_range.ts`:
+    - Added `lineEndChar` boundary safety helper for hunk coordinate calculations.
+  - `webclient/workspace/ids.ts` & `webclient/citc/converters.ts`:
+    - Added `getNameOrCitcId(workspaceId)` supporting CitC workspaces without aliases.
+    - Added `convertStringToVcs`, `convertVcsToString`, `convertVcsToContextName`.
+
+- **Protobuf & IPC Schemas (`extension/src/blaze-out/` & `extension/src/third_party/jetski/`)**:
+  - Reconstructed 929 Google3 Piper monorepo modules (526 Closure, 403 CJS).
+  - New Schemas & Messages:
+    - `RunCommandToolConfig.SandboxProxy` and `Http` in `third_party/jetski/cortex_pb/cortex_pb.ts`.
+    - `StepRenderInfo.StepBlock` (schema index 398, 7), `ContentBlock` (schema index 398, 8), and `Badge` (schema index 398, 9) in `third_party/jetski/cortex_pb/cortex_pb.ts`.
+    - `UserSettings.SandboxProxy` and `UserSettings.SandboxProxy.Http` in `third_party/jetski/jetbox_state_pb/`.
+    - `citc/converters.ts` in `devtools/cider/webclient/citc/converters.ts`.
+  - Updated Fields & Enums:
+    - `Model`: Added dynamic placeholders 1334–1365 (`custom-gateway-dynamic-models`), `opus-5.5` models (1366–1371), `lsp-slot1-lc-jetski` (1372), and `barium-b-tool-leakage-fix-tf` (1373).
+    - `CascadeNUXLocation`: Added `CASCADE_NUX_LOCATION_SERVICE_ANNOUNCEMENT_BANNER = 16`.
+    - `LoadedCustomization.Status`: Added `STATUS_ERROR = 4`.
+    - `CortexTrajectorySource`: Added `CIDER = 20`, `GEMINI_APP = 21`, `VSCODE = 22`, and `VISUAL_STUDIO = 23`.
+    - `SensitivityLevel`: Added enum values `UNSPECIFIED = 0`, `STANDARD = 1`, `REDACTED = 2`.
+    - `WorkspaceId.Vcs`: Added `CITC = 6`.
+    - `DeploymentConfig`: Added `x20_gemini_dir_prefix` (field 32).
+    - `MemoryMountConfig`: Removed `SojoBackendConfig` (oneof `backend_config_` fields updated to `[1, 2, 3, 5, 8]`).
+    - `SemanticType`: Added `ST_ADS_SAFETY_ID = 1129`.
+    - `DataCloudMetadataKey`: Added keys `SELECTED_SERVICES`, `SERVICES_COUNT`, `APIS_TO_ENABLE`, `ENABLED_APIS`, `DISABLED_APIS`, `MISSING_PERMISSIONS`, `MISSING_PERMISSIONS_COUNT`, `SERVICES_WITH_MISSING_PERMISSIONS`.
+
+- **Webview Bridges (`extension/bridge.js`, `extension/loading_bridge.js`)**:
+  - `loading_bridge.js`: Added handler for `report-button` posting `{ type: "reportIssue" }` and integrated unified `.visible` class toggling.
+  - `bridge.js`: Re-bundled with updated protobuf schemas (`RunCommandToolConfig.SandboxProxy`, `SensitivityLevel`, `StepBlock`, `CortexTrajectorySource`, `UserSettings.SandboxProxy`).
+
+- **Build Metadata (`extension/package.json`)**:
+  - `BUILD_DEPOT_PATH`: `//depot/google3`
+  - `BUILD_BLAZE_RELEASE`: `release blaze-2026.09.11-2 (mainline @979001970)`
+  - `BUILD_EMBED_LABEL`: `antigravity_vscode_extension_1.6.0_RC00`
+  - `BUILD_HOSTNAME`: `lmbjo12.prod.google.com`
+
+---
+
 ## [1.5.0] - 2026-09-23
 
 ### 🚀 Highlights

@@ -1529,6 +1529,54 @@ jspb$devtools_jetski_provisioning$MutableDeploymentConfig = class extends jspb_i
   }
 
 
+  /**
+   * optional string x20_gemini_dir_prefix = 32;
+   * @override
+   * @return {string}
+   */
+  getX20GeminiDirPrefix() {
+    return jspb_internal_adapters.getStringFieldWithDefault(this, 32);
+  }
+
+
+  /**
+   * @param {string|null|undefined} value
+   * @return {!jspb$devtools_jetski_provisioning$MutableDeploymentConfig} returns this
+   */
+  setX20GeminiDirPrefix(value) {
+    return jspb_internal_adapters.setStringField(this, 32, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$devtools_jetski_provisioning$MutableDeploymentConfig} returns this
+   */
+  clearX20GeminiDirPrefix() {
+    return jspb_internal_adapters.clearField(this, 32);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasX20GeminiDirPrefix() {
+    return jspb_internal_adapters.hasStringField(this, 32);
+  }
+
+
+  /**
+   * optional string x20_gemini_dir_prefix = 32;
+   * @override
+   * @return {string|undefined}
+   */
+  getX20GeminiDirPrefixOrUndefined() {
+    return jspb_internal_adapters.getStringFieldOrUndefined(this, 32);
+  }
+
+
 };
 
 /**
@@ -1578,7 +1626,8 @@ jspb$devtools_jetski_provisioning$MutableDeploymentConfig.hasInstance = /** @pur
  *  generativeServiceAddr: (?string|undefined),
  *  additionalLsArgsList: (?Array<string>|undefined),
  *  extraFilesMap: (?Array<!Array<string>>|undefined),
- *  enableControlPlaneMonitoring: (?boolean|undefined)
+ *  enableControlPlaneMonitoring: (?boolean|undefined),
+ *  x20GeminiDirPrefix: (?string|undefined)
  * }}
  */
 jspb$devtools_jetski_provisioning$MutableDeploymentConfig.ObjectFormat;
@@ -1660,7 +1709,8 @@ if (goog.DEBUG && !COMPILED) {
  *  generativeServiceAddr: (string|undefined),
  *  additionalLsArgsList: (!ReadonlyArray<string>|undefined),
  *  extraFilesMap: (!ReadonlyMap<string,string>|undefined),
- *  enableControlPlaneMonitoring: (boolean|undefined)
+ *  enableControlPlaneMonitoring: (boolean|undefined),
+ *  x20GeminiDirPrefix: (string|undefined)
  * }}
  */
 jspb$devtools_jetski_provisioning$MutableDeploymentConfig.FieldsInterface;

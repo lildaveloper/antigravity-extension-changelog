@@ -241,13 +241,15 @@ BrowserEvent.PointerType = {
 BrowserEvent.prototype.init = function(e, opt_currentTarget) {
   const type = this.type = e.type;
 
+  const touchEvent = /** @type {!TouchEvent} */ (e);
   /**
    * On touch devices use the first "changed touch" as the relevant touch.
    * @type {?Touch}
-   * @suppress {strictMissingProperties} Added to tighten compiler checks
    */
   const relevantTouch =
-      e.changedTouches && e.changedTouches.length ? e.changedTouches[0] : null;
+      touchEvent.changedTouches && touchEvent.changedTouches.length ?
+      touchEvent.changedTouches[0] :
+      null;
 
   // TODO(nicksantos): Change this.target to type EventTarget.
   this.target = /** @type {Node} */ (e.target) || e.srcElement;
@@ -294,19 +296,17 @@ BrowserEvent.prototype.init = function(e, opt_currentTarget) {
   this.button = e.button;
 
   this.keyCode = e.keyCode || 0;
-  /** @suppress {strictMissingProperties} Added to tighten compiler checks */
-  this.key = e.key || '';
+  this.key = (/** @type {!KeyboardEvent} */ (e)).key || '';
   this.charCode = e.charCode || (type == 'keypress' ? e.keyCode : 0);
   this.ctrlKey = e.ctrlKey;
   this.altKey = e.altKey;
   this.shiftKey = e.shiftKey;
   this.metaKey = e.metaKey;
   this.platformModifierKey = userAgent.MAC ? e.metaKey : e.ctrlKey;
-  /** @suppress {strictMissingProperties} Added to tighten compiler checks */
-  this.pointerId = e.pointerId || 0;
+  this.pointerId = (/** @type {!PointerEvent} */ (e)).pointerId || 0;
   this.pointerType = BrowserEvent.getPointerType_(e);
-  /** @suppress {strictMissingProperties} Added to tighten compiler checks */
-  this.state = e.state;
+  this.state =
+      /** @type {?Object} */ ((/** @type {!PopStateEvent} */ (e)).state);
   this.timeStamp = e.timeStamp;
   this.event_ = e;
   if (e.defaultPrevented) {
@@ -389,10 +389,9 @@ BrowserEvent.prototype.getBrowserEvent = function() {
  * @param {!Event} e
  * @return {string} The pointer type, e.g. 'mouse', 'pen', or 'touch'.
  * @private
- * @suppress {strictMissingProperties} "pointerType" on Event
  */
 BrowserEvent.getPointerType_ = function(e) {
-  return e.pointerType;
+  return (/** @type {!PointerEvent} */ (e)).pointerType;
 };
 
 exports = BrowserEvent;

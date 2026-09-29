@@ -31,6 +31,7 @@ const tsickle_workspace_14 = goog.requireType("google3.devtools.cider.extensionu
 const tsickle_settings_editor_provider_15 = goog.requireType("google3.devtools.cider.extensions.jetski.settings_editor_provider");
 const tsickle_util_16 = goog.requireType("google3.devtools.cider.extensions.jetski.setup.util");
 const tsickle_terminal_panel_provider_17 = goog.requireType("google3.devtools.cider.extensions.jetski.terminal_panel_provider");
+const tsickle_terminal_state_tracker_18 = goog.requireType("google3.devtools.cider.extensions.jetski.terminal_state_tracker");
 const protobuf_1 = goog.require('google3.third_party.javascript.bufbuild_protobuf.src.index'); // from //third_party/javascript/bufbuild_protobuf
 // from //third_party/javascript/bufbuild_protobuf
 const connect_1 = goog.require('google3.third_party.javascript.connectrpc_connect.src.index'); // from //third_party/javascript/connectrpc_connect
@@ -47,6 +48,7 @@ const jetski_instance_1 = goog.require('google3.devtools.cider.extensions.jetski
 const workspace_1 = goog.require('google3.devtools.cider.extensionutils.workspace');
 const settings_editor_provider_1 = goog.require('google3.devtools.cider.extensions.jetski.settings_editor_provider');
 const util_1 = goog.require('google3.devtools.cider.extensions.jetski.setup.util');
+const terminal_state_tracker_1 = goog.require('google3.devtools.cider.extensions.jetski.terminal_state_tracker');
 /** @typedef {!tsickle_delegate_interfaces_10.DynamicContextCategoryItem} */
 exports.DynamicContextCategoryItem; // type-only export
 /** @typedef {!tsickle_delegate_interfaces_10.DynamicContextProvider} */
@@ -306,8 +308,8 @@ class ExtensionApiImpl {
         return this.mainViews[0];
     }
     /**
-     * Returns the first active main Jetski instance. If none exists, focuses the
-     * panel to create it and waits for it to be registered.
+     * Returns the first active main Jetski instance. If none exists, opens the
+     * panel to create it (without taking focus) and waits for it to be registered.
      * @public
      * @return {!Promise<!tsickle_jetski_instance_12.JetskiInstance>}
      */
@@ -331,7 +333,9 @@ class ExtensionApiImpl {
                     resolve(view);
                 }
             }));
-            await vscode.commands.executeCommand(`${this.naming.viewId}.focus`);
+            await vscode.commands.executeCommand(`${this.naming.viewId}.focus`, {
+                preserveFocus: true,
+            });
             /** @type {!tsickle_jetski_instance_12.JetskiInstance} */
             const view = await promise;
             await view.ready;
@@ -549,6 +553,8 @@ class ExtensionApiImpl {
         this.telemetry = config.telemetry;
         this.workspaceManager = config.workspaceManager;
         this.notebookExecutor = config.notebookExecutor;
+        this.terminalStateTracker = new terminal_state_tracker_1.TerminalStateTracker();
+        this.context.subscriptions.push(this.terminalStateTracker);
         this.agentEditManager = config.agentEditManager;
         this.agentEditManager.setOpenStandardDiff((/**
          * @param {string} fileUri
@@ -648,23 +654,53 @@ class ExtensionApiImpl {
             }
         })));
         this.context.subscriptions.push(vscode.commands.registerCommand(`${this.naming.prefix}.insertTerminalSnippet`, (/**
+         * @param {(undefined|!tsickle_vscode_8.Terminal)=} terminalArg
          * @return {!Promise<void>}
          */
-        async () => {
+        async (terminalArg) => {
             /** @type {(undefined|!tsickle_vscode_8.Terminal)} */
-            const terminal = vscode.window.activeTerminal;
+            const terminal = terminalArg ?? vscode.window.activeTerminal;
             if (!terminal)
                 return;
+            /** @type {{processId: string, name: string, cwd: (undefined|string), lastCommand: string, lastExitCode: (undefined|number), isRunning: boolean, outputBuffer: string}} */
+            const snapshot = await this.terminalStateTracker.getTerminalSnapshot(terminal);
+            // Selection sources, best first. `Terminal.selection` is a proposed
+            // API (hence the cast) and is unset on most hosts, including Cider.
             /** @type {(undefined|string)} */
-            const selection = ((/** @type {{selection: (undefined|string)}} */ (terminal))).selection;
+            let selection = ((/** @type {{selection: (undefined|string)}} */ (terminal))).selection;
+            if (!selection) {
+                // No stable API for the selection, so bounce it through the
+                // clipboard and restore the user's contents afterwards.
+                try {
+                    /** @type {string} */
+                    const previousClipboard = await vscode.env.clipboard.readText();
+                    await vscode.commands.executeCommand('workbench.action.terminal.copySelection');
+                    /** @type {string} */
+                    const copied = await vscode.env.clipboard.readText();
+                    // copySelection is a silent no-op when nothing is selected, so an
+                    // unchanged clipboard is the only signal we get.
+                    if (copied && copied !== previousClipboard) {
+                        selection = copied;
+                        await vscode.env.clipboard.writeText(previousClipboard ?? '');
+                    }
+                }
+                catch {
+                    // Ignore if copySelection or clipboard read fails.
+                }
+            }
+            // Nothing selected: send recent output rather than silently doing
+            // nothing, since that is the common case.
+            if (!selection && snapshot.outputBuffer) {
+                selection = snapshot.outputBuffer;
+            }
             if (!selection)
                 return;
             void this.addContext({
                 case: 'terminal',
                 value: {
-                    processId: (await terminal.processId)?.toString() ?? '',
+                    processId: snapshot.processId,
                     name: terminal.name,
-                    lastCommand: '',
+                    lastCommand: snapshot.lastCommand,
                     selectionContent: selection,
                 },
             }, ' ');
@@ -687,6 +723,13 @@ class ExtensionApiImpl {
          */
         async () => {
             await this.newConversation();
+        })), vscode.commands.registerCommand(`${this.naming.prefix}.openConversation`, (/**
+         * @param {(undefined|string)=} cascadeId
+         * @param {(undefined|string)=} path
+         * @return {!Promise<void>}
+         */
+        async (cascadeId, path) => {
+            await this.openConversation(cascadeId, path);
         })));
         /** @type {function(): !Promise<void>} */
         const resetConversationHandler = (/**
@@ -936,6 +979,22 @@ class ExtensionApiImpl {
     }
     /**
      * @public
+     * @param {(undefined|string)=} cascadeId
+     * @param {(undefined|string)=} path
+     * @return {!Promise<void>}
+     */
+    async openConversation(cascadeId, path) {
+        /** @type {!tsickle_jetski_instance_12.JetskiInstance} */
+        const view = await this.ensureMainInstance();
+        await this.focusChatView(view);
+        /** @type {(undefined|string)} */
+        const targetUrl = path || (cascadeId ? `/c/${cascadeId}` : undefined);
+        if (targetUrl) {
+            await view.api.navigate({ path: targetUrl });
+        }
+    }
+    /**
+     * @public
      * @param {!Array<*>} markers
      * @return {!Promise<void>}
      */
@@ -1007,6 +1066,34 @@ class ExtensionApiImpl {
         return contentsMap?.get(rawKey) ?? contentsMap?.get(decodedKey) ?? '';
     }
     /**
+     * Resolves the active file URI, even when the chat webview has focus.
+     * Inline only: falls back to the active tab, then visible editors.
+     * @private
+     * @return {(undefined|string)}
+     */
+    getActiveEditorOrTabUri() {
+        if (vscode.window.activeTextEditor?.document?.uri) {
+            return vscode.window.activeTextEditor.document.uri.toString();
+        }
+        if (this.agentEditManager.diffZoneType !== 'inline') {
+            return undefined;
+        }
+        /** @type {(undefined|string)} */
+        const activeTabUri = getTabUri(vscode.window.tabGroups?.activeTabGroup?.activeTab);
+        if (activeTabUri)
+            return activeTabUri;
+        for (const group of vscode.window.tabGroups?.all ?? []) {
+            /** @type {(undefined|string)} */
+            const uri = getTabUri(group.activeTab);
+            if (uri)
+                return uri;
+        }
+        if (vscode.window.visibleTextEditors?.length) {
+            return vscode.window.visibleTextEditors[0].document.uri.toString();
+        }
+        return undefined;
+    }
+    /**
      * @private
      * @return {void}
      */
@@ -1019,8 +1106,7 @@ class ExtensionApiImpl {
             /** @type {(undefined|string)} */
             const uriStr = typeof fileUri === 'string'
                 ? fileUri
-                : (fileUri?.toString() ??
-                    vscode.window.activeTextEditor?.document.uri.toString());
+                : (fileUri?.toString() ?? this.getActiveEditorOrTabUri());
             if (uriStr) {
                 this.agentEditManager.focusHunk(uriStr, 'next');
             }
@@ -1032,8 +1118,7 @@ class ExtensionApiImpl {
             /** @type {(undefined|string)} */
             const uriStr = typeof fileUri === 'string'
                 ? fileUri
-                : (fileUri?.toString() ??
-                    vscode.window.activeTextEditor?.document.uri.toString());
+                : (fileUri?.toString() ?? this.getActiveEditorOrTabUri());
             if (uriStr) {
                 this.agentEditManager.focusHunk(uriStr, 'previous');
             }
@@ -1045,8 +1130,7 @@ class ExtensionApiImpl {
             /** @type {(undefined|string)} */
             const uriStr = typeof fileUri === 'string'
                 ? fileUri
-                : (fileUri?.toString() ??
-                    vscode.window.activeTextEditor?.document.uri.toString());
+                : (fileUri?.toString() ?? this.getActiveEditorOrTabUri());
             if (uriStr) {
                 await this.agentEditManager.handleAcceptFocusedHunk(uriStr);
             }
@@ -1058,8 +1142,7 @@ class ExtensionApiImpl {
             /** @type {(undefined|string)} */
             const uriStr = typeof fileUri === 'string'
                 ? fileUri
-                : (fileUri?.toString() ??
-                    vscode.window.activeTextEditor?.document.uri.toString());
+                : (fileUri?.toString() ?? this.getActiveEditorOrTabUri());
             if (uriStr) {
                 await this.agentEditManager.handleRejectFocusedHunk(uriStr);
             }
@@ -1071,8 +1154,7 @@ class ExtensionApiImpl {
             /** @type {(undefined|string)} */
             const uriStr = typeof fileUri === 'string'
                 ? fileUri
-                : (fileUri?.toString() ??
-                    vscode.window.activeTextEditor?.document.uri.toString());
+                : (fileUri?.toString() ?? this.getActiveEditorOrTabUri());
             if (uriStr) {
                 await this.agentEditManager.handleResolveAllAgentEditsInFile(uriStr, true);
             }
@@ -1084,8 +1166,7 @@ class ExtensionApiImpl {
             /** @type {(undefined|string)} */
             const uriStr = typeof fileUri === 'string'
                 ? fileUri
-                : (fileUri?.toString() ??
-                    vscode.window.activeTextEditor?.document.uri.toString());
+                : (fileUri?.toString() ?? this.getActiveEditorOrTabUri());
             if (uriStr) {
                 await this.agentEditManager.handleResolveAllAgentEditsInFile(uriStr, false);
             }
@@ -1154,10 +1235,8 @@ class ExtensionApiImpl {
             void this.telemetry?.logEvent('jetski_web.chat_message_sent', {
                 'userAction': true,
             });
-            /** @type {(undefined|!tsickle_vscode_8.TextEditor)} */
-            const activeEditor = vscode.window.activeTextEditor;
             /** @type {(undefined|string)} */
-            const activeFileUri = activeEditor?.document.uri.toString();
+            const activeFileUri = this.getActiveEditorOrTabUri();
             this.agentEditManager.onChatSent(activeFileUri);
         })), view.api.onDidStartConversation((/**
          * @return {void}
@@ -1537,6 +1616,9 @@ class ExtensionApiImpl {
     async openFile(request) {
         if (request.fileUri) {
             try {
+                if (await this.terminalStateTracker.focusTerminalFromUri(request.fileUri)) {
+                    return {};
+                }
                 /** @type {!tsickle_vscode_8.Uri} */
                 const uri = (0, workspace_1.toCiderWebclientUri)(request.fileUri);
                 if (isWorkspaceRoot(uri)) {
@@ -1942,8 +2024,13 @@ class ExtensionApiImpl {
         const cascadeId = request.payload?.cascadeId;
         /** @type {(undefined|string)} */
         const activeConversationId = this.context.workspaceState.get('lastConversationId');
-        // Only suppress if Cider is currently focused AND the notification is for the active conversation
-        if (vscode.window.state.focused &&
+        // Only suppress if the delegate requests suppression when the window is focused
+        // (default true for Cider browser notifications, false for VS Code desktop toasts)
+        // AND the notification is for the active conversation.
+        /** @type {boolean} */
+        const shouldSuppressWhenFocused = this.browserNotificationDelegate?.suppressWhenWindowFocused !== false;
+        if (shouldSuppressWhenFocused &&
+            vscode.window.state.focused &&
             cascadeId &&
             cascadeId === activeConversationId) {
             return {};
@@ -2131,6 +2218,40 @@ class ExtensionApiImpl {
                 success: false,
                 errorMessage: String(e),
             };
+        }
+    }
+    /**
+     * Broadcasts an error control message to all live surfaces.
+     * @public
+     * @param {(undefined|string)=} detail
+     * @return {void}
+     */
+    broadcastServerError(detail) {
+        for (const view of this.views) {
+            void Promise.resolve(view.postControlMessage({
+                source: 'antigravity-error',
+                type: 'showError',
+                detail,
+            })).catch((/**
+             * @return {void}
+             */
+            () => { }));
+        }
+    }
+    /**
+     * Clears the error state on all live surfaces.
+     * @public
+     * @return {void}
+     */
+    broadcastServerRecover() {
+        for (const view of this.views) {
+            void Promise.resolve(view.postControlMessage({
+                source: 'antigravity-error',
+                type: 'recover',
+            })).catch((/**
+             * @return {void}
+             */
+            () => { }));
         }
     }
     /**
@@ -2375,6 +2496,13 @@ if (false) {
      */
     ExtensionApiImpl.prototype.terminalPanelProvider;
     /**
+     * Tracks per-terminal shell-integration state (last command, exit code, and
+     * a capped buffer of recent output) for every open terminal.
+     * @const {!tsickle_terminal_state_tracker_18.TerminalStateTracker}
+     * @public
+     */
+    ExtensionApiImpl.prototype.terminalStateTracker;
+    /**
      * @type {(undefined|!tsickle_delegate_interfaces_10.HostDiagnosticsProvider)}
      * @private
      */
@@ -2412,4 +2540,17 @@ if (false) {
      * @private
      */
     ExtensionApiImpl.prototype.pendingOpenArtifacts;
+}
+/**
+ * Returns the document URI of a text or diff tab, if any.
+ * @param {(undefined|!tsickle_vscode_8.Tab)=} tab
+ * @return {(undefined|string)}
+ */
+function getTabUri(tab) {
+    // TabInputText has `uri`; TabInputTextDiff has `modified`.
+    /** @type {{uri: (undefined|!tsickle_vscode_8.Uri), modified: (undefined|!tsickle_vscode_8.Uri)}} */
+    const input = (/** @type {{uri: (undefined|!tsickle_vscode_8.Uri), modified: (undefined|!tsickle_vscode_8.Uri)}} */ (tab?.input));
+    /** @type {(undefined|!tsickle_vscode_8.Uri)} */
+    const uri = input?.uri ?? input?.modified;
+    return typeof uri?.toString === 'function' ? uri.toString() : undefined;
 }

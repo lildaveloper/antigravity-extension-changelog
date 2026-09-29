@@ -74,7 +74,7 @@ jspb$o$jetbox_state_pb$GoogleSpecificConfig.fromObject = function(obj) {
 };
 }
 
-var jspb$o$jetbox_state_pb$UserSettings;
-Object.defineProperty(this, 'jspb$o$jetbox_state_pb$UserSettings', {
-  get() { return jspb$o$jetbox_state_pb$UserSettings; },
-  set(v) { jspb$o$jetbox_state_pb$UserSettings = v; },
+var jspb$o$jetbox_state_pb$UserSettings$SandboxProxy$Http;
+Object.defineProperty(this, 'jspb$o$jetbox_state_pb$UserSettings$SandboxProxy$Http', {
+  get() { return jspb$o$jetbox_state_pb$UserSettings$SandboxProxy$Http; },
+  set(v) { jspb$o$jetbox_state_pb$UserSettings$SandboxProxy$Http = v; },

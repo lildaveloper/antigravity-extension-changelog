@@ -223,6 +223,20 @@ if (false) {
      */
     DiffZoneRenderer.prototype.closeDiffZone = function (fileUri, accept) { };
     /**
+     * Disposes a file's diff zone without saving or reverting disk.
+     * @public
+     * @param {string} fileUri
+     * @return {!Promise<void>}
+     */
+    DiffZoneRenderer.prototype.disposeDiffZone = function (fileUri) { };
+    /**
+     * Whether the user has manually edited the active diff zone buffer.
+     * @public
+     * @param {string} fileUri
+     * @return {boolean}
+     */
+    DiffZoneRenderer.prototype.hasUserEditedZone = function (fileUri) { };
+    /**
      * Disposes all active diff renderers across all files without resolving or saving.
      * @public
      * @return {!Promise<void>}

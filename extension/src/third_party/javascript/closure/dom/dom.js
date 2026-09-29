@@ -1377,7 +1377,7 @@ goog.dom.getChildren = function(element) {
  */
 goog.dom.getFirstElementChild = function(node) {
   'use strict';
-  if (node.firstElementChild !== undefined) {
+  if ((/** @type {!Element} */ (node)).firstElementChild !== undefined) {
     return /** @type {!Element} */ (node).firstElementChild;
   }
   return goog.dom.getNextElementNode_(node.firstChild, true);
@@ -1391,7 +1391,7 @@ goog.dom.getFirstElementChild = function(node) {
  */
 goog.dom.getLastElementChild = function(node) {
   'use strict';
-  if (node.lastElementChild !== undefined) {
+  if ((/** @type {!Element} */ (node)).lastElementChild !== undefined) {
     return /** @type {!Element} */ (node).lastElementChild;
   }
   return goog.dom.getNextElementNode_(node.lastChild, false);
@@ -1405,7 +1405,8 @@ goog.dom.getLastElementChild = function(node) {
  */
 goog.dom.getNextElementSibling = function(node) {
   'use strict';
-  if (goog.FEATURESET_YEAR > 2018 || node.nextElementSibling !== undefined) {
+  if (goog.FEATURESET_YEAR > 2018 ||
+      (/** @type {!Element} */ (node)).nextElementSibling !== undefined) {
     return /** @type {!Element} */ (node).nextElementSibling;
   }
   return goog.dom.getNextElementNode_(node.nextSibling, true);
@@ -1420,7 +1421,7 @@ goog.dom.getNextElementSibling = function(node) {
  */
 goog.dom.getPreviousElementSibling = function(node) {
   'use strict';
-  if (node.previousElementSibling !== undefined) {
+  if ((/** @type {!Element} */ (node)).previousElementSibling !== undefined) {
     return /** @type {!Element} */ (node).previousElementSibling;
   }
   return goog.dom.getNextElementNode_(node.previousSibling, false);
@@ -1610,7 +1611,8 @@ goog.dom.compareNodeOrder = function(node1, node2) {
     const isElement2 = node2.nodeType == goog.dom.NodeType.ELEMENT;
 
     if (isElement1 && isElement2) {
-      return node1.sourceIndex - node2.sourceIndex;
+      return (/** @type {!Element} */ (node1)).sourceIndex -
+          (/** @type {!Element} */ (node2)).sourceIndex;
     } else {
       const parent1 = node1.parentNode;
       const parent2 = node2.parentNode;
@@ -1628,8 +1630,10 @@ goog.dom.compareNodeOrder = function(node1, node2) {
         return goog.dom.compareParentsDescendantNodeIe_(node2, node1);
       }
 
-      return (isElement1 ? node1.sourceIndex : parent1.sourceIndex) -
-          (isElement2 ? node2.sourceIndex : parent2.sourceIndex);
+      return (isElement1 ? (/** @type {!Element} */ (node1)).sourceIndex :
+                           (/** @type {!Element} */ (parent1)).sourceIndex) -
+          (isElement2 ? (/** @type {!Element} */ (node2)).sourceIndex :
+                        (/** @type {!Element} */ (parent2)).sourceIndex);
     }
   }
 
@@ -1782,8 +1786,8 @@ goog.dom.getOwnerDocument = function(node) {
  */
 goog.dom.getFrameContentDocument = function(frame) {
   'use strict';
-  return frame.contentDocument ||
-      /** @type {!HTMLFrameElement} */ (frame).contentWindow.document;
+  const frameEl = /** @type {!HTMLIFrameElement|!HTMLFrameElement} */ (frame);
+  return frameEl.contentDocument || frameEl.contentWindow.document;
 };
 
 
@@ -1795,10 +1799,11 @@ goog.dom.getFrameContentDocument = function(frame) {
  */
 goog.dom.getFrameContentWindow = function(frame) {
   'use strict';
+  const frameEl = /** @type {!HTMLIFrameElement|!HTMLFrameElement} */ (frame);
   try {
-    return frame.contentWindow ||
-        (frame.contentDocument ? goog.dom.getWindow(frame.contentDocument) :
-                                 null);
+    return frameEl.contentWindow ||
+        (frameEl.contentDocument ? goog.dom.getWindow(frameEl.contentDocument) :
+                                   null);
   } catch (e) {
     // NOTE(jfedor): In IE8, checking the contentWindow or contentDocument
     // properties will throw a "Unspecified Error" exception if the iframe is
@@ -2084,7 +2089,7 @@ goog.dom.isFocusable = function(element) {
   // Some elements can have unspecified tab index and still receive focus.
   if (goog.dom.nativelySupportsFocus_(element)) {
     // Make sure the element is not disabled ...
-    focusable = !element.disabled &&
+    focusable = !(/** @type {!HTMLInputElement} */ (element)).disabled &&
         // ... and if a tab index is specified, it allows focus.
         (!goog.dom.hasSpecifiedTabIndex_(element) ||
          goog.dom.isTabIndexFocusable_(element));
@@ -2432,7 +2437,8 @@ goog.dom.getAncestor = function(
   let steps = 0;
   while (element &&
          (opt_maxSearchSteps == null || steps <= opt_maxSearchSteps)) {
-    goog.asserts.assert(element.name != 'parentNode');
+    goog.asserts.assert(
+        (/** @type {!Element} */ (element)).name != 'parentNode');
     if (matcher(element)) {
       return element;
     }

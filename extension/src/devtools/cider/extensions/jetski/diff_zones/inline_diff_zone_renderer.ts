@@ -40,6 +40,7 @@ class InlineDiffZoneRenderer {
         this.inlineDiffManager = inlineDiffManager;
         this.type = 'inline';
         this.subscriptions = [];
+        this.fileSubscriptions = new Map();
         this.subscriptions.push(this.inlineDiffManager);
     }
     /**
@@ -95,6 +96,9 @@ class InlineDiffZoneRenderer {
          * @return {string}
          */
         (h) => (0, hunk_storage_1.computeHunkHash)(h.insertions, h.deletions)));
+        /** @type {string} */
+        const normalizedTargetUri = (0, utils_1.normalizeUri)(uri.toString());
+        this.clearFileSubscriptions(normalizedTargetUri);
         // Listen for hunk resolutions from InlineDiffManager
         /** @type {!tsickle_vscode_1.Disposable} */
         const resolveSub = this.inlineDiffManager.onDidResolveHunk((/**
@@ -104,8 +108,6 @@ class InlineDiffZoneRenderer {
         async (event) => {
             /** @type {string} */
             const normalizedEventUri = (0, utils_1.normalizeUri)(event.uri.toString());
-            /** @type {string} */
-            const normalizedTargetUri = (0, utils_1.normalizeUri)(uri.toString());
             if (normalizedEventUri === normalizedTargetUri) {
                 await onHunkResolved({
                     fileUri: event.uri.toString(),
@@ -116,7 +118,6 @@ class InlineDiffZoneRenderer {
                 });
             }
         }));
-        this.subscriptions.push(resolveSub);
         /** @type {!tsickle_vscode_1.Disposable} */
         const finalizeSub = this.inlineDiffManager.onDidFinalizeFile((/**
          * @param {{uri: !tsickle_vscode_1.Uri, accepted: boolean, modifiedText: string}} event
@@ -125,8 +126,6 @@ class InlineDiffZoneRenderer {
         async (event) => {
             /** @type {string} */
             const normalizedEventUri = (0, utils_1.normalizeUri)(event.uri.toString());
-            /** @type {string} */
-            const normalizedTargetUri = (0, utils_1.normalizeUri)(uri.toString());
             if (normalizedEventUri === normalizedTargetUri) {
                 await onHunkResolved({
                     fileUri: event.uri.toString(),
@@ -135,7 +134,7 @@ class InlineDiffZoneRenderer {
                 });
             }
         }));
-        this.subscriptions.push(finalizeSub);
+        this.fileSubscriptions.set(normalizedTargetUri, [resolveSub, finalizeSub]);
         /** @type {boolean} */
         const success = await this.inlineDiffManager.registerDiff(uri, originalContents, modifiedContents);
         return {
@@ -312,6 +311,7 @@ class InlineDiffZoneRenderer {
      * @return {!Promise<boolean>}
      */
     async closeDiffZone(fileUri, accept) {
+        this.clearFileSubscriptions((0, utils_1.normalizeUri)(fileUri));
         if (accept) {
             await this.inlineDiffManager.acceptAll(fileUri);
         }
@@ -319,6 +319,28 @@ class InlineDiffZoneRenderer {
             await this.inlineDiffManager.rejectAll(fileUri);
         }
         return true;
+    }
+    /**
+     * Disposes the diff session and subscriptions without touching disk.
+     * @public
+     * @param {string} fileUri
+     * @return {!Promise<void>}
+     */
+    async disposeDiffZone(fileUri) {
+        this.clearFileSubscriptions((0, utils_1.normalizeUri)(fileUri));
+        await this.inlineDiffManager.disposeDiff(fileUri);
+    }
+    /**
+     * @private
+     * @param {string} normalizedUri
+     * @return {void}
+     */
+    clearFileSubscriptions(normalizedUri) {
+        for (const subscription of this.fileSubscriptions.get(normalizedUri) ??
+            []) {
+            subscription.dispose();
+        }
+        this.fileSubscriptions.delete(normalizedUri);
     }
     /**
      * @public
@@ -329,12 +351,27 @@ class InlineDiffZoneRenderer {
     }
     /**
      * @public
+     * @param {string} fileUri
+     * @return {boolean}
+     */
+    hasUserEditedZone(fileUri) {
+        return this.inlineDiffManager.getActiveDiff(fileUri)?.hasUserEdits === true;
+    }
+    /**
+     * @public
      * @return {void}
      */
     dispose() {
+        for (const subs of this.fileSubscriptions.values()) {
+            for (const sub of subs) {
+                sub.dispose();
+            }
+        }
+        this.fileSubscriptions.clear();
         for (const sub of this.subscriptions) {
             sub.dispose();
         }
+        this.subscriptions.length = 0;
     }
 }
 exports.InlineDiffZoneRenderer = InlineDiffZoneRenderer;
@@ -350,6 +387,11 @@ if (false) {
      * @private
      */
     InlineDiffZoneRenderer.prototype.subscriptions;
+    /**
+     * @const {!Map<string, !Array<!tsickle_vscode_1.Disposable>>}
+     * @private
+     */
+    InlineDiffZoneRenderer.prototype.fileSubscriptions;
     /**
      * @const {!tsickle_inline_diff_manager_6.InlineDiffManager}
      * @private

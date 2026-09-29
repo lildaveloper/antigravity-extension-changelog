@@ -25,8 +25,9 @@ const tsickle_settings_editor_provider_8 = goog.requireType("google3.devtools.ci
 const tsickle_cider_host_management_9 = goog.requireType("google3.devtools.cider.extensions.jetski.setup.cider_host_management");
 const tsickle_util_10 = goog.requireType("google3.devtools.cider.extensions.jetski.setup.util");
 const tsickle_terminal_panel_provider_11 = goog.requireType("google3.devtools.cider.extensions.jetski.terminal_panel_provider");
-const tsickle_webview_provider_12 = goog.requireType("google3.devtools.cider.extensions.jetski.webview_provider");
-const tsickle_webview_renderer_13 = goog.requireType("google3.devtools.cider.extensions.jetski.webview_renderer");
+const tsickle_terminal_state_tracker_12 = goog.requireType("google3.devtools.cider.extensions.jetski.terminal_state_tracker");
+const tsickle_webview_provider_13 = goog.requireType("google3.devtools.cider.extensions.jetski.webview_provider");
+const tsickle_webview_renderer_14 = goog.requireType("google3.devtools.cider.extensions.jetski.webview_renderer");
 const vscode = goog.require('vscode'); // from //devtools/cider/extensions:vscode
 // from //devtools/cider/extensions:vscode
 const artifact_editor_provider_1 = goog.require('google3.devtools.cider.extensions.jetski.artifact_editor_provider');
@@ -35,6 +36,7 @@ const settings_editor_provider_1 = goog.require('google3.devtools.cider.extensio
 const cider_host_management_1 = goog.require('google3.devtools.cider.extensions.jetski.setup.cider_host_management');
 const util_1 = goog.require('google3.devtools.cider.extensions.jetski.setup.util');
 const terminal_panel_provider_1 = goog.require('google3.devtools.cider.extensions.jetski.terminal_panel_provider');
+const terminal_state_tracker_1 = goog.require('google3.devtools.cider.extensions.jetski.terminal_state_tracker');
 const webview_provider_1 = goog.require('google3.devtools.cider.extensions.jetski.webview_provider');
 const webview_renderer_1 = goog.require('google3.devtools.cider.extensions.jetski.webview_renderer');
 /**
@@ -102,7 +104,7 @@ if (false) {
  * @param {!tsickle_vscode_1.ExtensionContext} context
  * @param {!JetskiCoreDependencies} deps
  * @param {!tsickle_delegate_interfaces_3.HostAppConfig} naming
- * @return {{apiImpl: !tsickle_extension_api_5.ExtensionApiImpl, provider: !tsickle_webview_provider_12.JetskiWebviewProvider}}
+ * @return {{apiImpl: !tsickle_extension_api_5.ExtensionApiImpl, provider: !tsickle_webview_provider_13.JetskiWebviewProvider}}
  */
 function activateWithDependencies(context, deps, naming) {
     (0, util_1.initLogSystem)(context, naming.logChannelName ?? `${naming.displayName ?? 'Jetski'} Extension`);
@@ -119,14 +121,41 @@ function activateWithDependencies(context, deps, naming) {
         telemetry: deps.telemetry,
         workspaceManager: deps.workspaceManager,
     });
-    /** @type {!tsickle_webview_renderer_13.WebviewRenderer} */
+    // The tracker relies on VS Code's Terminal Shell Integration APIs and
+    // `vscode.window.terminals`, which Cider's host does not expose. Registering
+    // there would surface an `@terminal` category that never returns any items.
+    if (!(0, util_1.isInCider)()) {
+        context.subscriptions.push(apiImpl.registerContextCategoryProvider({
+            trigger: 'terminal',
+            label: 'Terminal',
+            iconUri: terminal_state_tracker_1.TERMINAL_CATEGORY_ICON_URI,
+            provideItems: (/**
+             * @param {string} query
+             * @return {!Promise<!Array<{value: string, label: (undefined|string), uri: (undefined|string)}>>}
+             */
+            (query) => apiImpl.terminalStateTracker.provideContextItems(query)),
+        }));
+    }
+    /** @type {!tsickle_webview_renderer_14.WebviewRenderer} */
     const renderer = new webview_renderer_1.WebviewRenderer({
         apiImpl,
         context,
         delegate: deps.webviewDelegate,
         setupFn: deps.setupFn,
+        // "Report Issue" on the in-surface error component routes through the host's
+        // feedback command. The error component only appears when the backend is
+        // already known to be down, so we skip the health probe to open the offline
+        // fallback form immediately instead of waiting for the probe to time out.
+        onReportIssue: (/**
+         * @return {void}
+         */
+        () => {
+            void vscode.commands.executeCommand(`${naming.prefix}.feedback`, {
+                skipHealthCheck: true,
+            });
+        }),
     });
-    /** @type {!tsickle_webview_provider_12.JetskiWebviewProvider} */
+    /** @type {!tsickle_webview_provider_13.JetskiWebviewProvider} */
     const provider = new webview_provider_1.JetskiWebviewProvider(context, renderer, naming.viewId, naming);
     /** @type {!tsickle_terminal_panel_provider_11.TerminalPanelProvider} */
     const terminalPanelProvider = new terminal_panel_provider_1.TerminalPanelProvider(context, renderer, 'jetski.terminalView');

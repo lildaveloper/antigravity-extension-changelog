@@ -12,9 +12,11 @@ goog.require('jspb$exa$codeium_common_pb$MutablePermissionGrantsConfig');
 goog.require('jspb$jetbox_state_pb$MutableCustomThemeSeeds');
 goog.require('jspb$jetbox_state_pb$MutableGoogleSpecificConfig');
 goog.require('jspb$jetbox_state_pb$MutableUserSettings');
+goog.require('jspb$jetbox_state_pb$UserSettings$MutableSandboxProxy');
 goog.require('jspb$o$exa$codeium_common_pb$PermissionGrantsConfig');
 goog.require('jspb$o$jetbox_state_pb$CustomThemeSeeds');
 goog.require('jspb$o$jetbox_state_pb$GoogleSpecificConfig');
+goog.require('jspb$o$jetbox_state_pb$UserSettings$SandboxProxy');
 goog.require('jspb_internal_adapters');
 goog.require('jspb_internal_public_for_gencode');
 
@@ -73,6 +75,7 @@ jspb$o$jetbox_state_pb$UserSettings.internal_toObject = function(msg) {
     permissionGrantsV2Migrated: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getBooleanFieldLegacyNullable(msg, 44)),
     sandboxEnabledAtV2Migration: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getBooleanFieldLegacyNullable(msg, 45)),
     vertexServiceTier: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getStringFieldLegacyNullable(msg, 46)),
+    sandboxProxy: jspb$o$jetbox_state_pb$UserSettings$SandboxProxy.internal_toObject(msg.getSandboxProxy()),
   }));
 
 };
@@ -162,6 +165,9 @@ jspb$o$jetbox_state_pb$UserSettings.fromObject = function(obj) {
   jspb_internal_adapters.setBooleanField(msg, 44, obj.permissionGrantsV2Migrated);
   jspb_internal_adapters.setBooleanField(msg, 45, obj.sandboxEnabledAtV2Migration);
   jspb_internal_adapters.setStringField(msg, 46, obj.vertexServiceTier);
+  jspb_internal_adapters.setWrapperField(msg,
+      jspb$jetbox_state_pb$UserSettings$MutableSandboxProxy,
+      47, jspb_internal_public_for_gencode.fromObjectNullable(obj.sandboxProxy, jspb$o$jetbox_state_pb$UserSettings$SandboxProxy.fromObject));
   return msg;
 };
 }

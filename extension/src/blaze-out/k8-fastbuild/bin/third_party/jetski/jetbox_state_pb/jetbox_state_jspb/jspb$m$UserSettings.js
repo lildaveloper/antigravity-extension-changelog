@@ -12,6 +12,7 @@ goog.provide('jspb$ro.jetbox_state_pb$ReadonlyUserSettings');
 goog.require('jspb$exa$codeium_common_pb$MutablePermissionGrantsConfig');
 goog.require('jspb$jetbox_state_pb$MutableCustomThemeSeeds');
 goog.require('jspb$jetbox_state_pb$MutableGoogleSpecificConfig');
+goog.require('jspb$jetbox_state_pb$UserSettings$MutableSandboxProxy');
 goog.require('jspb_internal_adapters');
 goog.require('jspb_internal_public_for_gencode');
 /** @suppress {extraRequire} */
@@ -32,6 +33,7 @@ goog.requireType('jspb$r$jetbox_state_pb$UserSettings$internalDoNotUseReader');
 goog.requireType('jspb$ro.exa$codeium_common_pb$ReadonlyPermissionGrantsConfig');
 goog.requireType('jspb$ro.jetbox_state_pb$ReadonlyCustomThemeSeeds');
 goog.requireType('jspb$ro.jetbox_state_pb$ReadonlyGoogleSpecificConfig');
+goog.requireType('jspb$ro.jetbox_state_pb$UserSettings$ReadonlySandboxProxy');
 
 /**
  * @final
@@ -108,6 +110,7 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
    * optional bool allow_agent_access_non_workspace_files = 3;
    * @override
    * @return {boolean}
+   * @deprecated
    */
   getAllowAgentAccessNonWorkspaceFiles() {
     return jspb_internal_adapters.getBooleanFieldWithDefault(this, 3);
@@ -117,6 +120,7 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
   /**
    * @param {boolean|null|undefined} value
    * @return {!jspb$jetbox_state_pb$MutableUserSettings} returns this
+   * @deprecated
    */
   setAllowAgentAccessNonWorkspaceFiles(value) {
     return jspb_internal_adapters.setBooleanField(this, 3, value);
@@ -126,6 +130,7 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
   /**
    * Clears the field.
    * @return {!jspb$jetbox_state_pb$MutableUserSettings} returns this
+   * @deprecated
    */
   clearAllowAgentAccessNonWorkspaceFiles() {
     return jspb_internal_adapters.clearField(this, 3);
@@ -136,6 +141,7 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
    * Returns whether this field is set.
    * @override
    * @return {boolean}
+   * @deprecated
    */
   hasAllowAgentAccessNonWorkspaceFiles() {
     return jspb_internal_adapters.hasBooleanField(this, 3);
@@ -146,6 +152,7 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
    * optional bool allow_agent_access_non_workspace_files = 3;
    * @override
    * @return {boolean|undefined}
+   * @deprecated
    */
   getAllowAgentAccessNonWorkspaceFilesOrUndefined() {
     return jspb_internal_adapters.getBooleanFieldOrUndefined(this, 3);
@@ -385,6 +392,7 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
    * optional bool secure_mode_enabled = 7;
    * @override
    * @return {boolean}
+   * @deprecated
    */
   getSecureModeEnabled() {
     return jspb_internal_adapters.getBooleanFieldWithDefault(this, 7);
@@ -394,6 +402,7 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
   /**
    * @param {boolean|null|undefined} value
    * @return {!jspb$jetbox_state_pb$MutableUserSettings} returns this
+   * @deprecated
    */
   setSecureModeEnabled(value) {
     return jspb_internal_adapters.setBooleanField(this, 7, value);
@@ -403,6 +412,7 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
   /**
    * Clears the field.
    * @return {!jspb$jetbox_state_pb$MutableUserSettings} returns this
+   * @deprecated
    */
   clearSecureModeEnabled() {
     return jspb_internal_adapters.clearField(this, 7);
@@ -413,6 +423,7 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
    * Returns whether this field is set.
    * @override
    * @return {boolean}
+   * @deprecated
    */
   hasSecureModeEnabled() {
     return jspb_internal_adapters.hasBooleanField(this, 7);
@@ -423,6 +434,7 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
    * optional bool secure_mode_enabled = 7;
    * @override
    * @return {boolean|undefined}
+   * @deprecated
    */
   getSecureModeEnabledOrUndefined() {
     return jspb_internal_adapters.getBooleanFieldOrUndefined(this, 7);
@@ -894,6 +906,7 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
    * optional bool allow_agent_access_gitignore_files = 19;
    * @override
    * @return {boolean}
+   * @deprecated
    */
   getAllowAgentAccessGitignoreFiles() {
     return jspb_internal_adapters.getBooleanFieldWithDefault(this, 19);
@@ -903,6 +916,7 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
   /**
    * @param {boolean|null|undefined} value
    * @return {!jspb$jetbox_state_pb$MutableUserSettings} returns this
+   * @deprecated
    */
   setAllowAgentAccessGitignoreFiles(value) {
     return jspb_internal_adapters.setBooleanField(this, 19, value);
@@ -912,6 +926,7 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
   /**
    * Clears the field.
    * @return {!jspb$jetbox_state_pb$MutableUserSettings} returns this
+   * @deprecated
    */
   clearAllowAgentAccessGitignoreFiles() {
     return jspb_internal_adapters.clearField(this, 19);
@@ -922,6 +937,7 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
    * Returns whether this field is set.
    * @override
    * @return {boolean}
+   * @deprecated
    */
   hasAllowAgentAccessGitignoreFiles() {
     return jspb_internal_adapters.hasBooleanField(this, 19);
@@ -932,6 +948,7 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
    * optional bool allow_agent_access_gitignore_files = 19;
    * @override
    * @return {boolean|undefined}
+   * @deprecated
    */
   getAllowAgentAccessGitignoreFilesOrUndefined() {
     return jspb_internal_adapters.getBooleanFieldOrUndefined(this, 19);
@@ -2208,6 +2225,78 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
   }
 
 
+  /**
+   * optional SandboxProxy sandbox_proxy = 47;
+   * @override
+   * @return {!jspb$jetbox_state_pb$UserSettings$MutableSandboxProxy|undefined}
+   */
+  getSandboxProxy() {
+    return jspb_internal_adapters.getWrapperFieldOrUndefined(this, jspb$jetbox_state_pb$UserSettings$MutableSandboxProxy, 47);
+  }
+
+
+  /**
+   * optional SandboxProxy sandbox_proxy = 47;
+   * @override
+   * @return {!jspb$ro.jetbox_state_pb$UserSettings$ReadonlySandboxProxy}
+   */
+  getReadonlySandboxProxy() {
+    return jspb_internal_adapters.getReadonlyWrapperField(this, jspb$jetbox_state_pb$UserSettings$MutableSandboxProxy, 47);
+  }
+
+
+  /**
+   * optional SandboxProxy sandbox_proxy = 47;
+   * @param {!jspb_internal_public_for_gencode.OrUndefinedToken<U>=} legacyOrUndefined
+   * @return {!jspb$jetbox_state_pb$UserSettings$MutableSandboxProxy|R}
+   * @template U
+   * @template R := cond(eq(U, 'undefined'), 'undefined', 'jspb$jetbox_state_pb$UserSettings$MutableSandboxProxy') =:
+   * @tsType (legacyOrUndefined: import('google3/javascript/apps/jspb/internal_public').OrUndefinedToken<undefined>): ಠ_ಠ.clutz.jspb$jetbox_state_pb$UserSettings$MutableSandboxProxy|undefined
+   * @tsType (): ಠ_ಠ.clutz.jspb$jetbox_state_pb$UserSettings$MutableSandboxProxy
+   */
+  getMutableSandboxProxy(legacyOrUndefined) {
+    return jspb_internal_adapters.getMutableWrapperField(this, jspb$jetbox_state_pb$UserSettings$MutableSandboxProxy, 47, legacyOrUndefined);
+  }
+
+
+  /**
+   * @param {!jspb$ro.jetbox_state_pb$UserSettings$ReadonlySandboxProxy|null|undefined} value
+   * @return {!jspb$jetbox_state_pb$MutableUserSettings} returns this
+   */
+  setSandboxProxy(value) {
+    return jspb_internal_adapters.setWrapperField(this, jspb$jetbox_state_pb$UserSettings$MutableSandboxProxy, 47, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$jetbox_state_pb$MutableUserSettings} returns this
+   */
+  clearSandboxProxy() {
+    return jspb_internal_adapters.clearField(this, 47);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasSandboxProxy() {
+    return jspb_internal_adapters.hasWrapperField(this, jspb$jetbox_state_pb$UserSettings$MutableSandboxProxy, 47);
+  }
+
+
+  /**
+   * optional SandboxProxy sandbox_proxy = 47;
+   * @override
+   * @return {!jspb$ro.jetbox_state_pb$UserSettings$ReadonlySandboxProxy|undefined}
+   */
+  getSandboxProxyOrUndefined() {
+    return jspb_internal_adapters.getReadonlyWrapperFieldOrUndefined(this, jspb$jetbox_state_pb$UserSettings$MutableSandboxProxy, 47);
+  }
+
+
 };
 
 /**
@@ -2276,7 +2365,8 @@ jspb$jetbox_state_pb$MutableUserSettings.hasInstance = /** @pureOrBreakMyCode */
  *  enableAdc: (?boolean|undefined),
  *  permissionGrantsV2Migrated: (?boolean|undefined),
  *  sandboxEnabledAtV2Migration: (?boolean|undefined),
- *  vertexServiceTier: (?string|undefined)
+ *  vertexServiceTier: (?string|undefined),
+ *  sandboxProxy: (?jspb$jetbox_state_pb$UserSettings$MutableSandboxProxy.ObjectFormat|undefined)
  * }}
  */
 jspb$jetbox_state_pb$MutableUserSettings.ObjectFormat;
@@ -2377,7 +2467,8 @@ if (goog.DEBUG && !COMPILED) {
  *  enableAdc: (boolean|undefined),
  *  permissionGrantsV2Migrated: (boolean|undefined),
  *  sandboxEnabledAtV2Migration: (boolean|undefined),
- *  vertexServiceTier: (string|undefined)
+ *  vertexServiceTier: (string|undefined),
+ *  sandboxProxy: (!jspb$ro.jetbox_state_pb$UserSettings$ReadonlySandboxProxy|undefined)
  * }}
  */
 jspb$jetbox_state_pb$MutableUserSettings.FieldsInterface;

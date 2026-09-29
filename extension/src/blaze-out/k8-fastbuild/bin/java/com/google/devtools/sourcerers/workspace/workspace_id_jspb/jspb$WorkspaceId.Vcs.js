@@ -17,5 +17,6 @@ jspb$e.devtools$sourcerers$WorkspaceId$Vcs = {
   FIG: 2,
   COG: 3,
   JJ: 4,
-  REMOTE: 5
+  REMOTE: 5,
+  CITC: 6
 };

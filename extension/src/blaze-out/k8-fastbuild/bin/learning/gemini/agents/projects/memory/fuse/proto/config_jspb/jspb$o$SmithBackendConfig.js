@@ -70,7 +70,7 @@ jspb$o$jetski_memory$SmithBackendConfig.fromObject = function(obj) {
 };
 }
 
-var jspb$o$jetski_memory$SojoBackendConfig;
-Object.defineProperty(this, 'jspb$o$jetski_memory$SojoBackendConfig', {
-  get() { return jspb$o$jetski_memory$SojoBackendConfig; },
-  set(v) { jspb$o$jetski_memory$SojoBackendConfig = v; },
+var jspb$o$jetski_memory$MemoryMountConfig;
+Object.defineProperty(this, 'jspb$o$jetski_memory$MemoryMountConfig', {
+  get() { return jspb$o$jetski_memory$MemoryMountConfig; },
+  set(v) { jspb$o$jetski_memory$MemoryMountConfig = v; },

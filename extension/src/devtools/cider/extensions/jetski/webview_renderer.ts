@@ -49,6 +49,12 @@ if (false) {
      * @public
      */
     WebviewRendererConfig.prototype.setupFn;
+    /**
+     * Optional handler when the user clicks "Report Issue" in the error UI.
+     * @type {(undefined|function(): void)}
+     * @public
+     */
+    WebviewRendererConfig.prototype.onReportIssue;
 }
 /**
  * Centralised rendering and lifecycle management for Jetski webviews.
@@ -69,7 +75,23 @@ class WebviewRenderer {
         this.context = config.context;
         this.delegate = config.delegate;
         this.setupFn = config.setupFn;
+        this.onReportIssue = config.onReportIssue;
         this.messageNotifier = new loading_message_impl_1.MessageNotifierImpl();
+        // "Report Issue" from the loading-page error state (shown on hard backend
+        // start failures) routes through the same host handler as the iframe error
+        // component, keeping the two error surfaces behaviorally identical.
+        if (this.onReportIssue) {
+            /** @type {!tsickle_vscode_1.Disposable} */
+            const reportIssueSub = this.messageNotifier.onReportIssue((/**
+             * @return {void}
+             */
+            () => {
+                this.onReportIssue?.();
+            }));
+            // context.subscriptions may be absent in some hosts/tests; only register
+            // when available so disposal is still wired where supported.
+            this.context.subscriptions?.push(reportIssueSub);
+        }
     }
     /**
      * Invalidates the cached server URL, forcing re-setup on next render.
@@ -127,6 +149,20 @@ class WebviewRenderer {
      * @return {!Promise<void>}
      */
     async renderJetskiIframe(view, options) {
+        /** @type {function(): void} */
+        const onReload = (/**
+         * @return {void}
+         */
+        () => {
+            this.refresh();
+            void this.renderJetskiIframe(view, options);
+        });
+        /** @type {!tsickle_delegate_interfaces_2.RenderIframeOptions} */
+        const iframeOptions = {
+            ...options,
+            onReload,
+            onReportIssue: this.onReportIssue,
+        };
         // When opening secondary views (e.g. Settings, Artifacts, Terminal), the backend
         // server is already running and cached. Avoid calling renderLoading() if serverInfo
         // is already available, because rewriting webview.html in rapid succession forces
@@ -144,7 +180,7 @@ class WebviewRenderer {
             /** @type {string} */
             const serverUrl = this.delegate.validateServerUrl(serverInfo.effectiveUrl);
             // Render the Jetski iframe.
-            await this.delegate.renderIframe(view.webview, serverUrl, options);
+            await this.delegate.renderIframe(view.webview, serverUrl, iframeOptions);
             this.messageNotifier.dispose();
             // Register the webview with the ExtensionApi so it can receive RPCs.
             await this.apiImpl.registerWebview(view, options.type);
@@ -198,4 +234,9 @@ if (false) {
      * @private
      */
     WebviewRenderer.prototype.setupFn;
+    /**
+     * @const {(undefined|function(): void)}
+     * @private
+     */
+    WebviewRenderer.prototype.onReportIssue;
 }

@@ -237,20 +237,24 @@ goog.events.listen_ = function(
     // Don't break tests that expect a boolean.
     if (opt_options === undefined) opt_options = false;
     src.addEventListener(type.toString(), proxy, opt_options);
-  } else if (src.attachEvent) {
+  } else if ((/** @type {!Element} */ (src)).attachEvent) {
     // The else if above used to be an unconditional else. It would call
     // attachEvent come gws or high water. This would sometimes throw an
     // exception on IE11, spoiling the day of some callers. The previous
     // incarnation of this code, from 2007, indicates that it replaced an
     // earlier still version that caused excess allocations on IE6.
-    src.attachEvent(goog.events.getOnString_(type.toString()), proxy);
-  } else if (src.addListener && src.removeListener) {
+    (/** @type {!Element} */ (src))
+        .attachEvent(goog.events.getOnString_(type.toString()), proxy);
+  } else if (
+      (/** @type {!MediaQueryList} */ (src)).addListener &&
+      (/** @type {!MediaQueryList} */ (src)).removeListener) {
     // In IE, MediaQueryList uses addListener() insteadd of addEventListener. In
     // Safari, there is no global for the MediaQueryList constructor, so we just
     // check whether the object "looks like" MediaQueryList.
     goog.asserts.assert(
         type === 'change', 'MediaQueryList only has a change event');
-    src.addListener(proxy);
+    (/** @type {!MediaQueryList} */ (src))
+        .addListener(/** @type {!MediaQueryListListener} */ (proxy));
   } else {
     throw new Error('addEventListener and attachEvent are unavailable.');
   }
@@ -422,7 +426,7 @@ goog.events.unlistenByKey = function(key) {
     return false;
   }
 
-  const listener = key;
+  const listener = /** @type {?goog.events.Listener} */ (key);
   if (!listener || listener.removed) {
     return false;
   }
@@ -437,10 +441,14 @@ goog.events.unlistenByKey = function(key) {
   const proxy = listener.proxy;
   if (src.removeEventListener) {
     src.removeEventListener(type, proxy, listener.capture);
-  } else if (src.detachEvent) {
-    src.detachEvent(goog.events.getOnString_(type), proxy);
-  } else if (src.addListener && src.removeListener) {
-    src.removeListener(proxy);
+  } else if ((/** @type {!Element} */ (src)).detachEvent) {
+    (/** @type {!Element} */ (src))
+        .detachEvent(goog.events.getOnString_(type), proxy);
+  } else if (
+      (/** @type {!MediaQueryList} */ (src)).addListener &&
+      (/** @type {!MediaQueryList} */ (src)).removeListener) {
+    (/** @type {!MediaQueryList} */ (src))
+        .removeListener(/** @type {!MediaQueryListListener} */ (proxy));
   }
   goog.events.listenerCountEstimate_--;
 

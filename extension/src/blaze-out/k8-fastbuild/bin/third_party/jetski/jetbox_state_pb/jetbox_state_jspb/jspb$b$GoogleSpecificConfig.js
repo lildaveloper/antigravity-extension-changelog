@@ -35,7 +35,7 @@ jspb$b$jetbox_state_pb$GoogleSpecificConfig.fields = /** @pureOrBreakMyCode */([
 jspb$jetbox_state_pb$MutableGoogleSpecificConfig.prototype.serializeBinary = /** @pureOrBreakMyCode */(jspb_internal_public_for_gencode.makePrototypeSerializeBinaryFunction(jspb$b$jetbox_state_pb$GoogleSpecificConfig.fields));
 
 
-var jspb$b$jetbox_state_pb$UserSettings;
-Object.defineProperty(this, 'jspb$b$jetbox_state_pb$UserSettings', {
-  get() { return jspb$b$jetbox_state_pb$UserSettings; },
-  set(v) { jspb$b$jetbox_state_pb$UserSettings = v; },
+var jspb$b$jetbox_state_pb$UserSettings$SandboxProxy$Http;
+Object.defineProperty(this, 'jspb$b$jetbox_state_pb$UserSettings$SandboxProxy$Http', {
+  get() { return jspb$b$jetbox_state_pb$UserSettings$SandboxProxy$Http; },
+  set(v) { jspb$b$jetbox_state_pb$UserSettings$SandboxProxy$Http = v; },

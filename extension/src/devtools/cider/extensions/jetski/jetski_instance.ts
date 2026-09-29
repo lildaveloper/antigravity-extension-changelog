@@ -176,6 +176,15 @@ class JetskiInstance {
         return this.view.webview;
     }
     /**
+     * Posts a raw control message directly to the webview page.
+     * @public
+     * @param {*} message
+     * @return {!Thenable<boolean>}
+     */
+    postControlMessage(message) {
+        return this.view.webview.postMessage(message);
+    }
+    /**
      * @public
      * @return {void}
      */

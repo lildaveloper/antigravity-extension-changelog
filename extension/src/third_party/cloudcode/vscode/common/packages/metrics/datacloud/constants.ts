@@ -118,6 +118,22 @@ const DataCloudMetadataKey = {
     // The resulting zoom level percentage after the zoom action (e.g. '150').
     ZOOMED_TO: "zoomed_to",
     AUTH_METHOD: "authMethod",
+    // Comma-separated list of selected Data Cloud service IDs (e.g. 'bigquery,managed_apache_spark').
+    SELECTED_SERVICES: "selectedServices",
+    // Total count of selected Data Cloud services.
+    SERVICES_COUNT: "servicesCount",
+    // Comma-separated list of GCP APIs that the extension attempts to enable.
+    APIS_TO_ENABLE: "apisToEnable",
+    // Comma-separated list of GCP APIs that are already enabled on the project.
+    ENABLED_APIS: "enabledApis",
+    // Comma-separated list of GCP APIs that are disabled on the project.
+    DISABLED_APIS: "disabledApis",
+    // Comma-separated list of missing IAM permissions required by selected services.
+    MISSING_PERMISSIONS: "missingPermissions",
+    // Total count of missing IAM permissions.
+    MISSING_PERMISSIONS_COUNT: "missingPermissionsCount",
+    // Comma-separated list of service IDs that have missing IAM permissions.
+    SERVICES_WITH_MISSING_PERMISSIONS: "servicesWithMissingPermissions",
 };
 exports.DataCloudMetadataKey = DataCloudMetadataKey;
 /**

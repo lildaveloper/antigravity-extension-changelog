@@ -26,7 +26,8 @@ const tsickle_readline_9 = goog.requireType("google3.third_party.javascript.typi
 const tsickle_vscode_10 = goog.requireType("vscode");
 const tsickle_binary_downloader_11 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.binary_downloader");
 const tsickle_buffered_output_channel_12 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.buffered_output_channel");
-const tsickle_telemetry_constants_13 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.telemetry_constants");
+const tsickle_cde_auth_service_13 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.cde_auth_service");
+const tsickle_telemetry_constants_14 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.telemetry_constants");
 const child_process_1 = goog.require('google3.third_party.javascript.typings.node.node.child_process');
 const crypto = goog.require('google3.third_party.javascript.typings.node.node.crypto');
 const fs = goog.require('google3.third_party.javascript.typings.node.node.fs');
@@ -38,6 +39,7 @@ const vscode = goog.require('vscode'); // from //third_party/javascript/typings/
 // from //third_party/javascript/typings/vscode
 const binary_downloader_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.binary_downloader');
 const buffered_output_channel_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.buffered_output_channel');
+const cde_auth_service_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.cde_auth_service');
 const telemetry_constants_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.telemetry_constants');
 /**
  * Known system CA bundle paths by platform in order of priority.
@@ -102,6 +104,39 @@ function initializeHostSecurityEnvironment(platform = process.platform, fsExists
 }
 exports.initializeHostSecurityEnvironment = initializeHostSecurityEnvironment;
 /**
+ * Ensures `localhost` and `127.0.0.1` are present in a comma-separated `NO_PROXY` value
+ * whenever a proxy is active or `noProxy` is specified.
+ * @param {(undefined|string)=} rawNoProxy
+ * @return {string}
+ */
+function ensureLoopbackNoProxy(rawNoProxy) {
+    if (!rawNoProxy || !rawNoProxy.trim()) {
+        return 'localhost,127.0.0.1';
+    }
+    /** @type {!Array<string>} */
+    const parts = rawNoProxy
+        .split(',')
+        .map((/**
+     * @param {string} p
+     * @return {string}
+     */
+    (p) => p.trim()))
+        .filter(Boolean);
+    /** @type {!Set<string>} */
+    const lowerParts = new Set(parts.map((/**
+     * @param {string} p
+     * @return {string}
+     */
+    (p) => p.toLowerCase())));
+    if (!lowerParts.has('localhost')) {
+        parts.push('localhost');
+    }
+    if (!lowerParts.has('127.0.0.1')) {
+        parts.push('127.0.0.1');
+    }
+    return parts.join(',');
+}
+/**
  * Configures the current extension host process environment with HTTP and HTTPS proxy settings
  * derived from VS Code workspace configuration (`http.proxy` and `http.noProxy`).
  * @param {(undefined|!tsickle_vscode_10.WorkspaceConfiguration)=} configOverride
@@ -128,11 +163,19 @@ function configureHostProxyEnvironment(configOverride) {
     const rawNoProxy = httpConfig?.get('noProxy');
     /** @type {(undefined|string)} */
     const noProxySetting = typeof rawNoProxy === 'string' ? (/** @type {string} */ (rawNoProxy)).trim() : undefined;
-    if (noProxySetting) {
-        if (!process.env['NO_PROXY'] && !process.env['no_proxy']) {
-            process.env['NO_PROXY'] = noProxySetting;
-            process.env['no_proxy'] = noProxySetting;
-        }
+    /** @type {boolean} */
+    const hasActiveProxy = Boolean(proxySetting ||
+        process.env['HTTP_PROXY'] ||
+        process.env['http_proxy'] ||
+        process.env['HTTPS_PROXY'] ||
+        process.env['https_proxy']);
+    if (noProxySetting || hasActiveProxy) {
+        /** @type {(undefined|string)} */
+        const existingNoProxy = process.env['NO_PROXY'] || process.env['no_proxy'];
+        /** @type {string} */
+        const effectiveNoProxy = ensureLoopbackNoProxy(existingNoProxy || noProxySetting);
+        process.env['NO_PROXY'] = effectiveNoProxy;
+        process.env['no_proxy'] = effectiveNoProxy;
     }
 }
 exports.configureHostProxyEnvironment = configureHostProxyEnvironment;
@@ -177,11 +220,19 @@ function buildServerEnvironment(options) {
     const rawNoProxy = httpConfig?.get('noProxy');
     /** @type {(undefined|string)} */
     const noProxySetting = typeof rawNoProxy === 'string' ? (/** @type {string} */ (rawNoProxy)).trim() : undefined;
-    if (noProxySetting) {
-        if (!env['NO_PROXY'] && !env['no_proxy']) {
-            env['NO_PROXY'] = noProxySetting;
-            env['no_proxy'] = noProxySetting;
-        }
+    /** @type {boolean} */
+    const hasActiveProxy = Boolean(proxySetting ||
+        env['HTTP_PROXY'] ||
+        env['http_proxy'] ||
+        env['HTTPS_PROXY'] ||
+        env['https_proxy']);
+    if (noProxySetting || hasActiveProxy) {
+        /** @type {(undefined|string)} */
+        const existingNoProxy = env['NO_PROXY'] || env['no_proxy'];
+        /** @type {string} */
+        const effectiveNoProxy = ensureLoopbackNoProxy(existingNoProxy || noProxySetting);
+        env['NO_PROXY'] = effectiveNoProxy;
+        env['no_proxy'] = effectiveNoProxy;
     }
     // 2. OS Root CA Certificate propagation (for Zscaler/ZTNA SSL inspection)
     /** @type {(undefined|string)} */
@@ -202,6 +253,31 @@ function buildServerEnvironment(options) {
     return env;
 }
 exports.buildServerEnvironment = buildServerEnvironment;
+/**
+ * Resolves the working directory for spawning the backend server.
+ * When `cwd` passed to `child_process.spawn` does not exist on disk, Node.js
+ * throws `spawn <binary> ENOENT` (blaming the binary rather than `cwd`).
+ * @param {(undefined|!ReadonlyArray<!tsickle_vscode_10.WorkspaceFolder>)=} workspaceFolders
+ * @param {(undefined|string)=} extensionPath
+ * @param {function(string): boolean=} fsExists
+ * @return {string}
+ */
+function resolveActiveCwd(workspaceFolders, extensionPath, fsExists = fs.existsSync) {
+    if (workspaceFolders) {
+        for (const folder of workspaceFolders) {
+            /** @type {string} */
+            const folderPath = folder?.uri?.fsPath;
+            if (folderPath && fsExists(folderPath)) {
+                return folderPath;
+            }
+        }
+    }
+    if (extensionPath && fsExists(extensionPath)) {
+        return extensionPath;
+    }
+    return os.homedir();
+}
+exports.resolveActiveCwd = resolveActiveCwd;
 /**
  * Allocates a free ephemeral loopback port (127.0.0.1).
  * @return {!Promise<number>}
@@ -277,15 +353,91 @@ if (false) {
     ServerStartOptions.prototype.telemetry;
 }
 /**
+ * Default startup timeout waiting for backend language server HTTP health check (30 seconds).
+ * @type {number}
+ */
+exports.DEFAULT_SERVER_STARTUP_TIMEOUT_MS = 30000;
+/**
+ * Resolves the startup readiness timeout in milliseconds.
+ * @param {(undefined|!tsickle_vscode_10.WorkspaceConfiguration)=} configOverride
+ * @return {number}
+ */
+function resolveServerStartupTimeoutMs(configOverride) {
+    /** @type {number} */
+    const envTimeout = Number(process.env['ANTIGRAVITY_SERVER_READY_TIMEOUT_MS']);
+    if (envTimeout > 0) {
+        return envTimeout;
+    }
+    /** @type {!tsickle_vscode_10.WorkspaceConfiguration} */
+    const activeConfig = configOverride ?? vscode.workspace.getConfiguration('antigravity');
+    /** @type {number} */
+    const configuredTimeout = activeConfig?.get('serverStartupTimeoutMs', exports.DEFAULT_SERVER_STARTUP_TIMEOUT_MS);
+    return typeof configuredTimeout === 'number' && configuredTimeout > 0
+        ? configuredTimeout
+        : exports.DEFAULT_SERVER_STARTUP_TIMEOUT_MS;
+}
+/**
+ * Extracts `.name` from an `Error` or plain object, ignoring functions (which carry a function
+ * `.name` property of their own and would otherwise misclassify e.g. `throw TimeoutError`).
  * @param {*} err
+ * @return {(undefined|string)}
+ */
+function getErrorName(err) {
+    if (err instanceof Error) {
+        return (/** @type {!Error} */ (err)).name;
+    }
+    if (typeof err === 'object' && err !== null) {
+        return ((/** @type {{name: (undefined|string)}} */ (err))).name;
+    }
+    return undefined;
+}
+/**
+ * Returns true when `err` represents an `AbortSignal.timeout` or download stall timeout.
+ *
+ * Checked ahead of the generic `/timed? out/i` test in `categorizeServerStartError` because the DOM
+ * message ("The operation was aborted due to timeout") has no space in "timeout" and would
+ * otherwise fall through to `unexpected_failure`.
+ * @param {*} err
+ * @param {string} message
+ * @return {boolean}
+ */
+function isDownloadTimeoutError(err, message) {
+    return (getErrorName(err) === 'TimeoutError' ||
+        /aborted due to timeout/i.test(message));
+}
+/**
+ * @param {*} err
+ * @param {(undefined|{exitCode: (undefined|number), signal: (undefined|string)})=} processState
  * @return {string}
  */
-function categorizeServerStartError(err) {
+function categorizeServerStartError(err, processState) {
+    if (processState?.signal) {
+        return `killed_by_${processState.signal}`;
+    }
+    if (processState?.exitCode !== undefined) {
+        return processState.exitCode === 0
+            ? 'process_exit_zero'
+            : 'process_exit_nonzero';
+    }
     if (!err) {
         return 'unknown';
     }
+    /** @type {(undefined|string)} */
+    const code = ((/** @type {{code: (undefined|string)}} */ (err)))?.code;
+    if (code === 'ENOENT') {
+        return 'binary_not_found';
+    }
+    if (code === 'EACCES' || code === 'EPERM') {
+        return 'permission_denied';
+    }
+    if (code === 'ETIMEDOUT') {
+        return 'timeout';
+    }
     /** @type {string} */
     const message = err instanceof Error ? (/** @type {!Error} */ (err)).message : String(err);
+    if (isDownloadTimeoutError(err, message)) {
+        return 'download_failed';
+    }
     if (/timed? out/i.test(message) || /failed to start at/i.test(message)) {
         return 'timeout';
     }
@@ -316,6 +468,14 @@ class AntigravityServerManager {
          * Indicates whether the server is undergoing intentional shutdown to suppress false-positive crash telemetry.
          */
         this.isStopping = false;
+        /**
+         * Fires when the backend server process terminates unexpectedly (i.e. not via
+         * an intentional {\@link stop}). Consumers (e.g. the webview renderer) use this
+         * to flip already-loaded surfaces into the error state instead of leaving a
+         * stale/blank iframe pointing at a dead port.
+         */
+        this.serverCrashEmitter = new vscode.EventEmitter();
+        this.onServerCrash = this.serverCrashEmitter.event;
     }
     /**
      * @public
@@ -327,6 +487,70 @@ class AntigravityServerManager {
         }
         AntigravityServerManager.instance = new AntigravityServerManager();
         return AntigravityServerManager.instance;
+    }
+    /**
+     * Returns the URL of the currently running backend server, if any.
+     *
+     * Returns undefined when the server has not started, has crashed, or is
+     * mid-startup. This reflects only the locally spawned process and does not
+     * account for a remotely configured `antigravity.serverUrl`.
+     * @public
+     * @return {(undefined|string)}
+     */
+    getServerUrl() {
+        return this.serverUrl;
+    }
+    /**
+     * Returns the most recent startup or CLI loading error message, if any.
+     * @public
+     * @return {(undefined|string)}
+     */
+    getLastStartupError() {
+        return this.lastStartupError;
+    }
+    /**
+     * Sets or clears the most recent startup or CLI loading error message.
+     * @public
+     * @param {(undefined|string)=} error
+     * @return {void}
+     */
+    setLastStartupError(error) {
+        this.lastStartupError = error;
+    }
+    /**
+     * Reports whether the backend server frontend is reachable and responding.
+     *
+     * Resolves the effective server URL (remote override, spawned process, or the
+     * `antigravity.serverUrl`/`ANTIGRAVITY_SERVER_URL` configuration) and probes
+     * it with a short-timeout HTTP request. Used to decide whether the CLI-served
+     * feedback UI can be shown or whether the local fallback form is required.
+     * @public
+     * @param {number=} timeoutMs
+     * @return {!Promise<boolean>}
+     */
+    async isServerHealthy(timeoutMs = 2000) {
+        if (this.lastStartupError) {
+            return false;
+        }
+        /** @type {(undefined|string)} */
+        const url = this.getEffectiveServerUrl();
+        if (!url) {
+            return false;
+        }
+        return this.waitForServerReady(url, timeoutMs);
+    }
+    /**
+     * Resolves the effective backend URL, preferring an explicit remote override
+     * (`ANTIGRAVITY_SERVER_URL` env or `antigravity.serverUrl` setting) and
+     * falling back to the locally spawned process URL.
+     * @public
+     * @return {(undefined|string)}
+     */
+    getEffectiveServerUrl() {
+        /** @type {(undefined|string)} */
+        const configuredUrl = process?.env['ANTIGRAVITY_SERVER_URL'] ??
+            vscode.workspace.getConfiguration('antigravity').get('serverUrl');
+        return configuredUrl ?? this.serverUrl;
     }
     /**
      * Lazily initializes or returns the host-level BufferedOutputChannel.
@@ -363,6 +587,8 @@ class AntigravityServerManager {
     async getHostDiagnostics() {
         /** @type {string} */
         const binaryPath = this.getInstalledTargetPath();
+        /** @type {!Array<string>} */
+        const installLogs = this.getOutputChannelLogs();
         /** @type {(undefined|string)} */
         let binaryVersion;
         try {
@@ -371,8 +597,18 @@ class AntigravityServerManager {
         catch {
             // Binary might not be installed or executable yet.
         }
+        if (!binaryVersion) {
+            for (let i = installLogs.length - 1; i >= 0; i--) {
+                /** @type {(null|!RegExpMatchArray)} */
+                const match = installLogs[i].match(/(?:CLI version:\s*|binary\s+v|agy\s+\(v)(\d+\.\d+\.\d+[^ )\t\n\r]*)/i);
+                if (match) {
+                    binaryVersion = match[1];
+                    break;
+                }
+            }
+        }
         return {
-            installLogs: this.getOutputChannelLogs(),
+            installLogs,
             extensionLogs: [],
             binaryVersion: binaryVersion ?? '',
             binaryPath,
@@ -427,17 +663,39 @@ class AntigravityServerManager {
     }
     /**
      * Polls the specified HTTP URL until it returns a healthy status code (200-499) or times out.
+     * Periodically verifies process liveness via `isProcessAlive` callback (if provided) to abort early
+     * when the server process crashes or terminates unexpectedly during startup.
      * @public
      * @param {string} url
-     * @param {number=} timeoutMs
+     * @param {(undefined|number)=} timeoutMs
+     * @param {(undefined|function(): boolean)=} isProcessAlive
      * @return {!Promise<boolean>}
      */
-    async waitForServerReady(url, timeoutMs = 15000) {
+    async waitForServerReady(url, timeoutMs, isProcessAlive) {
+        /** @type {(undefined|number)} */
+        const envTimeout = process.env['ANTIGRAVITY_SERVER_READY_TIMEOUT_MS']
+            ? Number(process.env['ANTIGRAVITY_SERVER_READY_TIMEOUT_MS'])
+            : undefined;
+        /** @type {number} */
+        const effectiveTimeoutMs = timeoutMs ??
+            (envTimeout && !isNaN(envTimeout)
+                ? envTimeout
+                : exports.DEFAULT_SERVER_STARTUP_TIMEOUT_MS);
         /** @type {number} */
         const start = Date.now();
         /** @type {number} */
         let attempt = 0;
-        while (Date.now() - start < timeoutMs) {
+        /** @type {string} */
+        const healthUrl = url.endsWith('/healthz')
+            ? url
+            : `${url.replace(/\/$/, '')}/healthz`;
+        /** @type {(undefined|string)} */
+        let lastProbeError;
+        while (Date.now() - start < effectiveTimeoutMs) {
+            if (isProcessAlive && !isProcessAlive()) {
+                this.outputChannel?.appendLine(`[LAUNCH ERROR] Server process terminated early during startup probe (attempt ${attempt}).`);
+                return false;
+            }
             attempt++;
             try {
                 /** @type {boolean} */
@@ -446,36 +704,56 @@ class AntigravityServerManager {
                  * @return {void}
                  */
                 (resolve) => {
-                    const req = http.get(url, (/**
+                    /** @type {string} */
+                    const pollUrl = attempt % 2 === 1 ? healthUrl : url;
+                    const req = http.get(pollUrl, { agent: false }, (/**
                      * @param {?} res
                      * @return {void}
                      */
                     (res) => {
+                        res.resume();
                         resolve(res.statusCode !== undefined &&
                             res.statusCode >= 200 &&
                             res.statusCode < 500);
                     }));
+                    /** @type {boolean} */
+                    let timedOut = false;
                     req.on('error', (/**
+                     * @param {!Error} err
                      * @return {void}
                      */
-                    () => {
+                    (err) => {
+                        if (attempt % 20 === 1) {
+                            console.log(`[LAUNCH POLL ${attempt}] Error connecting to ${pollUrl}: ${err.message}`);
+                        }
+                        if (!timedOut) {
+                            lastProbeError = err?.message || String(err);
+                        }
                         resolve(false);
                     }));
-                    req.setTimeout(1000, (/**
+                    req.setTimeout(2000, (/**
                      * @return {void}
                      */
                     () => {
+                        timedOut = true;
+                        lastProbeError = 'probe request timed out';
                         req.destroy();
                         resolve(false);
                     }));
                 }));
                 if (healthy) {
                     this.outputChannel?.appendLine(`[LAUNCH] Server at ${url} is READY after ${attempt} attempt(s).`);
+                    console.log(`[LAUNCH] Server at ${url} is READY after ${attempt} attempt(s).`);
                     return true;
                 }
             }
-            catch {
+            catch (err) {
+                lastProbeError = err instanceof Error ? (/** @type {!Error} */ (err)).message : String(err);
                 // Retry
+            }
+            if (isProcessAlive && !isProcessAlive()) {
+                this.outputChannel?.appendLine(`[LAUNCH ERROR] Server process terminated early during startup probe (attempt ${attempt}).`);
+                return false;
             }
             await new Promise((/**
              * @param {function((void|!PromiseLike<void>)): void} r
@@ -485,7 +763,10 @@ class AntigravityServerManager {
                 setTimeout(r, 250);
             }));
         }
-        this.outputChannel?.appendLine(`[LAUNCH ERROR] Timed out waiting for server at ${url} after ${timeoutMs}ms.`);
+        /** @type {string} */
+        const timeoutMsg = `[LAUNCH ERROR] Timed out waiting for server at ${url} after ${effectiveTimeoutMs}ms (${attempt} attempts, last error: ${lastProbeError || 'none'}).`;
+        this.outputChannel?.appendLine(timeoutMsg);
+        console.error(timeoutMsg);
         return false;
     }
     /**
@@ -518,6 +799,7 @@ class AntigravityServerManager {
             return this.serverUrl;
         }
         this.isStopping = false;
+        this.lastStartupError = undefined;
         /** @type {number} */
         const startTime = Date.now();
         void activeTelemetry?.logEvent(telemetry_constants_1.AntigravityEvent.SERVER_START);
@@ -527,11 +809,19 @@ class AntigravityServerManager {
         async () => {
             /** @type {(undefined|number)} */
             let startupExitCode;
+            /** @type {(undefined|string)} */
+            let startupSignal;
+            /** @type {(undefined|!Error)} */
+            let startupSpawnError;
+            /** @type {(undefined|number)} */
+            let spawnStartTime;
             try {
                 /** @type {(undefined|number)} */
                 const configuredPort = vscode.workspace
                     .getConfiguration('antigravity')
                     .get('serverPort');
+                /** @type {number} */
+                const startupTimeoutMs = resolveServerStartupTimeoutMs(options.configOverride);
                 /** @type {number} */
                 const port = Number(configuredPort) || (await this.getAvailableEphemeralPort());
                 /** @type {string} */
@@ -548,7 +838,7 @@ class AntigravityServerManager {
                 /** @type {!ReadonlyArray<!tsickle_vscode_10.WorkspaceFolder>} */
                 const workspaceFolders = vscode.workspace.workspaceFolders ?? [];
                 for (const folder of workspaceFolders) {
-                    if (folder?.uri?.fsPath) {
+                    if (folder?.uri?.fsPath && fs.existsSync(folder.uri.fsPath)) {
                         args.push(`--add-dir=${folder.uri.fsPath}`);
                     }
                 }
@@ -566,14 +856,20 @@ class AntigravityServerManager {
                 /** @type {string} */
                 const versionLog = versionStr ? ` (v${versionStr})` : '';
                 this.outputChannel?.appendLine(`[LAUNCH] Spawning ${binaryPath}${versionLog} ${args.join(' ')}`);
+                console.log(`[LAUNCH] Spawning ${binaryPath}${versionLog} ${args.join(' ')}`);
                 /** @type {string} */
-                const activeCwd = workspaceFolders[0]?.uri?.fsPath ?? context.extensionPath;
+                const activeCwd = resolveActiveCwd(workspaceFolders, context.extensionPath);
                 const serverEnv = buildServerEnvironment({
                     configOverride: options.configOverride,
                 });
+                if (cde_auth_service_1.CdeAuthService.getInstance().isCdeEnvironment()) {
+                    serverEnv['ANTIGRAVITY_CDE'] = 'true';
+                }
+                spawnStartTime = Date.now();
                 this.serverProcess = (0, child_process_1.spawn)(binaryPath, args, {
                     cwd: activeCwd,
                     env: serverEnv,
+                    shell: false,
                     stdio: ['ignore', 'pipe', 'pipe'],
                 });
                 if (this.serverProcess.stdout) {
@@ -588,6 +884,7 @@ class AntigravityServerManager {
                     (line) => {
                         if (line.trim()) {
                             this.outputChannel?.appendLine(`[HUB STDOUT] ${line}`);
+                            console.log(`[HUB STDOUT] ${line}`);
                             if (line.startsWith('ANTIGRAVITY_OPEN_URL:')) {
                                 /** @type {string} */
                                 const url = line
@@ -632,6 +929,7 @@ class AntigravityServerManager {
                     (line) => {
                         if (line.trim()) {
                             this.outputChannel?.appendLine(`[HUB STDERR] ${line}`);
+                            console.log(`[HUB STDERR] ${line}`);
                         }
                     }));
                 }
@@ -641,6 +939,9 @@ class AntigravityServerManager {
                  * @return {void}
                  */
                 (err) => {
+                    if (!this.isStopping) {
+                        startupSpawnError = err;
+                    }
                     this.outputChannel?.appendLine(`[LAUNCH PROCESS ERROR] Failed to spawn process: ${err.message}`);
                     void activeTelemetry?.logError?.(telemetry_constants_1.AntigravityEvent.SERVER_CRASH, {
                         'exit_code': -1,
@@ -648,6 +949,9 @@ class AntigravityServerManager {
                         'stack': err.stack,
                         'failure_reason': 'spawn_error',
                     });
+                    this.serverProcess = undefined;
+                    this.serverUrl = undefined;
+                    this.port = undefined;
                 }));
                 // Track process exit. If the process terminates unexpectedly (not triggered via intentional stop()),
                 // emit a SERVER_CRASH event for both non-zero exit codes and signal kills (e.g. OOM SIGKILL, SIGSEGV).
@@ -658,13 +962,22 @@ class AntigravityServerManager {
                  */
                 (code, signal) => {
                     if (!this.isStopping) {
-                        startupExitCode = code ?? -1;
+                        startupExitCode = code !== null ? code : undefined;
+                        startupSignal = signal ?? undefined;
                     }
                     /** @type {string} */
                     const msg = `[LAUNCH ERROR] Server process exited unexpectedly with code ${code}, signal ${signal}`;
                     console.error(msg);
                     this.outputChannel?.appendLine(msg);
-                    if (!this.isStopping && (code !== 0 || signal !== null)) {
+                    /** @type {boolean} */
+                    const unexpected = !this.isStopping && (code !== 0 || signal !== null);
+                    // Whether the server had already come up before this exit. Only a
+                    // crash *after* a successful start should flip live surfaces into the
+                    // error state; a failure during initial startup is handled by the
+                    // renderer's setup/catch path and its own loading error UI.
+                    /** @type {boolean} */
+                    const hadStarted = this.serverUrl !== undefined;
+                    if (unexpected) {
                         void activeTelemetry?.logError?.(telemetry_constants_1.AntigravityEvent.SERVER_CRASH, {
                             'exit_code': code ?? -1,
                             'signal': signal || 'none',
@@ -674,20 +987,60 @@ class AntigravityServerManager {
                                 : 'process_exit_nonzero',
                         });
                     }
+                    // Notify listeners of a mid-session termination/crash so open webviews
+                    // can show the error component instead of a frozen/blank iframe
+                    // (including SIGTERM traps where the Go binary exits with code 0).
+                    if (!this.isStopping && hadStarted) {
+                        /** @type {string} */
+                        const reason = signal
+                            ? `killed_by_${signal}`
+                            : code !== 0
+                                ? 'process_exit_nonzero'
+                                : 'process_terminated';
+                        this.serverCrashEmitter.fire({
+                            code: code ?? null,
+                            signal: signal ?? null,
+                            reason,
+                        });
+                    }
                     this.serverProcess = undefined;
                     this.serverUrl = undefined;
                     this.port = undefined;
                 }));
+                /** @type {function(): boolean} */
+                const isProcessAlive = (/**
+                 * @return {boolean}
+                 */
+                () => startupSpawnError === undefined &&
+                    this.serverProcess !== undefined &&
+                    this.serverProcess.exitCode === null &&
+                    this.serverProcess.signalCode === null &&
+                    !this.serverProcess.killed);
                 /** @type {boolean} */
-                const ready = await this.waitForServerReady(backendUrl);
+                const ready = await this.waitForServerReady(backendUrl, startupTimeoutMs, isProcessAlive);
                 if (!ready) {
                     await this.stop();
-                    throw new Error(`Server failed to start at ${backendUrl}`);
+                    if (startupSpawnError) {
+                        throw startupSpawnError;
+                    }
+                    if (startupSignal) {
+                        throw new Error(`Server failed to start: process terminated by signal ${startupSignal}`);
+                    }
+                    if (startupExitCode !== undefined) {
+                        throw new Error(`Server failed to start: process exited early with code ${startupExitCode}`);
+                    }
+                    // `backendUrl` is left verbatim on purpose. `sanitizeString` in
+                    // telemetry_service collapses `127.0.0.1:<port>` to a single
+                    // `<IP_REDACTED>` token before the message is sent, so rewriting the
+                    // host here would only leak the ephemeral port and give every event
+                    // a distinct error string.
+                    throw new Error(`Server failed to start at ${backendUrl} after ${startupTimeoutMs}ms`);
                 }
                 this.serverUrl = backendUrl;
                 this.port = port;
+                this.lastStartupError = undefined;
                 /** @type {number} */
-                const durationMs = Date.now() - startTime;
+                const durationMs = Date.now() - (spawnStartTime ?? startTime);
                 void activeTelemetry?.logEvent(telemetry_constants_1.AntigravityEvent.SERVER_START_SUCCESS, {
                     'duration_ms': durationMs,
                     'success': true,
@@ -697,11 +1050,16 @@ class AntigravityServerManager {
             catch (err) {
                 this.serverUrl = undefined;
                 this.port = undefined;
+                this.lastStartupError =
+                    err instanceof Error ? (/** @type {!Error} */ (err)).message : String(err);
                 // Record startup failure duration, categorized reason, exit code, sanitized error message, and stack trace in telemetry.
                 /** @type {number} */
-                const durationMs = Date.now() - startTime;
+                const durationMs = Date.now() - (spawnStartTime ?? startTime);
                 /** @type {string} */
-                const failureReason = categorizeServerStartError(err);
+                const failureReason = categorizeServerStartError(err, {
+                    exitCode: startupExitCode,
+                    signal: startupSignal,
+                });
                 /** @type {number} */
                 const exitCode = startupExitCode ??
                     (typeof ((/** @type {{exitCode: *}} */ (err)))?.exitCode === 'number'
@@ -809,9 +1167,28 @@ if (false) {
      */
     AntigravityServerManager.prototype.startingPromise;
     /**
+     * @type {(undefined|string)}
+     * @private
+     */
+    AntigravityServerManager.prototype.lastStartupError;
+    /**
      * Indicates whether the server is undergoing intentional shutdown to suppress false-positive crash telemetry.
      * @type {boolean}
      * @private
      */
     AntigravityServerManager.prototype.isStopping;
+    /**
+     * Fires when the backend server process terminates unexpectedly (i.e. not via
+     * an intentional {\@link stop}). Consumers (e.g. the webview renderer) use this
+     * to flip already-loaded surfaces into the error state instead of leaving a
+     * stale/blank iframe pointing at a dead port.
+     * @const {!tsickle_vscode_10.EventEmitter<{code: (null|number), signal: (null|string), reason: string}>}
+     * @private
+     */
+    AntigravityServerManager.prototype.serverCrashEmitter;
+    /**
+     * @const {!tsickle_vscode_10.Event<{code: (null|number), signal: (null|string), reason: string}>}
+     * @public
+     */
+    AntigravityServerManager.prototype.onServerCrash;
 }

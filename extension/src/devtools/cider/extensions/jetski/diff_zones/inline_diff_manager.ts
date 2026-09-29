@@ -14,13 +14,15 @@
 goog.module('google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_manager');
 var module = module || { id: 'devtools/cider/extensions/jetski/diff_zones/inline_diff_manager.closure.js' };
 goog.require('google3.third_party.javascript.tslib.tslib');
-const tsickle_vscode_1 = goog.requireType("vscode");
-const tsickle_diff_helper_2 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.diff_helper");
-const tsickle_hunk_storage_3 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.hunk_storage");
-const tsickle_inline_diff_changes_4 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_changes");
-const tsickle_inline_diff_range_tracker_5 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_range_tracker");
-const tsickle_utils_6 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.utils");
-const tsickle_inline_diff_change_range_7 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_change_range");
+const tsickle_cider_1 = goog.requireType("google3.devtools.cider.extensions.cider");
+const tsickle_vscode_2 = goog.requireType("vscode");
+const tsickle_diff_helper_3 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.diff_helper");
+const tsickle_hunk_storage_4 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.hunk_storage");
+const tsickle_inline_diff_changes_5 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_changes");
+const tsickle_inline_diff_range_tracker_6 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_range_tracker");
+const tsickle_utils_7 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.utils");
+const tsickle_inline_diff_change_range_8 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_change_range");
+const cider_1 = goog.require('google3.devtools.cider.extensions.cider');
 const vscode = goog.require('vscode'); // from //devtools/cider/extensions:vscode
 // from //devtools/cider/extensions:vscode
 const diff_helper_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.diff_helper');
@@ -42,7 +44,7 @@ exports.ActiveDiff = ActiveDiff;
 /* istanbul ignore if */
 if (false) {
     /**
-     * @type {!tsickle_vscode_1.Uri}
+     * @type {!tsickle_vscode_2.Uri}
      * @public
      */
     ActiveDiff.prototype.uri;
@@ -65,7 +67,7 @@ if (false) {
      */
     ActiveDiff.prototype.combinedText;
     /**
-     * @type {!tsickle_inline_diff_changes_4.InlineDiffChanges}
+     * @type {!tsickle_inline_diff_changes_5.InlineDiffChanges}
      * @public
      */
     ActiveDiff.prototype.changes;
@@ -74,6 +76,11 @@ if (false) {
      * @public
      */
     ActiveDiff.prototype.hasBeenShown;
+    /**
+     * @type {(undefined|boolean)}
+     * @public
+     */
+    ActiveDiff.prototype.hasUserEdits;
 }
 /**
  * @record
@@ -82,27 +89,27 @@ function DiffStyleGroup() { }
 /* istanbul ignore if */
 if (false) {
     /**
-     * @type {!tsickle_vscode_1.TextEditorDecorationType}
+     * @type {!tsickle_vscode_2.TextEditorDecorationType}
      * @public
      */
     DiffStyleGroup.prototype.base;
     /**
-     * @type {!tsickle_vscode_1.TextEditorDecorationType}
+     * @type {!tsickle_vscode_2.TextEditorDecorationType}
      * @public
      */
     DiffStyleGroup.prototype.single;
     /**
-     * @type {!tsickle_vscode_1.TextEditorDecorationType}
+     * @type {!tsickle_vscode_2.TextEditorDecorationType}
      * @public
      */
     DiffStyleGroup.prototype.top;
     /**
-     * @type {!tsickle_vscode_1.TextEditorDecorationType}
+     * @type {!tsickle_vscode_2.TextEditorDecorationType}
      * @public
      */
     DiffStyleGroup.prototype.mid;
     /**
-     * @type {!tsickle_vscode_1.TextEditorDecorationType}
+     * @type {!tsickle_vscode_2.TextEditorDecorationType}
      * @public
      */
     DiffStyleGroup.prototype.bottom;
@@ -127,7 +134,7 @@ if (false) {
 /**
  * Manages in-editor inline diff reviews by temporarily editing the file buffer,
  * coloring line ranges, and overlaying Accept/Reject CodeLenses.
- * @extends {tsickle_vscode_1.Disposable}
+ * @extends {tsickle_vscode_2.Disposable}
  */
 class InlineDiffManager {
     /**
@@ -141,6 +148,8 @@ class InlineDiffManager {
         this.pendingManualSaveUris = new Set();
         // URIs with pending auto-save to finalize as rejected on didSave.
         this.pendingAutoSaveUris = new Set();
+        // In-flight finalizations by URI; tab-close handlers wait on these.
+        this.finalizingUris = new Map();
         this.disposables = [];
         this.isResolvingHunk = false;
         this.onDidFinalizeFileEmitter = new vscode.EventEmitter();
@@ -149,13 +158,18 @@ class InlineDiffManager {
         this.onDidResolveHunk = this.onDidResolveHunkEmitter.event;
         this.onDidChangeActiveDiffsEmitter = new vscode.EventEmitter();
         this.onDidChangeActiveDiffs = this.onDidChangeActiveDiffsEmitter.event;
+        this.preFocusOutDiskBytes = new Map();
+        /**
+         * URIs whose diff is mid-application; their change events must be ignored.
+         */
+        this.applyingDiffUris = new Set();
         /** @type {string} */
         const BORDER_WIDTH = '1px';
         /** @type {string} */
         const BORDER_STYLE = 'solid';
-        /** @type {!tsickle_vscode_1.ThemeColor} */
+        /** @type {!tsickle_vscode_2.ThemeColor} */
         const addBorderColor = new vscode.ThemeColor('diffEditor.insertedTextBorder');
-        /** @type {!tsickle_vscode_1.ThemeColor} */
+        /** @type {!tsickle_vscode_2.ThemeColor} */
         const deleteBorderColor = new vscode.ThemeColor('diffEditor.removedTextBorder');
         this.styles = {
             add: {
@@ -236,25 +250,25 @@ class InlineDiffManager {
         }
         this.codeLensProvider = new InlineDiffCodeLensProvider(this);
         this.disposables.push(vscode.workspace.registerTextDocumentContentProvider('antigravity-diff-original', new OriginalDocumentProvider(this)), vscode.languages.registerCodeLensProvider({ scheme: 'file' }, this.codeLensProvider), vscode.commands.registerCommand('antigravity.inlineDiff.accept', (/**
-         * @param {(undefined|string|!tsickle_vscode_1.Uri)=} fileUriStr
+         * @param {(undefined|string|!tsickle_vscode_2.Uri)=} fileUriStr
          * @param {(undefined|number)=} index
          * @return {!Promise<void>}
          */
         (fileUriStr, index) => this.acceptHunk(fileUriStr, index))), vscode.commands.registerCommand('antigravity.inlineDiff.reject', (/**
-         * @param {(undefined|string|!tsickle_vscode_1.Uri)=} fileUriStr
+         * @param {(undefined|string|!tsickle_vscode_2.Uri)=} fileUriStr
          * @param {(undefined|number)=} index
          * @return {!Promise<void>}
          */
         (fileUriStr, index) => this.rejectHunk(fileUriStr, index))), vscode.commands.registerCommand('antigravity.inlineDiff.acceptAll', (/**
-         * @param {(undefined|string|!tsickle_vscode_1.Uri)=} fileUriStr
+         * @param {(undefined|string|!tsickle_vscode_2.Uri)=} fileUriStr
          * @return {!Promise<void>}
          */
         (fileUriStr) => this.acceptAll(fileUriStr))), vscode.commands.registerCommand('antigravity.inlineDiff.rejectAll', (/**
-         * @param {(undefined|string|!tsickle_vscode_1.Uri)=} fileUriStr
+         * @param {(undefined|string|!tsickle_vscode_2.Uri)=} fileUriStr
          * @return {!Promise<void>}
          */
         (fileUriStr) => this.rejectAll(fileUriStr))), vscode.window.onDidChangeActiveTextEditor((/**
-         * @param {(undefined|!tsickle_vscode_1.TextEditor)} editor
+         * @param {(undefined|!tsickle_vscode_2.TextEditor)} editor
          * @return {void}
          */
         (editor) => {
@@ -273,7 +287,7 @@ class InlineDiffManager {
         () => {
             this.refreshAllVisibleDecorations();
         })), vscode.workspace.onDidChangeTextDocument((/**
-         * @param {!tsickle_vscode_1.TextDocumentChangeEvent} event
+         * @param {!tsickle_vscode_2.TextDocumentChangeEvent} event
          * @return {void}
          */
         (event) => {
@@ -284,7 +298,7 @@ class InlineDiffManager {
         ...(typeof vscode.workspace.onWillSaveTextDocument === 'function'
             ? [
                 vscode.workspace.onWillSaveTextDocument((/**
-                 * @param {!tsickle_vscode_1.TextDocumentWillSaveEvent} event
+                 * @param {!tsickle_vscode_2.TextDocumentWillSaveEvent} event
                  * @return {void}
                  */
                 (event) => {
@@ -296,7 +310,7 @@ class InlineDiffManager {
         ...(typeof vscode.workspace.onDidSaveTextDocument === 'function'
             ? [
                 vscode.workspace.onDidSaveTextDocument((/**
-                 * @param {!tsickle_vscode_1.TextDocument} doc
+                 * @param {!tsickle_vscode_2.TextDocument} doc
                  * @return {void}
                  */
                 (doc) => {
@@ -306,7 +320,7 @@ class InlineDiffManager {
             : []), 
         // Handle document close events when documents are explicitly closed/disposed.
         vscode.workspace.onDidCloseTextDocument((/**
-         * @param {!tsickle_vscode_1.TextDocument} doc
+         * @param {!tsickle_vscode_2.TextDocument} doc
          * @return {void}
          */
         (doc) => {
@@ -324,7 +338,7 @@ class InlineDiffManager {
         ...(vscode.window?.tabGroups?.onDidChangeTabs
             ? [
                 vscode.window.tabGroups.onDidChangeTabs((/**
-                 * @param {!tsickle_vscode_1.TabChangeEvent} event
+                 * @param {!tsickle_vscode_2.TabChangeEvent} event
                  * @return {void}
                  */
                 (event) => {
@@ -376,7 +390,7 @@ class InlineDiffManager {
     /**
      * Registers a new file diff and starts the in-editor review process.
      * @public
-     * @param {!tsickle_vscode_1.Uri} uri
+     * @param {!tsickle_vscode_2.Uri} uri
      * @param {string} originalText
      * @param {string} modifiedText
      * @return {!Promise<boolean>}
@@ -399,9 +413,9 @@ class InlineDiffManager {
             }
             this.activeDiffs.delete(key);
         }
-        /** @type {!tsickle_vscode_1.TextDocument} */
+        /** @type {!tsickle_vscode_2.TextDocument} */
         const document = await vscode.workspace.openTextDocument(uri);
-        /** @type {!tsickle_inline_diff_changes_4.InlineDiffChanges} */
+        /** @type {!tsickle_inline_diff_changes_5.InlineDiffChanges} */
         const changes = new inline_diff_changes_1.InlineDiffChanges();
         /** @type {!ActiveDiff} */
         const activeDiff = {
@@ -413,8 +427,47 @@ class InlineDiffManager {
             hasBeenShown: true,
         };
         this.activeDiffs.set(key, activeDiff);
-        await this.applyContentReplacement(document, activeDiff.combinedText);
-        activeDiff.changes.setup(hunks, document);
+        /** @type {string} */
+        const normalizedKey = (0, utils_1.normalizeUri)(key);
+        /** @type {string} */
+        const combinedText = activeDiff.combinedText;
+        /** @type {!tsickle_vscode_2.TextDocument} */
+        let docForSetup = document;
+        // The agent already wrote modifiedText to disk (as in Cider). Leave disk
+        // alone; stage combinedText in the buffer to render both sides.
+        this.applyingDiffUris.add(normalizedKey);
+        try {
+            /** @type {boolean} */
+            const applied = await this.applyContentReplacement(docForSetup, combinedText);
+            if (!applied) {
+                await this.forceReloadFromFile(uri);
+                docForSetup = await vscode.workspace.openTextDocument(uri);
+                /** @type {boolean} */
+                const retryApplied = await this.applyContentReplacement(docForSetup, combinedText);
+                if (!retryApplied) {
+                    this.activeDiffs.delete(key);
+                    return false;
+                }
+            }
+            try {
+                docForSetup = await vscode.workspace.openTextDocument(uri);
+            }
+            catch { }
+        }
+        finally {
+            // Release the guard only after our own change events have drained.
+            await new Promise((/**
+             * @param {function(*): void} r
+             * @return {void}
+             */
+            (r) => {
+                setTimeout(r, 0);
+            }));
+            this.applyingDiffUris.delete(normalizedKey);
+        }
+        activeDiff.combinedText = combinedText;
+        activeDiff.changes.setup(hunks, docForSetup);
+        this.codeLensProvider.refresh();
         this.refreshVisibleEditorDecorations(key, activeDiff.changes);
         await vscode.commands.executeCommand('setContext', 'antigravity.hasActiveDiff', true);
         await this.refreshGitAndGitLens(uri);
@@ -424,7 +477,7 @@ class InlineDiffManager {
     /**
      * Accepts a specific hunk inside a file.
      * @public
-     * @param {(undefined|string|!tsickle_vscode_1.Uri)=} targetUri
+     * @param {(undefined|string|!tsickle_vscode_2.Uri)=} targetUri
      * @param {(undefined|number)=} index
      * @return {!Promise<void>}
      */
@@ -433,14 +486,14 @@ class InlineDiffManager {
             return;
         }
         /** @type {string} */
-        const uriStr = typeof targetUri === 'string' ? targetUri : (/** @type {!tsickle_vscode_1.Uri} */ (targetUri)).toString();
+        const uriStr = typeof targetUri === 'string' ? targetUri : (/** @type {!tsickle_vscode_2.Uri} */ (targetUri)).toString();
         /** @type {(undefined|!ActiveDiff)} */
         const activeDiff = this.activeDiffs.get(uriStr);
         if (!activeDiff) {
             console.warn(`[Antigravity] acceptHunk failed: no active diff found for uriStr: ${uriStr}`);
             return;
         }
-        /** @type {!tsickle_inline_diff_change_range_7.InlineDiffChangeRange} */
+        /** @type {!tsickle_inline_diff_change_range_8.InlineDiffChangeRange} */
         const rangeToResolve = activeDiff.changes.ranges[index];
         if (!rangeToResolve) {
             console.warn(`[Antigravity] acceptHunk failed: no range found at index: ${index}`);
@@ -462,25 +515,33 @@ class InlineDiffManager {
             accept: true,
             hunkHash,
         });
-        /** @type {!Array<!tsickle_inline_diff_change_range_7.InlineDiffChangeRange>} */
+        /** @type {!Array<!tsickle_inline_diff_change_range_8.InlineDiffChangeRange>} */
         const remainingRanges = activeDiff.changes.ranges.filter((/**
-         * @param {!tsickle_inline_diff_change_range_7.InlineDiffChangeRange} _
+         * @param {!tsickle_inline_diff_change_range_8.InlineDiffChangeRange} _
          * @param {number} i
          * @return {boolean}
          */
         (_, i) => i !== index));
-        /** @type {!tsickle_vscode_1.TextDocument} */
+        /** @type {!tsickle_vscode_2.TextDocument} */
         const document = await vscode.workspace.openTextDocument(activeDiff.uri);
         if (rangeToResolve.deletionRange) {
-            /** @type {!tsickle_vscode_1.Range} */
-            const rangeToDelete = new vscode.Range(rangeToResolve.deletionRange.start, document.lineAt(rangeToResolve.deletionRange.end.line).rangeIncludingLineBreak.end);
-            /** @type {!tsickle_vscode_1.WorkspaceEdit} */
+            /** @type {number} */
+            const endLine = document.lineCount > 0
+                ? Math.min(rangeToResolve.deletionRange.end.line, document.lineCount - 1)
+                : 0;
+            /** @type {!tsickle_vscode_2.Position} */
+            const endPos = document.lineCount > 0
+                ? document.lineAt(endLine).rangeIncludingLineBreak.end
+                : new vscode.Position(0, 0);
+            /** @type {!tsickle_vscode_2.Range} */
+            const rangeToDelete = new vscode.Range(rangeToResolve.deletionRange.start, endPos);
+            /** @type {!tsickle_vscode_2.WorkspaceEdit} */
             const edit = new vscode.WorkspaceEdit();
             edit.delete(activeDiff.uri, rangeToDelete);
             this.isResolvingHunk = true;
             await vscode.workspace.applyEdit(edit);
             this.isResolvingHunk = false;
-            /** @type {!tsickle_vscode_1.TextDocumentContentChangeEvent} */
+            /** @type {!tsickle_vscode_2.TextDocumentContentChangeEvent} */
             const changeEvent = {
                 range: rangeToDelete,
                 text: '',
@@ -496,19 +557,8 @@ class InlineDiffManager {
             activeDiff.changes.ranges = remainingRanges;
         }
         activeDiff.combinedText = document.getText();
-        /** @type {string} */
-        const normalizedKey = (0, utils_1.normalizeUri)(uriStr);
-        this.internalSaveUris.add(normalizedKey);
-        try {
-            if (document.isDirty) {
-                await document.save();
-            }
-        }
-        finally {
-            this.internalSaveUris.delete(normalizedKey);
-        }
         if (activeDiff.changes.ranges.length === 0) {
-            await this.finalizeFile(uriStr, true);
+            await this.finalizeFile(uriStr);
         }
         else {
             this.codeLensProvider.refresh();
@@ -520,7 +570,7 @@ class InlineDiffManager {
     /**
      * Rejects a specific hunk inside a file.
      * @public
-     * @param {(undefined|string|!tsickle_vscode_1.Uri)=} targetUri
+     * @param {(undefined|string|!tsickle_vscode_2.Uri)=} targetUri
      * @param {(undefined|number)=} index
      * @return {!Promise<void>}
      */
@@ -529,14 +579,14 @@ class InlineDiffManager {
             return;
         }
         /** @type {string} */
-        const uriStr = typeof targetUri === 'string' ? targetUri : (/** @type {!tsickle_vscode_1.Uri} */ (targetUri)).toString();
+        const uriStr = typeof targetUri === 'string' ? targetUri : (/** @type {!tsickle_vscode_2.Uri} */ (targetUri)).toString();
         /** @type {(undefined|!ActiveDiff)} */
         const activeDiff = this.activeDiffs.get(uriStr);
         if (!activeDiff) {
             console.warn(`[Antigravity] rejectHunk failed: no active diff found for uriStr: ${uriStr}`);
             return;
         }
-        /** @type {!tsickle_inline_diff_change_range_7.InlineDiffChangeRange} */
+        /** @type {!tsickle_inline_diff_change_range_8.InlineDiffChangeRange} */
         const rangeToResolve = activeDiff.changes.ranges[index];
         if (!rangeToResolve) {
             console.warn(`[Antigravity] rejectHunk failed: no range found at index: ${index}`);
@@ -558,25 +608,33 @@ class InlineDiffManager {
             accept: false,
             hunkHash,
         });
-        /** @type {!Array<!tsickle_inline_diff_change_range_7.InlineDiffChangeRange>} */
+        /** @type {!Array<!tsickle_inline_diff_change_range_8.InlineDiffChangeRange>} */
         const remainingRanges = activeDiff.changes.ranges.filter((/**
-         * @param {!tsickle_inline_diff_change_range_7.InlineDiffChangeRange} _
+         * @param {!tsickle_inline_diff_change_range_8.InlineDiffChangeRange} _
          * @param {number} i
          * @return {boolean}
          */
         (_, i) => i !== index));
-        /** @type {!tsickle_vscode_1.TextDocument} */
+        /** @type {!tsickle_vscode_2.TextDocument} */
         const document = await vscode.workspace.openTextDocument(activeDiff.uri);
         if (rangeToResolve.additionRange) {
-            /** @type {!tsickle_vscode_1.Range} */
-            const rangeToDelete = new vscode.Range(rangeToResolve.additionRange.start, document.lineAt(rangeToResolve.additionRange.end.line).rangeIncludingLineBreak.end);
-            /** @type {!tsickle_vscode_1.WorkspaceEdit} */
+            /** @type {number} */
+            const endLine = document.lineCount > 0
+                ? Math.min(rangeToResolve.additionRange.end.line, document.lineCount - 1)
+                : 0;
+            /** @type {!tsickle_vscode_2.Position} */
+            const endPos = document.lineCount > 0
+                ? document.lineAt(endLine).rangeIncludingLineBreak.end
+                : new vscode.Position(0, 0);
+            /** @type {!tsickle_vscode_2.Range} */
+            const rangeToDelete = new vscode.Range(rangeToResolve.additionRange.start, endPos);
+            /** @type {!tsickle_vscode_2.WorkspaceEdit} */
             const edit = new vscode.WorkspaceEdit();
             edit.delete(activeDiff.uri, rangeToDelete);
             this.isResolvingHunk = true;
             await vscode.workspace.applyEdit(edit);
             this.isResolvingHunk = false;
-            /** @type {!tsickle_vscode_1.TextDocumentContentChangeEvent} */
+            /** @type {!tsickle_vscode_2.TextDocumentContentChangeEvent} */
             const changeEvent = {
                 range: rangeToDelete,
                 text: '',
@@ -592,19 +650,8 @@ class InlineDiffManager {
             activeDiff.changes.ranges = remainingRanges;
         }
         activeDiff.combinedText = document.getText();
-        /** @type {string} */
-        const normalizedKey = (0, utils_1.normalizeUri)(uriStr);
-        this.internalSaveUris.add(normalizedKey);
-        try {
-            if (document.isDirty) {
-                await document.save();
-            }
-        }
-        finally {
-            this.internalSaveUris.delete(normalizedKey);
-        }
         if (activeDiff.changes.ranges.length === 0) {
-            await this.finalizeFile(uriStr, false);
+            await this.finalizeFile(uriStr);
         }
         else {
             this.codeLensProvider.refresh();
@@ -628,18 +675,18 @@ class InlineDiffManager {
         }
         /** @type {string} */
         const targetUri = activeDiff.uri.toString();
-        /** @type {(undefined|!tsickle_vscode_1.TextEditor)} */
+        /** @type {(undefined|!tsickle_vscode_2.TextEditor)} */
         const editor = (0, utils_1.findEditorForUri)(targetUri);
         if (!editor)
             return;
         // Target the same index (which now points to the next hunk) or clamp to the last remaining hunk.
         /** @type {number} */
         const nextIndex = Math.min(resolvedIndex, activeDiff.changes.ranges.length - 1);
-        /** @type {!tsickle_inline_diff_change_range_7.InlineDiffChangeRange} */
+        /** @type {!tsickle_inline_diff_change_range_8.InlineDiffChangeRange} */
         const nextHunk = activeDiff.changes.ranges[nextIndex];
         if (!nextHunk)
             return;
-        /** @type {(undefined|!tsickle_vscode_1.Range)} */
+        /** @type {(undefined|!tsickle_vscode_2.Range)} */
         const targetRange = nextHunk.additionRange ?? nextHunk.deletionRange;
         if (targetRange) {
             editor.revealRange(targetRange, vscode.TextEditorRevealType.InCenter);
@@ -649,50 +696,58 @@ class InlineDiffManager {
     /**
      * Accepts all pending changes in a file.
      * @public
-     * @param {(undefined|string|!tsickle_vscode_1.Uri)=} uri
+     * @param {(undefined|string|!tsickle_vscode_2.Uri)=} uri
      * @return {!Promise<void>}
      */
     async acceptAll(uri) {
-        /** @type {(undefined|string|!tsickle_vscode_1.Uri)} */
+        /** @type {(undefined|string|!tsickle_vscode_2.Uri)} */
         const targetUri = uri ?? vscode.window.activeTextEditor?.document.uri;
         if (!targetUri) {
             return;
         }
         /** @type {string} */
-        const uriStr = typeof targetUri === 'string' ? targetUri : (/** @type {!tsickle_vscode_1.Uri} */ (targetUri)).toString();
+        const uriStr = typeof targetUri === 'string' ? targetUri : (/** @type {!tsickle_vscode_2.Uri} */ (targetUri)).toString();
         /** @type {(undefined|!ActiveDiff)} */
         const activeDiff = this.getActiveDiff(uriStr);
         if (!activeDiff) {
             console.warn(`[Antigravity] acceptAll failed: no active diff found for uriStr: ${uriStr}`);
             return;
         }
-        /** @type {!tsickle_vscode_1.TextDocument} */
+        /** @type {!tsickle_vscode_2.TextDocument} */
         const document = await vscode.workspace.openTextDocument(activeDiff.uri);
+        // Superseded by a newer diff while awaiting; don't accept it.
+        if (this.getActiveDiff(uriStr) !== activeDiff) {
+            return;
+        }
         await this.applyContentReplacement(document, activeDiff.modifiedText);
-        await this.finalizeFile(activeDiff.uri.toString(), true);
+        await this.finalizeFile(activeDiff.uri.toString(), true, activeDiff);
     }
     /**
      * Rejects all pending changes in a file.
      * @public
-     * @param {(undefined|string|!tsickle_vscode_1.Uri)=} uri
+     * @param {(undefined|string|!tsickle_vscode_2.Uri)=} uri
      * @return {!Promise<void>}
      */
     async rejectAll(uri) {
-        /** @type {(undefined|string|!tsickle_vscode_1.Uri)} */
+        /** @type {(undefined|string|!tsickle_vscode_2.Uri)} */
         const targetUri = uri ?? vscode.window.activeTextEditor?.document.uri;
         if (!targetUri) {
             return;
         }
         /** @type {string} */
-        const uriStr = typeof targetUri === 'string' ? targetUri : (/** @type {!tsickle_vscode_1.Uri} */ (targetUri)).toString();
+        const uriStr = typeof targetUri === 'string' ? targetUri : (/** @type {!tsickle_vscode_2.Uri} */ (targetUri)).toString();
         /** @type {(undefined|!ActiveDiff)} */
         const activeDiff = this.getActiveDiff(uriStr);
         if (!activeDiff) {
             console.warn(`[Antigravity] rejectAll failed: no active diff found for uriStr: ${uriStr}`);
             return;
         }
-        /** @type {!tsickle_vscode_1.TextDocument} */
+        /** @type {!tsickle_vscode_2.TextDocument} */
         const document = await vscode.workspace.openTextDocument(activeDiff.uri);
+        // Superseded by a newer diff while awaiting; don't revert it.
+        if (this.getActiveDiff(uriStr) !== activeDiff) {
+            return;
+        }
         await this.applyContentReplacement(document, activeDiff.originalText);
         // Guarantee originalText is written directly to disk even if the editor buffer was closed/discarded.
         if (vscode.workspace?.fs) {
@@ -705,7 +760,52 @@ class InlineDiffManager {
                 console.error(`[Antigravity] rejectAll: fs.writeFile failed for ${activeDiff.uri.toString()}:`, fsError);
             }
         }
-        await this.finalizeFile(activeDiff.uri.toString(), false);
+        await this.finalizeFile(activeDiff.uri.toString(), false, activeDiff);
+    }
+    /**
+     * Disposes a diff session without saving to disk.
+     * @public
+     * @param {(string|!tsickle_vscode_2.Uri)} targetUri
+     * @return {!Promise<void>}
+     */
+    async disposeDiff(targetUri) {
+        /** @type {string} */
+        const uriStr = typeof targetUri === 'string' ? targetUri : (/** @type {!tsickle_vscode_2.Uri} */ (targetUri)).toString();
+        /** @type {(undefined|!ActiveDiff)} */
+        const activeDiff = this.getActiveDiff(uriStr);
+        if (!activeDiff) {
+            return;
+        }
+        /** @type {string} */
+        const key = activeDiff.uri.toString();
+        for (const editor of vscode.window.visibleTextEditors) {
+            if (editor.document.uri.toString() === key) {
+                this.clearDecorations(editor);
+            }
+        }
+        this.activeDiffs.delete(key);
+        if (uriStr !== key) {
+            this.activeDiffs.delete(uriStr);
+        }
+        this.onDidChangeActiveDiffsEmitter.fire();
+        this.debouncedRefreshCodeLenses();
+        await vscode.commands.executeCommand('setContext', 'antigravity.hasActiveDiff', this.activeDiffs.size > 0);
+        // Sync buffer to modifiedText without a focus-stealing revert.
+        try {
+            if ((0, utils_1.hasCiderForceResolveFromFile)()) {
+                await cider_1.cider.ai.forceResolveFromFile(activeDiff.uri);
+            }
+            else {
+                /** @type {!tsickle_vscode_2.TextDocument} */
+                const document = await vscode.workspace.openTextDocument(activeDiff.uri);
+                if (document.getText() !== activeDiff.modifiedText) {
+                    await this.applyContentReplacement(document, activeDiff.modifiedText);
+                }
+            }
+        }
+        catch {
+            // Best-effort cleanup
+        }
     }
     /**
      * Reverts all registered diff files to their original state and disposes resource hooks.
@@ -715,7 +815,7 @@ class InlineDiffManager {
     async cleanUpAll() {
         for (const activeDiff of this.activeDiffs.values()) {
             try {
-                /** @type {!tsickle_vscode_1.TextDocument} */
+                /** @type {!tsickle_vscode_2.TextDocument} */
                 const document = await vscode.workspace.openTextDocument(activeDiff.uri);
                 await this.revertDocument(document, activeDiff.originalText);
             }
@@ -747,7 +847,7 @@ class InlineDiffManager {
          */
         () => {
             this.disposables.forEach((/**
-             * @param {!tsickle_vscode_1.Disposable} d
+             * @param {!tsickle_vscode_2.Disposable} d
              * @return {void}
              */
             (d) => {
@@ -791,11 +891,11 @@ class InlineDiffManager {
     // modal error in non-Git ones. See refreshGitForUri() for details.
     /**
      * @private
-     * @param {(undefined|!tsickle_vscode_1.Uri)=} targetUri
+     * @param {(undefined|!tsickle_vscode_2.Uri)=} targetUri
      * @return {!Promise<void>}
      */
     async refreshGitAndGitLens(targetUri) {
-        /** @type {(undefined|!tsickle_vscode_1.Uri)} */
+        /** @type {(undefined|!tsickle_vscode_2.Uri)} */
         const docUri = targetUri ?? vscode.window?.activeTextEditor?.document?.uri;
         try {
             await vscode.commands.executeCommand('gitlens.clearFileAnnotations');
@@ -822,7 +922,7 @@ class InlineDiffManager {
     // preventing GitLens from attributing newly inserted lines to historical commits.
     /**
      * @public
-     * @param {(undefined|!tsickle_vscode_1.Uri)=} targetUri
+     * @param {(undefined|!tsickle_vscode_2.Uri)=} targetUri
      * @return {!Promise<void>}
      */
     async touchGitIndexForUri(targetUri) {
@@ -833,23 +933,23 @@ class InlineDiffManager {
             return;
         }
         try {
-            /** @type {!tsickle_vscode_1.Uri} */
+            /** @type {!tsickle_vscode_2.Uri} */
             let cur = targetUri;
             // Walk up directory tree to locate .git
             while (cur.path !== '/' && cur.path !== '.') {
-                /** @type {!tsickle_vscode_1.Uri} */
+                /** @type {!tsickle_vscode_2.Uri} */
                 const parent = vscode.Uri.joinPath(cur, '..');
                 if (parent.path === cur.path) {
                     break;
                 }
                 cur = parent;
-                /** @type {!tsickle_vscode_1.Uri} */
+                /** @type {!tsickle_vscode_2.Uri} */
                 const gitUri = vscode.Uri.joinPath(cur, '.git');
                 try {
-                    /** @type {!tsickle_vscode_1.FileStat} */
+                    /** @type {!tsickle_vscode_2.FileStat} */
                     const stat = await vscode.workspace.fs.stat(gitUri);
                     if (stat.type & vscode.FileType.Directory) {
-                        /** @type {!tsickle_vscode_1.Uri} */
+                        /** @type {!tsickle_vscode_2.Uri} */
                         const indexUri = vscode.Uri.joinPath(gitUri, 'index');
                         await safeTouchFile(indexUri);
                         return;
@@ -863,11 +963,11 @@ class InlineDiffManager {
                         if (match) {
                             /** @type {string} */
                             const gitdirStr = match[1].trim();
-                            /** @type {!tsickle_vscode_1.Uri} */
+                            /** @type {!tsickle_vscode_2.Uri} */
                             const resolvedGitDir = gitdirStr.startsWith('/')
                                 ? vscode.Uri.file(gitdirStr)
                                 : vscode.Uri.joinPath(cur, gitdirStr);
-                            /** @type {!tsickle_vscode_1.Uri} */
+                            /** @type {!tsickle_vscode_2.Uri} */
                             const indexUri = vscode.Uri.joinPath(resolvedGitDir, 'index');
                             await safeTouchFile(indexUri);
                             return;
@@ -885,7 +985,7 @@ class InlineDiffManager {
     }
     /**
      * @private
-     * @param {!tsickle_vscode_1.TextEditor} editor
+     * @param {!tsickle_vscode_2.TextEditor} editor
      * @param {!ActiveDiff} activeDiff
      * @return {!Promise<void>}
      */
@@ -893,24 +993,68 @@ class InlineDiffManager {
         this.applyDecorations(editor, activeDiff.changes);
     }
     /**
+     * Replaces buffer contents, preferring editor.edit over applyEdit.
      * @private
-     * @param {!tsickle_vscode_1.TextDocument} document
+     * @param {!tsickle_vscode_2.TextDocument} document
      * @param {string} text
      * @return {!Promise<boolean>}
      */
     async applyContentReplacement(document, text) {
-        /** @type {!tsickle_vscode_1.WorkspaceEdit} */
+        if (document.getText() === text) {
+            return true;
+        }
+        /** @type {string} */
+        const normalizedDocUri = (0, utils_1.normalizeUri)(document.uri.toString());
+        /** @type {(undefined|!tsickle_vscode_2.TextEditor)} */
+        const visibleEditor = vscode.window.visibleTextEditors?.find((/**
+         * @param {!tsickle_vscode_2.TextEditor} e
+         * @return {boolean}
+         */
+        (e) => (0, utils_1.normalizeUri)(e.document?.uri?.toString()) === normalizedDocUri));
+        if (visibleEditor && typeof visibleEditor.edit === 'function') {
+            this.isResolvingHunk = true;
+            try {
+                /** @type {!tsickle_vscode_2.Position} */
+                const endPosition = visibleEditor.document.lineCount > 0
+                    ? visibleEditor.document.lineAt(visibleEditor.document.lineCount - 1).range.end
+                    : new vscode.Position(0, 0);
+                /** @type {!tsickle_vscode_2.Range} */
+                const fullRange = new vscode.Range(new vscode.Position(0, 0), endPosition);
+                /** @type {boolean} */
+                const success = await visibleEditor.edit((/**
+                 * @param {!tsickle_vscode_2.TextEditorEdit} editBuilder
+                 * @return {void}
+                 */
+                (editBuilder) => {
+                    editBuilder.replace(fullRange, text);
+                }), { undoStopBefore: false, undoStopAfter: false });
+                if (success) {
+                    return true;
+                }
+            }
+            catch (e) {
+                console.warn('[Antigravity] applyContentReplacement editor.edit error:', e);
+            }
+            finally {
+                this.isResolvingHunk = false;
+            }
+        }
+        /** @type {!tsickle_vscode_2.WorkspaceEdit} */
         const edit = new vscode.WorkspaceEdit();
-        /** @type {!tsickle_vscode_1.Position} */
+        /** @type {!tsickle_vscode_2.Position} */
         const endPosition = document.lineCount > 0
             ? document.lineAt(document.lineCount - 1).range.end
             : new vscode.Position(0, 0);
-        /** @type {!tsickle_vscode_1.Range} */
+        /** @type {!tsickle_vscode_2.Range} */
         const fullRange = new vscode.Range(new vscode.Position(0, 0), endPosition);
         edit.replace(document.uri, fullRange, text);
         this.isResolvingHunk = true;
         try {
             return await vscode.workspace.applyEdit(edit);
+        }
+        catch (e) {
+            console.warn('[Antigravity] applyContentReplacement applyEdit error:', e);
+            return false;
         }
         finally {
             this.isResolvingHunk = false;
@@ -918,32 +1062,32 @@ class InlineDiffManager {
     }
     /**
      * @private
-     * @param {!tsickle_vscode_1.TextEditor} editor
-     * @param {!tsickle_inline_diff_changes_4.InlineDiffChanges} changes
+     * @param {!tsickle_vscode_2.TextEditor} editor
+     * @param {!tsickle_inline_diff_changes_5.InlineDiffChanges} changes
      * @return {void}
      */
     applyDecorations(editor, changes) {
-        /** @type {!Array<!tsickle_vscode_1.Range>} */
+        /** @type {!Array<!tsickle_vscode_2.Range>} */
         const additionRanges = changes.ranges
             .map((/**
-         * @param {!tsickle_inline_diff_change_range_7.InlineDiffChangeRange} r
-         * @return {(undefined|!tsickle_vscode_1.Range)}
+         * @param {!tsickle_inline_diff_change_range_8.InlineDiffChangeRange} r
+         * @return {(undefined|!tsickle_vscode_2.Range)}
          */
         (r) => r.additionRange))
             .filter((/**
-         * @param {(undefined|!tsickle_vscode_1.Range)} r
+         * @param {(undefined|!tsickle_vscode_2.Range)} r
          * @return {boolean}
          */
         (r) => !!r));
-        /** @type {!Array<!tsickle_vscode_1.Range>} */
+        /** @type {!Array<!tsickle_vscode_2.Range>} */
         const deletionRanges = changes.ranges
             .map((/**
-         * @param {!tsickle_inline_diff_change_range_7.InlineDiffChangeRange} r
-         * @return {(undefined|!tsickle_vscode_1.Range)}
+         * @param {!tsickle_inline_diff_change_range_8.InlineDiffChangeRange} r
+         * @return {(undefined|!tsickle_vscode_2.Range)}
          */
         (r) => r.deletionRange))
             .filter((/**
-         * @param {(undefined|!tsickle_vscode_1.Range)} r
+         * @param {(undefined|!tsickle_vscode_2.Range)} r
          * @return {boolean}
          */
         (r) => !!r));
@@ -954,19 +1098,19 @@ class InlineDiffManager {
     }
     /**
      * @private
-     * @param {!tsickle_vscode_1.TextEditor} editor
-     * @param {!Array<!tsickle_vscode_1.Range>} ranges
+     * @param {!tsickle_vscode_2.TextEditor} editor
+     * @param {!Array<!tsickle_vscode_2.Range>} ranges
      * @param {string} type
      * @return {void}
      */
     applyBorderDecorations(editor, ranges, type) {
-        /** @type {!Array<!tsickle_vscode_1.Range>} */
+        /** @type {!Array<!tsickle_vscode_2.Range>} */
         const singleLine = [];
-        /** @type {!Array<!tsickle_vscode_1.Range>} */
+        /** @type {!Array<!tsickle_vscode_2.Range>} */
         const top = [];
-        /** @type {!Array<!tsickle_vscode_1.Range>} */
+        /** @type {!Array<!tsickle_vscode_2.Range>} */
         const mid = [];
-        /** @type {!Array<!tsickle_vscode_1.Range>} */
+        /** @type {!Array<!tsickle_vscode_2.Range>} */
         const bottom = [];
         /** @type {number} */
         const lineCount = editor.document.lineCount;
@@ -1001,7 +1145,7 @@ class InlineDiffManager {
     }
     /**
      * @private
-     * @param {!tsickle_vscode_1.TextEditor} editor
+     * @param {!tsickle_vscode_2.TextEditor} editor
      * @return {void}
      */
     clearDecorations(editor) {
@@ -1013,7 +1157,7 @@ class InlineDiffManager {
     }
     /**
      * @private
-     * @param {!tsickle_vscode_1.TextDocumentChangeEvent} event
+     * @param {!tsickle_vscode_2.TextDocumentChangeEvent} event
      * @return {void}
      */
     handleDocumentEdit(event) {
@@ -1021,19 +1165,74 @@ class InlineDiffManager {
             return;
         /** @type {string} */
         const key = event.document.uri.toString();
+        /** @type {string} */
+        const normalizedKey = (0, utils_1.normalizeUri)(key);
+        // Ignore async echoes of registerDiff's own edits and save hooks.
+        if (this.applyingDiffUris.has(normalizedKey) ||
+            this.internalSaveUris.has(normalizedKey) ||
+            this.pendingManualSaveUris.has(normalizedKey) ||
+            this.pendingAutoSaveUris.has(normalizedKey)) {
+            return;
+        }
         /** @type {(undefined|!ActiveDiff)} */
         const activeDiff = this.activeDiffs.get(key);
         if (!activeDiff || !activeDiff.hasBeenShown)
             return;
         activeDiff.changes.ranges = (0, inline_diff_range_tracker_1.recalculateInlineDiffRanges)(activeDiff.changes.ranges, event.contentChanges);
         activeDiff.combinedText = event.document.getText();
+        // A clean buffer was reverted to disk (e.g. "Don't Save"), not user typing.
+        if (event.document.isDirty) {
+            activeDiff.hasUserEdits = true;
+            activeDiff.modifiedText = this.stripHunkLines(activeDiff.combinedText, activeDiff.changes.ranges, (/**
+             * @param {!tsickle_inline_diff_change_range_8.InlineDiffChangeRange} r
+             * @return {(undefined|!tsickle_vscode_2.Range)}
+             */
+            (r) => r.deletionRange));
+            activeDiff.originalText = this.stripHunkLines(activeDiff.combinedText, activeDiff.changes.ranges, (/**
+             * @param {!tsickle_inline_diff_change_range_8.InlineDiffChangeRange} r
+             * @return {(undefined|!tsickle_vscode_2.Range)}
+             */
+            (r) => r.additionRange));
+        }
         this.refreshVisibleEditorDecorations(key, activeDiff.changes);
         this.debouncedRefreshCodeLenses();
+    }
+    /**
+     * @private
+     * @template T
+     * @param {string} text
+     * @param {!Array<T>} ranges
+     * @param {function(T): (undefined|!tsickle_vscode_2.Range)} pickRange
+     * @return {string}
+     */
+    stripHunkLines(text, ranges, pickRange) {
+        /** @type {!Set<number>} */
+        const excluded = new Set();
+        for (const r of ranges) {
+            /** @type {(undefined|!tsickle_vscode_2.Range)} */
+            const target = pickRange(r);
+            if (target) {
+                for (let line = target.start.line; line <= target.end.line; line++) {
+                    excluded.add(line);
+                }
+            }
+        }
+        if (excluded.size === 0)
+            return text;
+        return text
+            .split('\n')
+            .filter((/**
+         * @param {string} _
+         * @param {number} idx
+         * @return {boolean}
+         */
+        (_, idx) => !excluded.has(idx)))
+            .join('\n');
     }
     // Update antigravity.hasActiveDiff context key when active editor focus changes.
     /**
      * @private
-     * @param {!tsickle_vscode_1.TextEditor} editor
+     * @param {!tsickle_vscode_2.TextEditor} editor
      * @return {!Promise<void>}
      */
     async handleActiveEditorChange(editor) {
@@ -1053,23 +1252,42 @@ class InlineDiffManager {
     // Revert to originalText and reject diff when document is closed without saving.
     /**
      * @private
-     * @param {!tsickle_vscode_1.TextDocument} document
+     * @param {!tsickle_vscode_2.TextDocument} document
      * @return {!Promise<void>}
      */
     async handleDocumentClose(document) {
         /** @type {string} */
         const key = document.uri.toString();
+        // Wait for a "Save"-driven finalization before deciding to reject.
+        await this.finalizingUris.get((0, utils_1.normalizeUri)(key));
         /** @type {(undefined|!ActiveDiff)} */
         const activeDiff = this.getActiveDiff(key);
         if (!activeDiff) {
             return;
+        }
+        // Do not reject if document is still open in any tab group or visible editor.
+        /** @type {string} */
+        const normalizedKey = (0, utils_1.normalizeUri)(key);
+        for (const group of vscode.window.tabGroups?.all ?? []) {
+            for (const tab of group.tabs) {
+                /** @type {(undefined|!tsickle_vscode_2.Uri)} */
+                const uri = getTabUri(tab);
+                if (uri && (0, utils_1.normalizeUri)(uri.toString()) === normalizedKey) {
+                    return;
+                }
+            }
+        }
+        for (const editor of vscode.window.visibleTextEditors ?? []) {
+            if ((0, utils_1.normalizeUri)(editor.document.uri.toString()) === normalizedKey) {
+                return;
+            }
         }
         await this.rejectAll(activeDiff.uri);
     }
     // Handle closed tabs to reject diffs when dirty buffer state is discarded.
     /**
      * @private
-     * @param {!tsickle_vscode_1.TabChangeEvent} event
+     * @param {!tsickle_vscode_2.TabChangeEvent} event
      * @return {!Promise<void>}
      */
     async handleTabsChange(event) {
@@ -1081,7 +1299,7 @@ class InlineDiffManager {
         const openUris = new Set();
         for (const group of vscode.window.tabGroups?.all ?? []) {
             for (const tab of group.tabs) {
-                /** @type {(undefined|!tsickle_vscode_1.Uri)} */
+                /** @type {(undefined|!tsickle_vscode_2.Uri)} */
                 const uri = getTabUri(tab);
                 if (uri) {
                     openUris.add((0, utils_1.normalizeUri)(uri.toString()));
@@ -1089,7 +1307,7 @@ class InlineDiffManager {
             }
         }
         for (const tab of event.closed) {
-            /** @type {(undefined|!tsickle_vscode_1.Uri)} */
+            /** @type {(undefined|!tsickle_vscode_2.Uri)} */
             const uri = getTabUri(tab);
             if (!uri)
                 continue;
@@ -1101,6 +1319,8 @@ class InlineDiffManager {
             if (openUris.has(normalizedUri)) {
                 continue;
             }
+            // Wait for a "Save"-driven finalization first.
+            await this.finalizingUris.get(normalizedUri);
             /** @type {(undefined|!ActiveDiff)} */
             const activeDiff = this.getActiveDiff(uriStr);
             if (!activeDiff) {
@@ -1110,8 +1330,99 @@ class InlineDiffManager {
         }
     }
     /**
+     * Reloads from disk via AntigravityFiles, then cider.ai, then revert.
      * @private
-     * @param {!tsickle_vscode_1.TextDocument} document
+     * @param {!tsickle_vscode_2.Uri} uri
+     * @return {!Promise<void>}
+     */
+    async forceReloadFromFile(uri) {
+        try {
+            if ((0, utils_1.hasCiderForceResolveFromFile)()) {
+                await cider_1.cider.ai.forceResolveFromFile(uri);
+                return;
+            }
+            /** @type {!tsickle_vscode_2.TextDocument} */
+            const doc = await vscode.workspace.openTextDocument(uri);
+            if (doc.isDirty) {
+                /** @type {(undefined|!tsickle_vscode_2.TextDocument)} */
+                const previousActiveDoc = vscode.window.activeTextEditor?.document;
+                await vscode.window.showTextDocument(doc, {
+                    preview: false,
+                    preserveFocus: false,
+                });
+                await vscode.commands.executeCommand('workbench.action.files.revert');
+                if (previousActiveDoc &&
+                    previousActiveDoc.uri.toString() !== doc.uri.toString()) {
+                    await vscode.window.showTextDocument(previousActiveDoc, {
+                        preview: false,
+                        preserveFocus: true,
+                    });
+                }
+            }
+        }
+        catch (e) {
+            console.warn(`[Antigravity] forceReloadFromFile failed for ${uri.toString()}:`, e);
+        }
+    }
+    /**
+     * Saves textToPersist, falling back to fs.writeFile plus a reload.
+     * @private
+     * @param {!tsickle_vscode_2.TextDocument} document
+     * @param {(undefined|string)=} targetText
+     * @return {!Promise<void>}
+     */
+    async safeSaveDocument(document, targetText) {
+        /** @type {!tsickle_vscode_2.Uri} */
+        const uri = document.uri;
+        /** @type {string} */
+        const textToPersist = targetText ?? document.getText();
+        if (document.isDirty) {
+            try {
+                await document.save();
+            }
+            catch { }
+        }
+        if (vscode.workspace?.fs) {
+            try {
+                /** @type {!Uint8Array} */
+                const targetBytes = new TextEncoder().encode(textToPersist);
+                /** @type {boolean} */
+                let diskMatches = false;
+                try {
+                    /** @type {!Uint8Array} */
+                    const diskBytes = await vscode.workspace.fs.readFile(uri);
+                    diskMatches =
+                        diskBytes.length === targetBytes.length &&
+                            diskBytes.every((/**
+                             * @param {number} b
+                             * @param {number} i
+                             * @return {boolean}
+                             */
+                            (b, i) => b === targetBytes[i]));
+                }
+                catch {
+                    diskMatches = false;
+                }
+                if (!diskMatches) {
+                    await vscode.workspace.fs.writeFile(uri, targetBytes);
+                }
+            }
+            catch { }
+        }
+        if (document.isDirty) {
+            await this.forceReloadFromFile(uri);
+            if (document.isDirty) {
+                try {
+                    await document.save();
+                }
+                catch { }
+            }
+        }
+    }
+    /**
+     * Reverts to originalText and saves.
+     * @private
+     * @param {!tsickle_vscode_2.TextDocument} document
      * @param {string} originalText
      * @return {!Promise<void>}
      */
@@ -1121,25 +1432,30 @@ class InlineDiffManager {
         this.internalSaveUris.add(normalizedKey);
         try {
             await this.applyContentReplacement(document, originalText);
-            if (document.isDirty) {
-                await document.save();
-            }
+            await this.safeSaveDocument(document, originalText);
         }
         finally {
             this.internalSaveUris.delete(normalizedKey);
         }
     }
     /**
+     * Applies targetText, saves, clears diff state, fires onDidFinalizeFile.
+     *
+     * Abandoned if `expectedDiff` is no longer the current diff.
      * @private
      * @param {string} uriStr
-     * @param {boolean} accepted
+     * @param {(undefined|boolean)=} accepted
+     * @param {(undefined|!ActiveDiff)=} expectedDiff
      * @return {!Promise<void>}
      */
-    async finalizeFile(uriStr, accepted) {
+    async finalizeFile(uriStr, accepted, expectedDiff) {
         /** @type {(undefined|!ActiveDiff)} */
         const activeDiff = this.getActiveDiff(uriStr);
         if (!activeDiff) {
             console.warn(`[Antigravity] finalizeFile: no active diff found for ${uriStr}`);
+            return;
+        }
+        if (expectedDiff !== undefined && activeDiff !== expectedDiff) {
             return;
         }
         /** @type {string} */
@@ -1151,28 +1467,44 @@ class InlineDiffManager {
         }
         this.internalSaveUris.add(normalizedKey);
         try {
-            /** @type {!tsickle_vscode_1.TextDocument} */
+            /** @type {!tsickle_vscode_2.TextDocument} */
             const document = await vscode.workspace.openTextDocument(activeDiff.uri);
-            if (document.isDirty) {
-                await document.save();
+            // Superseded by a newer diff; writing targetText would revert it.
+            if (this.activeDiffs.get(key) !== activeDiff) {
+                return;
+            }
+            /** @type {string} */
+            const targetText = accepted === true
+                ? activeDiff.modifiedText
+                : accepted === false
+                    ? activeDiff.originalText
+                    : document.getText();
+            if (document.getText() !== targetText) {
+                await this.applyContentReplacement(document, targetText);
+            }
+            await this.safeSaveDocument(document, targetText);
+            // Re-check: applying and saving both yield to the event loop.
+            if (this.activeDiffs.get(key) !== activeDiff) {
+                return;
             }
             this.activeDiffs.delete(key);
-            if (uriStr !== key) {
+            if (uriStr !== key && this.activeDiffs.get(uriStr) === activeDiff) {
                 this.activeDiffs.delete(uriStr);
             }
             this.onDidChangeActiveDiffsEmitter.fire();
             this.debouncedRefreshCodeLenses();
-            // Update antigravity.hasActiveDiff context key based on remaining pending diffs across all files.
-            await vscode.commands.executeCommand('setContext', 'antigravity.hasActiveDiff', this.hasActiveDiffs());
-            for (const editor of vscode.window?.visibleTextEditors ?? []) {
-                if (editor.document?.uri?.toString?.() === key) {
+            await vscode.commands.executeCommand('setContext', 'antigravity.hasActiveDiff', this.activeDiffs.size > 0);
+            for (const editor of vscode.window.visibleTextEditors) {
+                if (editor.document.uri.toString() === key) {
                     this.clearDecorations(editor);
                 }
             }
             await this.refreshGitAndGitLens(activeDiff.uri);
+            /** @type {boolean} */
+            const finalAccepted = accepted ?? document.getText() !== activeDiff.originalText;
             this.onDidFinalizeFileEmitter.fire({
                 uri: activeDiff.uri,
-                accepted,
+                accepted: finalAccepted,
                 modifiedText: activeDiff.modifiedText,
             });
         }
@@ -1180,10 +1512,10 @@ class InlineDiffManager {
             this.internalSaveUris.delete(normalizedKey);
         }
     }
-    // Pre-save hook: manual save applies modifiedText; auto-save reverts to originalText.
+    // Pre-save: manual saves write modifiedText; auto-saves originalText.
     /**
      * @private
-     * @param {!tsickle_vscode_1.TextDocumentWillSaveEvent} event
+     * @param {!tsickle_vscode_2.TextDocumentWillSaveEvent} event
      * @return {void}
      */
     handleDocumentWillSave(event) {
@@ -1193,20 +1525,46 @@ class InlineDiffManager {
             if (this.internalSaveUris.has(normalizedKey)) {
                 return;
             }
+            /** @type {string} */
+            const key = event.document.uri.toString();
             /** @type {(undefined|!ActiveDiff)} */
-            const activeDiff = this.getActiveDiff(event.document.uri.toString());
+            const activeDiff = this.getActiveDiff(key);
             if (!activeDiff) {
                 return;
             }
-            /** @type {!tsickle_vscode_1.Position} */
-            const endPosition = event.document.lineCount > 0
-                ? event.document.lineAt(event.document.lineCount - 1).range.end
+            /** @type {!tsickle_vscode_2.TextDocument} */
+            const doc = event.document;
+            /** @type {!tsickle_vscode_2.Position} */
+            const endPosition = doc.lineCount > 0
+                ? doc.lineAt(doc.lineCount - 1).range.end
                 : new vscode.Position(0, 0);
-            /** @type {!tsickle_vscode_1.Range} */
+            /** @type {!tsickle_vscode_2.Range} */
             const fullRange = new vscode.Range(new vscode.Position(0, 0), endPosition);
             // Auto-saves (AfterDelay / FocusOut): revert buffer so disk remains clean and reject diff.
             if (event.reason != null &&
                 event.reason !== vscode.TextDocumentSaveReason.Manual) {
+                // Ignore FocusOut auto-save so focus changes don't reject active diffs.
+                if (event.reason === vscode.TextDocumentSaveReason.FocusOut) {
+                    if (vscode.workspace?.fs) {
+                        Promise.resolve(vscode.workspace.fs.readFile(event.document.uri))
+                            .then((/**
+                         * @param {!Uint8Array} bytes
+                         * @return {void}
+                         */
+                        (bytes) => {
+                            /** @type {string} */
+                            const text = new TextDecoder().decode(bytes);
+                            if (text !== activeDiff.combinedText) {
+                                this.preFocusOutDiskBytes.set(normalizedKey, bytes);
+                            }
+                        }))
+                            .catch((/**
+                         * @return {void}
+                         */
+                        () => { }));
+                    }
+                    return;
+                }
                 this.pendingAutoSaveUris.add(normalizedKey);
                 event.waitUntil(Promise.resolve([
                     vscode.TextEdit.replace(fullRange, activeDiff.originalText),
@@ -1225,7 +1583,7 @@ class InlineDiffManager {
     // Post-save hook: finalize as accepted for manual save, or rejected for auto-save.
     /**
      * @private
-     * @param {!tsickle_vscode_1.TextDocument} document
+     * @param {!tsickle_vscode_2.TextDocument} document
      * @return {void}
      */
     handleDocumentDidSave(document) {
@@ -1239,6 +1597,38 @@ class InlineDiffManager {
         /** @type {boolean} */
         const isAutoSave = this.pendingAutoSaveUris.delete(normalizedKey);
         if (!isManualSave && !isAutoSave) {
+            // Undo a FocusOut flush of combinedText without clobbering newer writes.
+            /** @type {(undefined|!ActiveDiff)} */
+            const activeDiff = this.getActiveDiff(document.uri.toString());
+            /** @type {(undefined|!Uint8Array)} */
+            const snapshotBytes = this.preFocusOutDiskBytes.get(normalizedKey);
+            this.preFocusOutDiskBytes.delete(normalizedKey);
+            if (activeDiff && vscode.workspace?.fs) {
+                Promise.resolve(vscode.workspace.fs.readFile(activeDiff.uri))
+                    .then((/**
+                 * @param {!Uint8Array} diskBytes
+                 * @return {!Promise<void>}
+                 */
+                async (diskBytes) => {
+                    /** @type {string} */
+                    const diskText = new TextDecoder().decode(diskBytes);
+                    if (snapshotBytes) {
+                        await vscode.workspace.fs.writeFile(activeDiff.uri, snapshotBytes);
+                    }
+                    else if (diskText === activeDiff.combinedText) {
+                        /** @type {!Uint8Array} */
+                        const encoded = new TextEncoder().encode(activeDiff.modifiedText);
+                        await vscode.workspace.fs.writeFile(activeDiff.uri, encoded);
+                    }
+                }))
+                    .catch((/**
+                 * @param {?} e
+                 * @return {void}
+                 */
+                (e) => {
+                    console.warn(`[Antigravity] Failed to restore modifiedText after FocusOut save for ${activeDiff.uri.toString()}:`, e);
+                }));
+            }
             return;
         }
         /** @type {string} */
@@ -1246,24 +1636,37 @@ class InlineDiffManager {
         /** @type {(undefined|!ActiveDiff)} */
         const activeDiff = this.getActiveDiff(key);
         if (activeDiff) {
-            this.finalizeFile(key, isManualSave).catch((/**
+            // Publish so a concurrent tab close waits instead of rejecting.
+            /** @type {!Promise<void>} */
+            const finalizing = this.finalizeFile(key, isManualSave).catch((/**
              * @param {?} e
              * @return {void}
              */
             (e) => {
                 console.error('[Antigravity] Error finalizing file on save:', e);
             }));
+            this.finalizingUris.set(normalizedKey, finalizing);
+            void finalizing.finally((/**
+             * @return {void}
+             */
+            () => {
+                if (this.finalizingUris.get(normalizedKey) === finalizing) {
+                    this.finalizingUris.delete(normalizedKey);
+                }
+            }));
         }
     }
     /**
      * @private
      * @param {string} uriStr
-     * @param {!tsickle_inline_diff_changes_4.InlineDiffChanges} changes
+     * @param {!tsickle_inline_diff_changes_5.InlineDiffChanges} changes
      * @return {void}
      */
     refreshVisibleEditorDecorations(uriStr, changes) {
+        /** @type {string} */
+        const normalizedTarget = (0, utils_1.normalizeUri)(uriStr);
         for (const editor of vscode.window.visibleTextEditors) {
-            if (editor.document.uri.toString() === uriStr) {
+            if ((0, utils_1.normalizeUri)(editor.document.uri.toString()) === normalizedTarget) {
                 this.applyDecorations(editor, changes);
             }
         }
@@ -1311,7 +1714,12 @@ if (false) {
      */
     InlineDiffManager.prototype.pendingAutoSaveUris;
     /**
-     * @const {!Array<!tsickle_vscode_1.Disposable>}
+     * @const {!Map<string, !Promise<void>>}
+     * @private
+     */
+    InlineDiffManager.prototype.finalizingUris;
+    /**
+     * @const {!Array<!tsickle_vscode_2.Disposable>}
      * @private
      */
     InlineDiffManager.prototype.disposables;
@@ -1326,32 +1734,32 @@ if (false) {
      */
     InlineDiffManager.prototype.isResolvingHunk;
     /**
-     * @const {!tsickle_vscode_1.EventEmitter<{uri: !tsickle_vscode_1.Uri, accepted: boolean, modifiedText: string}>}
+     * @const {!tsickle_vscode_2.EventEmitter<{uri: !tsickle_vscode_2.Uri, accepted: boolean, modifiedText: string}>}
      * @private
      */
     InlineDiffManager.prototype.onDidFinalizeFileEmitter;
     /**
-     * @const {!tsickle_vscode_1.Event<{uri: !tsickle_vscode_1.Uri, accepted: boolean, modifiedText: string}>}
+     * @const {!tsickle_vscode_2.Event<{uri: !tsickle_vscode_2.Uri, accepted: boolean, modifiedText: string}>}
      * @public
      */
     InlineDiffManager.prototype.onDidFinalizeFile;
     /**
-     * @const {!tsickle_vscode_1.EventEmitter<{uri: !tsickle_vscode_1.Uri, hunkIndex: number, accept: boolean, hunkHash: string}>}
+     * @const {!tsickle_vscode_2.EventEmitter<{uri: !tsickle_vscode_2.Uri, hunkIndex: number, accept: boolean, hunkHash: string}>}
      * @private
      */
     InlineDiffManager.prototype.onDidResolveHunkEmitter;
     /**
-     * @const {!tsickle_vscode_1.Event<{uri: !tsickle_vscode_1.Uri, hunkIndex: number, accept: boolean, hunkHash: string}>}
+     * @const {!tsickle_vscode_2.Event<{uri: !tsickle_vscode_2.Uri, hunkIndex: number, accept: boolean, hunkHash: string}>}
      * @public
      */
     InlineDiffManager.prototype.onDidResolveHunk;
     /**
-     * @const {!tsickle_vscode_1.EventEmitter<void>}
+     * @const {!tsickle_vscode_2.EventEmitter<void>}
      * @private
      */
     InlineDiffManager.prototype.onDidChangeActiveDiffsEmitter;
     /**
-     * @const {!tsickle_vscode_1.Event<void>}
+     * @const {!tsickle_vscode_2.Event<void>}
      * @public
      */
     InlineDiffManager.prototype.onDidChangeActiveDiffs;
@@ -1370,10 +1778,21 @@ if (false) {
      * @private
      */
     InlineDiffManager.prototype.styles;
+    /**
+     * @const {!Map<string, !Uint8Array>}
+     * @private
+     */
+    InlineDiffManager.prototype.preFocusOutDiskBytes;
+    /**
+     * URIs whose diff is mid-application; their change events must be ignored.
+     * @const {!Set<string>}
+     * @private
+     */
+    InlineDiffManager.prototype.applyingDiffUris;
 }
 /**
  * TextDocumentContentProvider providing original document content from register Diff states.
- * @implements {tsickle_vscode_1.TextDocumentContentProvider}
+ * @implements {tsickle_vscode_2.TextDocumentContentProvider}
  */
 class OriginalDocumentProvider {
     /**
@@ -1385,7 +1804,7 @@ class OriginalDocumentProvider {
     }
     /**
      * @public
-     * @param {!tsickle_vscode_1.Uri} uri
+     * @param {!tsickle_vscode_2.Uri} uri
      * @return {string}
      */
     provideTextDocumentContent(uri) {
@@ -1406,7 +1825,7 @@ if (false) {
 }
 /**
  * CodeLensProvider generating Accept/Reject buttons above active hunks.
- * @implements {tsickle_vscode_1.CodeLensProvider<!tsickle_vscode_1.CodeLens>}
+ * @implements {tsickle_vscode_2.CodeLensProvider<!tsickle_vscode_2.CodeLens>}
  */
 class InlineDiffCodeLensProvider {
     /**
@@ -1420,9 +1839,9 @@ class InlineDiffCodeLensProvider {
     }
     /**
      * @public
-     * @param {!tsickle_vscode_1.TextDocument} document
-     * @param {!tsickle_vscode_1.CancellationToken} token
-     * @return {!Array<!tsickle_vscode_1.CodeLens>}
+     * @param {!tsickle_vscode_2.TextDocument} document
+     * @param {!tsickle_vscode_2.CancellationToken} token
+     * @return {!Array<!tsickle_vscode_2.CodeLens>}
      */
     provideCodeLenses(document, token) {
         /** @type {(undefined|!ActiveDiff)} */
@@ -1432,14 +1851,14 @@ class InlineDiffCodeLensProvider {
             token.isCancellationRequested) {
             return [];
         }
-        /** @type {!Array<!tsickle_vscode_1.CodeLens>} */
+        /** @type {!Array<!tsickle_vscode_2.CodeLens>} */
         const codeLenses = [];
         for (const [index__tsickle_destructured_3, range__tsickle_destructured_4] of activeDiff.changes.ranges.entries()) {
             const index = /** @type {number} */ (index__tsickle_destructured_3);
-            const range = /** @type {!tsickle_inline_diff_change_range_7.InlineDiffChangeRange} */ (range__tsickle_destructured_4);
-            /** @type {!tsickle_vscode_1.Position} */
+            const range = /** @type {!tsickle_inline_diff_change_range_8.InlineDiffChangeRange} */ (range__tsickle_destructured_4);
+            /** @type {!tsickle_vscode_2.Position} */
             const position = new vscode.Position(range.start, 0);
-            /** @type {!tsickle_vscode_1.Range} */
+            /** @type {!tsickle_vscode_2.Range} */
             const codeLensRange = new vscode.Range(position, position);
             codeLenses.push(new vscode.CodeLens(codeLensRange, {
                 title: '$(check) Accept',
@@ -1466,12 +1885,12 @@ class InlineDiffCodeLensProvider {
 /* istanbul ignore if */
 if (false) {
     /**
-     * @const {!tsickle_vscode_1.EventEmitter<void>}
+     * @const {!tsickle_vscode_2.EventEmitter<void>}
      * @private
      */
     InlineDiffCodeLensProvider.prototype.changeEmitter;
     /**
-     * @const {!tsickle_vscode_1.Event<void>}
+     * @const {!tsickle_vscode_2.Event<void>}
      * @public
      */
     InlineDiffCodeLensProvider.prototype.onDidChangeCodeLenses;
@@ -1490,7 +1909,7 @@ if (false) {
  *
  * Returns undefined when the Git extension is missing or inactive, when the API
  * is unavailable, or when the URI does not belong to any open repository.
- * @param {(undefined|!tsickle_vscode_1.Uri)=} targetUri
+ * @param {(undefined|!tsickle_vscode_2.Uri)=} targetUri
  * @return {(undefined|!GitApiRepository)}
  */
 function getOwningGitRepository(targetUri) {
@@ -1498,7 +1917,7 @@ function getOwningGitRepository(targetUri) {
         return undefined;
     }
     try {
-        /** @type {(undefined|!tsickle_vscode_1.Extension<!GitExtensionExports>)} */
+        /** @type {(undefined|!tsickle_vscode_2.Extension<!GitExtensionExports>)} */
         const gitExtension = vscode.extensions?.getExtension('vscode.git');
         if (!gitExtension || !gitExtension.isActive) {
             return undefined;
@@ -1533,7 +1952,7 @@ function getOwningGitRepository(targetUri) {
  * URI makes resolution deterministic, so neither branch above can be reached.
  * When no repository owns the file there is nothing meaningful to refresh, so
  * the command is skipped rather than left to prompt.
- * @param {(undefined|!tsickle_vscode_1.Uri)=} targetUri
+ * @param {(undefined|!tsickle_vscode_2.Uri)=} targetUri
  * @return {!Promise<void>}
  */
 async function refreshGitForUri(targetUri) {
@@ -1555,7 +1974,7 @@ async function refreshGitForUri(targetUri) {
  */
 function isGitLensActive() {
     try {
-        /** @type {(undefined|!tsickle_vscode_1.Extension<?>)} */
+        /** @type {(undefined|!tsickle_vscode_2.Extension<?>)} */
         const gitLens = vscode.extensions?.getExtension('eamodio.gitlens');
         return Boolean(gitLens?.isActive);
     }
@@ -1592,15 +2011,15 @@ if (false) {
 }
 /**
  * Safely extracts the document Uri from a vscode.Tab input.
- * @param {!tsickle_vscode_1.Tab} tab
- * @return {(undefined|!tsickle_vscode_1.Uri)}
+ * @param {!tsickle_vscode_2.Tab} tab
+ * @return {(undefined|!tsickle_vscode_2.Uri)}
  */
 function getTabUri(tab) {
     if (!tab || !tab.input)
         return undefined;
     // Cast untyped tab.input to probe uri/modified properties safely.
-    /** @type {{uri: (undefined|!tsickle_vscode_1.Uri), modified: (undefined|!tsickle_vscode_1.Uri)}} */
-    const input = (/** @type {{uri: (undefined|!tsickle_vscode_1.Uri), modified: (undefined|!tsickle_vscode_1.Uri)}} */ (tab.input));
+    /** @type {{uri: (undefined|!tsickle_vscode_2.Uri), modified: (undefined|!tsickle_vscode_2.Uri)}} */
+    const input = (/** @type {{uri: (undefined|!tsickle_vscode_2.Uri), modified: (undefined|!tsickle_vscode_2.Uri)}} */ (tab.input));
     if (input.uri && typeof input.uri.toString === 'function') {
         return input.uri;
     }
@@ -1612,7 +2031,7 @@ function getTabUri(tab) {
 /**
  * Safely touches a file's access and modification timestamps without opening or
  * truncating the file contents. Gracefully no-ops in non-Node environments.
- * @param {!tsickle_vscode_1.Uri} uri
+ * @param {!tsickle_vscode_2.Uri} uri
  * @return {!Promise<void>}
  */
 async function safeTouchFile(uri) {
@@ -1635,7 +2054,7 @@ async function safeTouchFile(uri) {
         // Best-effort timestamp update; ignore if file is inaccessible or locked.
     }
 }
-/** @type {{getOwningGitRepository: function((undefined|!tsickle_vscode_1.Uri)=): (undefined|!GitApiRepository), isGitLensActive: function(): boolean, refreshGitForUri: function((undefined|!tsickle_vscode_1.Uri)=): !Promise<void>, safeTouchFile: function(!tsickle_vscode_1.Uri): !Promise<void>}} */
+/** @type {{getOwningGitRepository: function((undefined|!tsickle_vscode_2.Uri)=): (undefined|!GitApiRepository), isGitLensActive: function(): boolean, refreshGitForUri: function((undefined|!tsickle_vscode_2.Uri)=): !Promise<void>, safeTouchFile: function(!tsickle_vscode_2.Uri): !Promise<void>}} */
 exports.TEST_ONLY = {
     getOwningGitRepository,
     isGitLensActive,
