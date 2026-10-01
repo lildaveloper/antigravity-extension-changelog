@@ -6,12 +6,13 @@ description: Automatically fetches, ingests, de-bundles, and normalizes a new An
 # Update Antigravity Extension Release Skill
 
 This skill provides a fully automated, deterministic pipeline for tracking Google Antigravity VS Code Extension (`google.google-antigravity`) releases:
-1. Automatically queries and downloads the latest `.vsix` from the Visual Studio Marketplace into `releases/`.
-2. Reconstructs the internal Google3 monorepo source tree from sourcemaps into `extension/`.
+1. Automatically queries and downloads the latest `.vsix` from the Visual Studio Marketplace into `packages/extension-history/releases/`.
+2. Reconstructs the internal Google3 monorepo source tree from sourcemaps into `packages/extension-history/extension/`.
 3. Normalizes webview bridges, manifest metadata, and icon assets.
 4. Performs deep AST/protobuf/diff analysis against the prior release.
-5. Formats and prepends a two-tier release report in `CHANGELOG.md`.
-6. Creates an atomic release commit.
+5. Formats and prepends a two-tier release report in `packages/extension-history/CHANGELOG.md`.
+6. Rebuilds the documentation surface (`docs/index.html`).
+7. Creates an atomic release commit.
 
 ---
 
@@ -21,31 +22,31 @@ To check for and ingest a new release:
 
 ```bash
 # Auto-check Marketplace for the latest release (downloads if new)
-node scripts/ingest.js
+node packages/extension-history/scripts/ingest.js
 
 # Or ingest a specific version
-node scripts/ingest.js <VERSION>
+node packages/extension-history/scripts/ingest.js <VERSION>
 ```
 
 **Examples:**
 ```bash
-node scripts/ingest.js
-node scripts/ingest.js 1.7.0
+node packages/extension-history/scripts/ingest.js
+node packages/extension-history/scripts/ingest.js 1.7.0
 ```
 
 ### Tooling Inventory:
-1. **`scripts/fetch-release.js`**: Queries the VS Code Marketplace API for `Google.google-antigravity`, checks for new versions, and streams the `.vsix` archive directly into `releases/`.
-2. **`scripts/unpack-vsix.js`**: Unzips the `.vsix` package into temporary `.staging/`.
-3. **`scripts/extract-sources.js`**:
+1. **`packages/extension-history/scripts/fetch-release.js`**: Queries the VS Code Marketplace API for `Google.google-antigravity`, checks for new versions, and streams the `.vsix` archive directly into `packages/extension-history/releases/`.
+2. **`packages/extension-history/scripts/unpack-vsix.js`**: Unzips the `.vsix` package into temporary `.staging/`.
+3. **`packages/extension-history/scripts/extract-sources.js`**:
    - Parses `extension.js.map` sections.
-   - Reconstructs ~860+ individual Google3 monorepo source files under `extension/src/`.
+   - Reconstructs ~860+ individual Google3 monorepo source files under `packages/extension-history/extension/src/`.
    - Strips Closure/CJS wrappers and code signing blocks.
-4. **`scripts/normalize-bridge.js`**:
-   - Copies manifests, licenses, and icon assets into `extension/`.
-   - Strips digital signatures from `extension/bridge.js` and `extension/loading_bridge.js`.
+4. **`packages/extension-history/scripts/normalize-bridge.js`**:
+   - Copies manifests, licenses, and icon assets into `packages/extension-history/extension/`.
+   - Strips digital signatures from `packages/extension-history/extension/bridge.js` and `loading_bridge.js`.
    - Formats bridge scripts with Prettier for clean diffs.
    - Cleans up `.staging/`.
-5. **`scripts/get-release-date.js`**: Resolves official publication timestamps from the Marketplace.
+5. **`packages/extension-history/scripts/get-release-date.js`**: Resolves official publication timestamps from the Marketplace.
 
 ---
 
@@ -55,7 +56,7 @@ When the user triggers `/update-antigravity` (with or without a specific version
 
 ### Step 1: Run the Unified Ingestion Runner
 ```bash
-node scripts/ingest.js [VERSION]
+node packages/extension-history/scripts/ingest.js [VERSION]
 ```
 
 - **If already up to date:** The script will report that the current version matches the latest marketplace version and is already cached. Inform the user: *"Antigravity is already up to date (current version: X.Y.Z)."* and stop.
@@ -65,7 +66,7 @@ node scripts/ingest.js [VERSION]
 Check modified, added, and deleted files:
 ```bash
 git status
-git diff --stat extension/
+git diff --stat packages/extension-history/extension/
 ```
 
 ### Step 3: Perform Deep Diff Analysis
@@ -73,58 +74,72 @@ Inspect diffs across these key functional areas to gather both user-facing chang
 
 1. **Extension Core & Server Lifecycle**:
    ```bash
-   git diff extension/src/cloud/developer_experience/antigravity_extensions/vscode/
+   git diff packages/extension-history/extension/src/cloud/developer_experience/antigravity_extensions/vscode/
    ```
    *Look for: binary download logic, LSP/server startup recovery loops, workspace management, telemetry.*
 
 2. **Diff Rendering & Inline Editing (Jetski)**:
    ```bash
-   git diff extension/src/devtools/cider/extensions/jetski/diff_zones/
+   git diff packages/extension-history/extension/src/devtools/cider/extensions/jetski/diff_zones/
    ```
    *Look for: inline diff zone renderers, hunk storage, agent edit manager, conflict resolution.*
 
 3. **Protobuf & IPC Schemas**:
    ```bash
-   git diff extension/src/blaze-out/ extension/src/third_party/jetski/ extension/src/net/proto2/
+   git diff packages/extension-history/extension/src/blaze-out/ packages/extension-history/extension/src/third_party/jetski/ packages/extension-history/extension/src/net/proto2/
    ```
    *Look for: new RPC services, message fields, configuration schemas, feature flags.*
 
 4. **Webview Bridges & UI**:
    ```bash
-   git diff extension/bridge.js extension/loading_bridge.js
+   git diff packages/extension-history/extension/bridge.js packages/extension-history/extension/loading_bridge.js
    ```
    *Look for: webview message handlers, event listeners, UI theme changes.*
 
 5. **Extension Manifest & Contributes**:
    ```bash
-   git diff extension/package.json
+   git diff packages/extension-history/extension/package.json
    ```
    *Look for: new commands, configuration properties, menu contributions, keybindings, Blaze build labels.*
 
 ---
 
-## 3. Step 4: Document in `CHANGELOG.md` (Two-Tier Structure)
+## 3. Step 4: Document in `packages/extension-history/CHANGELOG.md` (Two-Tier Structure)
 
 ### Release Date:
-Use the date printed by `scripts/ingest.js` for the release heading:
-`## [<VERSION>] - <YYYY-MM-DD>`
+Use the date printed by `packages/extension-history/scripts/ingest.js` for the release heading:
+`## [v<VERSION>] - <YYYY-MM-DD>`
 
 ### Stacking Rule: Reverse-Chronological Order (Newest at Top)
-Always prepend the new release block directly below the header separator (`---`) in `CHANGELOG.md`.
+Always prepend the new release block directly below the header separator (`---`) in `packages/extension-history/CHANGELOG.md`.
 
-### Formatting & Spacing Guidelines:
-- **Loose List Spacing:** Include a single blank line between top-level bullet blocks for clean readability in Markdown viewers. Keep child sub-bullets grouped tightly under their respective parent bullet.
+### Headline & Summary Guidelines (Official Google Antigravity Style):
+Immediately below the version header (`## [v<VERSION>] - <YYYY-MM-DD>`), add:
+1. **Headline (`### <Headline>`)**: 5–10 words, active and punchy, capturing the top 1–3 capabilities (e.g. `### Terminal context, resumable downloads, and native OS notifications`).
+2. **Summary Paragraph**: Exactly 1–2 conversational sentences (25–45 words) summarizing the primary user value, new capabilities, and stability/performance enhancements.
+   - **Avoid repetitive boilerplate**: Never start every summary with formulaic openings like *"This release introduces..."*, *"This update adds..."*, or *"In this version..."*.
+   - **Select a capability-first opening hook**:
+     - *Action-oriented / Direct user value*: Lead with what developers can do (e.g., *"You can now mention @terminal to pull active selections or recent terminal execution output directly into chat context."* or *"Report issues and inspect host logs directly inside the editor with the new antigravity.feedback diagnostics screen."*).
+     - *Performance / System-level breakthrough*: Lead with the architectural gain (e.g., *"Lightweight filesystem stat caching replaces full SHA-256 checks on backend binaries, eliminating multi-second cold-start freezes."*).
+     - *Visual / Surface experience*: Lead with the aesthetic or UI upgrade (e.g., *"A redesigned activation screen brings the official Antigravity logo, ambient glow effects, and smooth loading transitions to your sidebar."*).
+     - *Resilience / Stability*: Lead with the reliability safeguard (e.g., *"Recover seamlessly from network hiccups with exponential backoff download retries and an interactive webview retry screen."*).
+   - **Inspect existing releases for tone calibration**: Always inspect previous entries in `packages/extension-history/CHANGELOG.md` (especially releases sharing similar themes or user values) before drafting the summary to maintain consistent voice, cadence, and conciseness.
+   - **Sentence structure**: Sentence 1 highlights the star capability and direct developer benefit. Sentence 2 cleanly groups secondary improvements and fixes (e.g., *"This release also adds..."*, *"This patch also adds..."*).
+   - **Grounded details & zero artificial fluff**: Technical entries across all sections use bold topic anchors (`- **Topic**: Details`). Keep them factual and grounded strictly in the diff. Nested sub-bullets are strictly optional—only use them when a feature naturally breaks down into multiple distinct technical facets or files. If a single bullet explains the change completely, keep it as a single bullet without padding filler.
 
 ### Template:
 ```markdown
-## [<VERSION>] - <YYYY-MM-DD>
+## [v<VERSION>] - <YYYY-MM-DD>
 
-### 🚀 Highlights
+### <Punchy 5-10 word headline highlighting top 1-3 capabilities>
+<1-2 conversational sentences leading with a capability hook and summarizing core user benefits and secondary updates.>
+
+### Highlights
 - **<Topic>**: <High-level summary of major capability or change>
 
 - **<Topic>**: <High-level summary of major capability or change>
 
-### ✨ Improvements & Features
+### Improvements
 - **<Feature Area>**:
   - <Description of feature or improvement>
   - <Additional sub-points if needed...>
@@ -133,14 +148,14 @@ Always prepend the new release block directly below the header separator (`---`)
   - <Description of feature or improvement>
   - <Additional sub-points if needed...>
 
-### 🐛 Fixes & Patches
+### Fixes
 - **<Fix Area>**: <Description of bug fix or stability improvement>
 
 - **<Fix Area>**: <Description of bug fix or stability improvement>
 
 ---
 
-### ⚙️ Under the Hood (Technical & Internal Intelligence)
+### Under the Hood
 *This section documents exact Google3 monorepo changes, schemas, and build revisions.*
 
 - **Core & Lifecycle (`extension/src/cloud/...`)**:
@@ -163,11 +178,23 @@ Always prepend the new release block directly below the header separator (`---`)
 
 ---
 
-## 4. Step 5: Atomic Stage and Commit
+## 4. Step 5: Rebuild Documentation Site
 
-Stage the updated extension payload, releases archive, and changelog:
+`packages/extension-history/CHANGELOG.md` is the canonical source of truth for the extension release history. Run the site generator to compile `docs/index.html`:
+
 ```bash
-git add extension/ releases/ CHANGELOG.md
+node build_docs.js
+```
+
+Verify that the generator completed without errors and updated `docs/index.html`.
+
+---
+
+## 5. Step 6: Atomic Stage and Commit
+
+Stage the updated extension payload, releases archive, canonical changelog, and documentation website:
+```bash
+git add packages/extension-history/ docs/
 git commit -m "Antigravity Extension - Version <VERSION>"
 ```
 
@@ -178,6 +205,6 @@ git status
 
 ---
 
-## 5. Step 6: Present Release Notes to User
+## 6. Step 7: Present Release Notes to User
 
 Output the user-facing release notes and key technical highlights directly in chat for the user.
