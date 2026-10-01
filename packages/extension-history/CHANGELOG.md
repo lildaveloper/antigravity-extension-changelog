@@ -1,14 +1,19 @@
 # Changelog
 
-All notable releases and technical changes for the Google Antigravity VS Code Extension are documented in this file.
+Track new features, improvements, and bug fixes across Google Antigravity VS Code Extension releases.
 
-Each release includes both user-facing release notes (Highlights, Improvements, Fixes) and under-the-hood technical changes (Google3 monorepo architecture, Protobuf/JSPB schemas, and build metadata).
+New versions roll out gradually and may take a few days to reach all users.
+
+## Antigravity Extension
 
 ---
 
-## [1.6.0] - 2026-09-29
+## [v1.6.0] - 2026-09-29
 
-### 🚀 Highlights
+### Terminal context, resumable downloads, and native OS notifications
+You can now mention @terminal to pull active selections or recent terminal execution output directly into chat context. This release also adds resumable HTTP range binary downloads, in-surface webview error screens for server crash recovery, and native IDE toast notifications.
+
+### Highlights
 - **Terminal Context Integration & `@terminal` Mentions**: Introduced the integrated `TerminalStateTracker` and contributed `antigravity.insertTerminalSnippet` ("Add Terminal Selection or Output to Chat"), allowing users to add active terminal selections or recent terminal execution output directly into chat context via context menus or `@terminal` mention pills.
 
 - **Resumable HTTP Range Downloads & Stall Inactivity Guard**: Upgraded the CLI binary downloader with HTTP `Range` and `If-Range` resumption (validated via `ETag` and `Last-Modified`), chunk-inactivity stall timeouts (`DEFAULT_DOWNLOAD_INACTIVITY_TIMEOUT_MS = 30000`), and automatic 24-hour cleanup of abandoned staging artifacts (`agy.tmp.<uuid>` / `.unpack_<hex>`).
@@ -21,7 +26,7 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 - **In-IDE Native Toast & OS Notifications**: Implemented `VscodeNotificationDelegate` bridging webview agent completions and `/grill-me` interactive questions to native VS Code toasts with "Open Chat" actions and desktop OS notification banners.
 
-### ✨ Improvements & Features
+### Improvements
 - **Terminal Shell Integration & Context Category Provider**:
   - Connected `TerminalStateTracker` to VS Code's Shell Integration API (`TerminalShellExecution`, `onDidStartTerminalShellExecution`, `onDidEndTerminalShellExecution`).
   - Buffers up to 8,192 characters of recent terminal output per terminal with ANSI escape sequence scrubbing (`stripAnsiCodes`).
@@ -78,7 +83,7 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
   - Upgraded `gaxios` from `v6_7_1` to `v7_1_1`.
   - Removed obsolete `is_stream` package.
 
-### 🐛 Fixes & Patches
+### Fixes
 - **Focus-Out Diff Discard Regression**: Fixed an issue where editor window focus loss or switching tabs triggered `FocusOut` auto-saves that erroneously reverted unreviewed inline diffs and closed diff sessions.
 
 - **Mid-Session Language Server Crash Blank Screen**: Prevented extension webviews from hanging indefinitely on dead HTTP ports when the language server process exits prematurely, immediately rendering an in-surface retry and diagnostic reporting screen.
@@ -93,7 +98,7 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 ---
 
-### ⚙️ Under the Hood (Technical & Internal Intelligence)
+### Under the Hood
 *This section documents exact Google3 monorepo changes, schemas, and build revisions.*
 
 - **Core & Lifecycle (`extension/src/cloud/...`)**:
@@ -197,9 +202,12 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 ---
 
-## [1.5.0] - 2026-09-23
+## [v1.5.0] - 2026-09-23
 
-### 🚀 Highlights
+### Fast-path binary caching, save-aware diffs, and eager server boot
+Lightweight filesystem stat caching replaces full SHA-256 checks on backend binaries, eliminating multi-second cold-start freezes. This release also makes inline diffs save-aware, reconciles discarded tab buffers, and scopes Git refreshes directly to repository roots.
+
+### Highlights
 - **Fast-Path Binary Stat-Based Identity Caching (b/561981286)**: Replaced multi-second full-file SHA-256 hash calculations on the ~200 MiB backend binary with lightweight filesystem stat tuples (`path:size:mtimeMs:ctimeMs:ino`), eliminating significant startup lag on Windows and cold starts.
 
 - **Save-Aware Inline Diff Lifecycle**: Inline diff sessions now actively intercept document save events: manual saves (`Cmd+S` / `Ctrl+S`) apply and accept pending modifications, while automatic background saves revert to original text to prevent unreviewed diffs from leaking to disk.
@@ -212,7 +220,7 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 - **Eager Background Server Pre-warming**: The extension host now eagerly boots and pre-warms the backend language server upon activation with secure CSRF token binding (`--csrf_token`), exposing `AntigravityExtensionApi` with active port and token metadata.
 
-### ✨ Improvements & Features
+### Improvements
 - **Manual & Auto-Save Inline Diff Interception**:
   - Manual saves (`TextDocumentSaveReason.Manual`) synchronously substitute the active buffer with clean modified text via `event.waitUntil` and finalize the diff session as accepted upon save completion.
   - Auto-saves (`AfterDelay`, `FocusOut`) revert buffer content to `originalText` before disk writes to keep filesystem state clean, tracking pending auto-saves to finalize diffs as rejected.
@@ -254,7 +262,7 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
   - `MemoryMountConfig` & `FuseConfig`: Added `SojoBackendConfig` (target, agent_id, read_only) and `MemoryBankBackendConfig` (target, parent, agent_id, bundle_type, read_only) oneofs; added `sql_max_ram_mb` (field 30, default 8192) in `FuseConfig`; added `force_experiments` (field 8) in `MemoryConfig`.
   - `GoogleSpecificConfig`: Added `magic_workspace_cog_config` (`CogWorkspaceConfig` with `repo_name` and `branch_name`).
 
-### 🐛 Fixes & Patches
+### Fixes
 - **Binary Identity Hash Latency (b/561981286)**: Eliminated repeated SHA-256 computation over the 200 MiB binary during extension startup, switching to filesystem `stat` metadata keys and cutting seconds off cold boot times.
 
 - **Multi-Repo Git Refresh Prompt Spam (b/561494994)**: Fixed an issue where unqualified `git.refresh` command executions caused VS Code to prompt users with a "Choose a repository" dropdown or show modal errors in non-Git workspaces.
@@ -267,7 +275,7 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 ---
 
-### ⚙️ Under the Hood (Technical & Internal Intelligence)
+### Under the Hood
 *This section documents exact Google3 monorepo changes, schemas, and build revisions.*
 
 - **Core & Lifecycle (`extension/src/cloud/...`)**:
@@ -348,9 +356,12 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 ---
 
-## [1.4.0] - 2026-09-17
+## [v1.4.0] - 2026-09-17
 
-### 🚀 Highlights
+### In-IDE feedback diagnostics, cold-start freeze fixes, and network resilience
+Report issues and inspect host logs directly inside the editor with the new antigravity.feedback diagnostics screen. This release also eliminates cold-start freezes in offline environments with a 3-second update budget and adds Retry-After backoff intelligence.
+
+### Highlights
 - **In-IDE Feedback & Diagnostics Collection**: Added an integrated feedback command (`antigravity.feedback`) and a high-performance, ring-buffered logging subsystem (`BufferedOutputChannel`) enabling diagnostic bundles and host installation logs to be inspected and reported directly within the IDE.
 
 - **Fast-Path Startup & Startup Freeze Elimination**: Eliminated the ~94.5s cold-start freeze during offline or unreachable network states (b/559283462). When an existing valid backend binary is present, update discovery operates on a bounded 3-second budget, falling back immediately to the existing binary without delaying editor readiness.
@@ -361,7 +372,7 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 - **Agent Lifecycle Hooks & Clickable Step Diff Badges**: Introduced foundational protobuf schemas for workspace agent lifecycle hooks (`HooksDiscoveryConfig`), step title diff badges (`StepRenderInfo.FileDiffRef`), and contextual link scope references (`LinkScopeItem`).
 
-### ✨ Improvements & Features
+### Improvements
 - **Integrated Feedback Command**: Contributed `antigravity.feedback` ("Provide Feedback") to the command palette and status bar settings flow, connecting to in-webview feedback panels.
 
 - **Buffered Output Channel**: Implemented `BufferedOutputChannel` wrapping `vscode.OutputChannel` with an in-memory 1,000-line circular ring buffer and persistent append-only disk logging to `~/.gemini/logs/install.log`.
@@ -393,7 +404,7 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
   - `semantic_annotations_pb.ts`: Added semantic types `ST_MODEL_TOOL_RESPONSE_URL` (1917) and `ST_YOUTUBE_EXTERNAL_VIDEO_TRACK_ID` (14203).
   - `verbalization_options_pb.ts`: Added `CitationGranularityOptions` under citation chunking options.
 
-### 🐛 Fixes & Patches
+### Fixes
 - **Network Startup Freeze (b/559283462)**: Fixed a critical bug where sequential probing of manifest candidate URLs hung for ~94.5s on unreachable networks. Candidate probing now sets a 5-second socket timeout with a single attempt per candidate, and aborts immediately upon encountering non-HTTP transport/socket failures.
 
 - **Legacy Cascade Listener Deprecation**: Removed obsolete `vscode.Cascade` event subscriptions (`onDidRequestAcceptAllInFile`, `onDidRequestRejectAllInFile`, `onDidRequestNextHunk`, `onDidRequestPreviousHunk`, and `onDidDragToCascade`), eliminating stale IPC listeners.
@@ -402,7 +413,7 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 ---
 
-### ⚙️ Under the Hood (Technical & Internal Intelligence)
+### Under the Hood
 *This section documents exact Google3 monorepo changes, schemas, and build revisions.*
 
 - **Core & Lifecycle (`extension/src/cloud/...`)**:
@@ -455,9 +466,12 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 ---
 
-## [1.3.0] - 2026-09-10
+## [v1.3.0] - 2026-09-10
 
-### 🚀 Highlights
+### Branded activation experience, enterprise proxy support, and subagent schemas
+A redesigned activation screen brings the official Antigravity logo, ambient glow effects, and smooth loading transitions to your sidebar. This release also adds enterprise root CA proxy discovery and keyboard-driven diff hunk controls under your cursor.
+
+### Highlights
 - **Branded Initialization & Loading Experience**: Overhauled the extension activation and webview loading interface with the official Antigravity logo, ambient glow effects, indeterminate progress bar, and smooth transitions.
 
 - **Enterprise Proxy & ZTNA Support**: Automatic discovery and propagation of system root CA bundles across Linux and macOS, alongside HTTP/HTTPS proxy configuration inheritance, enabling seamless operation behind enterprise security gateways (e.g. Zscaler).
@@ -468,7 +482,7 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 - **Unified Remote & CitC Workspace Navigation**: Modularized remote workspace URI translation (`toCiderWebclientUri` / `toJetskiFileUri`), supporting linked worktree and Jujutsu (`jj`) commit resolution.
 
-### ✨ Improvements & Features
+### Improvements
 - **Branded Loading View**: Added vector Antigravity logo (`ANTIGRAVITY_LOGO_SVG`) with radial blur glow, styled product branding, animated progress bar, and 10s fallback reveal in `desktop_webview_delegate.ts`.
 
 - **Focused Diff Hunk Commands**: Registered `antigravity.prioritized.agentAcceptFocusedHunk`, `agentRejectFocusedHunk`, `agentFocusNextHunk`, `agentFocusPreviousHunk`, `agentAcceptAllInFile`, and `agentRejectAllInFile`.
@@ -495,7 +509,7 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 - **Plugin MCP Configuration**: Added `PluginMcpUserConfig` schema with configurable variables map for MCP plugins.
 
-### 🐛 Fixes & Patches
+### Fixes
 - **Safe `.git/index` Timestamp Updating**: Replaced dangerous `readFile` + `writeFile` cycle on `.git/index` with `fs.promises.utimes` (`safeTouchFile`), avoiding file content truncation or race conditions during GitLens blame cache invalidation.
 
 - **GitLens Guard**: Avoids touching `.git/index` if the GitLens extension (`eamodio.gitlens`) is not installed or active.
@@ -508,7 +522,7 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 ---
 
-### ⚙️ Under the Hood (Technical & Internal Intelligence)
+### Under the Hood
 *This section documents exact Google3 monorepo changes, schemas, and build revisions.*
 
 - **Core & Lifecycle (`extension/src/cloud/...`)**:
@@ -558,21 +572,24 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 ---
 
-## [1.2.1] - 2026-09-08
+## [v1.2.1] - 2026-09-08
 
-### 🚀 Highlights
+### Webview compatibility and prototype isolation
+Webview message serialization is now scoped strictly to Antigravity views, eliminating prototype mutation conflicts with third-party extensions like GitLens. This patch also adds direct pass-through support for binary ArrayBuffer payloads.
+
+### Highlights
 - **Third-Party Webview Compatibility & Prototype Isolation**: Scoped webview message serialization directly to the Antigravity webview instance, preventing global prototype mutation that affected third-party extension webviews (such as GitLens).
 
 - **Binary Webview Message Support**: Added direct pass-through for `ArrayBuffer` and typed array views (`ArrayBuffer.isView`) in webview IPC, avoiding destructive JSON stringification of binary payloads.
 
-### 🐛 Fixes & Patches
+### Fixes
 - **Third-Party Extension Webview Interference**: Removed global `Object.getPrototypeOf(webview)` prototype patching in `desktop_webview_delegate.ts`. Webview patching for BigInt serialization is now applied strictly to the individual Antigravity webview instance, eliminating side effects on other extensions sharing the VS Code Webview prototype.
 
 - **Binary Message Serialization**: Guarded `postMessage` JSON serialization against `ArrayBuffer` and `ArrayBufferView` payloads, ensuring binary buffers are forwarded untouched rather than mangled by `JSON.stringify`.
 
 ---
 
-### ⚙️ Under the Hood (Technical & Internal Intelligence)
+### Under the Hood
 *This section documents exact Google3 monorepo changes, schemas, and build revisions.*
 
 - **Core & Lifecycle (`extension/src/cloud/...`)**:
@@ -589,9 +606,12 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 ---
 
-## [1.2.0] - 2026-09-03
+## [v1.2.0] - 2026-09-03
 
-### 🚀 Highlights
+### Status bar integration, GitLens cache sync, and settings tab deduplication
+A dedicated status bar item now gives one-click access to Antigravity and Jetski configuration panels. This release also syncs GitLens blame cache invalidation on accepted diffs and prevents duplicate Settings and Artifact tabs across split editors.
+
+### Highlights
 - **Status Bar Integration & Settings Command**: Introduced a dedicated status bar button (`Antigravity - Settings`) and registered the `antigravity.openSettings` command for direct access to Antigravity and Jetski configuration panels with screen targeting.
 
 - **Git & GitLens Deep Integration**: Added automatic GitLens blame cache invalidation (via `.git/index` mtime updates) and `git.refresh` synchronization upon diff resolution, ensuring new and accepted agent edits appear as uncommitted working changes rather than attributing lines to historical commits.
@@ -600,7 +620,7 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 - **Configurable Server Port & Process Crash Telemetry**: Added `antigravity.serverPort` configuration to allow binding fixed ports, alongside comprehensive `SERVER_CRASH` telemetry tracking unexpected process terminations, signals, and spawn failures.
 
-### ✨ Improvements & Features
+### Improvements
 - **Status Bar Item**: Added a persistent, right-aligned status bar item (`Antigravity - Settings`) linking directly to settings.
 
 - **Customizable Server Port**: Added `antigravity.serverPort` setting (default `0` for ephemeral port allocation) with automatic window reload prompting on change.
@@ -623,7 +643,7 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 - **New AI Models & Multimodal Options**: Added enum mappings for Gemini Next (model 1260) and internal research models (`gemini-harness-le`, `gdm-safety-tf-2-non-logging`, `gemini-3p7-raw-thoughts`, `gdm-safety-tf-yolo`). Added WebM audio format, `Resolution` tokenization options (`P640X368`, `P368X640`), and `DocsOptions.ImageMode` for embedded document image extraction.
 
-### 🐛 Fixes & Patches
+### Fixes
 - **Duplicate Settings Tabs**: Prevented duplicate settings tabs from spawning across split editor groups or different navigation routes by checking existing tabs via `findOpenCustomTab` and navigating in-place via `updateActiveSettings`.
 
 - **Duplicate Artifact Tabs**: Canonicalized artifact URIs by stripping URL fragments, caching `cascadeId` per file path in memory, and focusing existing custom editor tabs across all editor groups.
@@ -642,7 +662,7 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 ---
 
-### ⚙️ Under the Hood (Technical & Internal Intelligence)
+### Under the Hood
 *This section documents exact Google3 monorepo changes, schemas, and build revisions.*
 
 - **Core & Lifecycle (`extension/src/cloud/...`)**:
@@ -690,16 +710,19 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 ---
 
-## [1.1.0] - 2026-08-27
+## [v1.1.0] - 2026-08-27
 
-### 🚀 Highlights
+### Resilient server recovery, inline diff viewport auto-scrolling, and Permissions V2
+Recover seamlessly from network hiccups with exponential backoff download retries and an interactive webview retry screen. This release also auto-scrolls your editor to remaining diff hunks upon accept/reject and adds foundational Permissions V2 schemas.
+
+### Highlights
 - **Resilient Server Startup & Recovery**: Introduced exponential backoff retry loops and an interactive in-webview recovery state with a manual "Retry" action, preventing extension crashes during network dropouts or backend server installation issues.
 
 - **Enhanced Inline Diff Navigation**: Added automatic viewport scrolling and cursor advancement to remaining hunks upon accept/reject, plus relative navigation (`next` / `previous`) across inline diffs.
 
 - **Permissions V2 & Skills Foundation**: Added core protobuf schemas and client state models for Permissions V2, security plugin settings, conversation grouping, and custom skill configurations.
 
-### ✨ Improvements & Features
+### Improvements
 - **Interactive Startup Recovery**: When local server startup or binary acquisition fails, the webview displays a themed error screen with actionable diagnostics and a "Retry" button.
 
 - **Next-Hunk Auto-Advancement**: Accepting or rejecting an inline diff hunk now automatically reveals and focuses the next remaining hunk in the editor.
@@ -716,7 +739,7 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 - **New AI Models & Multimodal Options**: Added enum definitions for internal Gemini variants (`gemini-tl-test-high`, `medium`, `low`) and millisecond precision options for interleaved modality verbalization.
 
-### 🐛 Fixes & Patches
+### Fixes
 - **Binary Downloader Exponential Backoff**: Download pipelines and manifest lookups now automatically retry transient network drops up to 3 times with exponential backoff, while failing fast on non-retryable 4xx client errors.
 
 - **Corrupt Binary Cleanup**: Automatically unlinks and re-downloads staging files if SHA-256 checksum verification fails.
@@ -729,7 +752,7 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 ---
 
-### ⚙️ Under the Hood (Technical & Internal Intelligence)
+### Under the Hood
 *This section documents exact Google3 monorepo changes, schemas, and build revisions.*
 
 - **Core & Lifecycle (`extension/src/cloud/...`)**:
@@ -774,12 +797,15 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 ---
 
-## [1.0.0] - 2026-08-20
+## [v1.0.0] - 2026-08-20
 
-### 🚀 Highlights
+### Initial release of Google Antigravity for VS Code
+Google Antigravity for Visual Studio Code brings Google's agent-first AI development platform directly into your editor, featuring local language server lifecycle management, real-time inline diffs, and a responsive webview chat sidebar.
+
+### Highlights
 - **Initial Public Release**: Google Antigravity for Visual Studio Code brings Google's agent-first AI development platform directly into the VS Code editor.
 
-### ✨ Improvements & Features
+### Improvements
 - **Antigravity Language Server Integration**: Automated lifecycle management, downloading, and background execution of local Antigravity server processes.
 
 - **Agent Edit Manager & Inline Diffs**: Real-time inline diff zone rendering and side-by-side diff reviews powered by Google Jetski.
@@ -788,12 +814,12 @@ Each release includes both user-facing release notes (Highlights, Improvements, 
 
 - **Workspace Navigation**: Support for changing workspaces and synchronizing conversation state across sessions.
 
-### 🐛 Fixes & Patches
+### Fixes
 - Baseline launch release.
 
 ---
 
-### ⚙️ Under the Hood (Technical & Internal Intelligence)
+### Under the Hood
 *This section documents exact Google3 monorepo changes, schemas, and build revisions.*
 
 - **Core & Lifecycle (`extension/src/cloud/...`)**:
