@@ -226,7 +226,7 @@ function parseChangelog(md, tabPrefix = 'ext') {
 }
 
 function countBullets(lines) {
-  return lines.filter(l => l.trim().startsWith('- **') || (l.trim().startsWith('- ') && !l.startsWith('    ') && !l.startsWith('  -'))).length;
+  return lines.filter(l => !l.startsWith('  ') && !l.startsWith('\t') && (l.trim().startsWith('- **') || l.trim().startsWith('- '))).length;
 }
 
 function renderReleaseRow(r, pkg) {

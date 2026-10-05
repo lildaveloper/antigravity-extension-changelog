@@ -1700,7 +1700,10 @@
           <ul class="isMobile">
             <li data-tab-hidden="true" style="display: none;"><a href="#_top" style="display: none;"><span>Overview</span></a></li>
             
-    <li data-tab="extension" ><a href="#rel-ext-1.6.0" class="mobile-toc-link" aria-current="true"><span>v1.6.0</span></a></li>
+    <li data-tab="extension" ><a href="#rel-ext-1.7.0" class="mobile-toc-link" aria-current="true"><span>v1.7.0</span></a></li>
+  
+
+    <li data-tab="extension" ><a href="#rel-ext-1.6.0" class="mobile-toc-link" ><span>v1.6.0</span></a></li>
   
 
     <li data-tab="extension" ><a href="#rel-ext-1.5.0" class="mobile-toc-link" ><span>v1.5.0</span></a></li>
@@ -1722,6 +1725,9 @@
   
 
     <li data-tab="extension" ><a href="#rel-ext-1.0.0" class="mobile-toc-link" ><span>v1.0.0</span></a></li>
+  
+
+    <li data-tab="patches" style="display: none;"><a href="#rel-patches-1.7.0" class="mobile-toc-link" ><span>v1.7.0</span></a></li>
   
 
     <li data-tab="patches" style="display: none;"><a href="#rel-patches-1.6.0" class="mobile-toc-link" ><span>v1.6.0</span></a></li>
@@ -1747,7 +1753,10 @@
                   <ul id="tocList" class="starlight-toc-list">
                     <li data-tab-hidden="true" style="display: none;"><a href="#_top" style="display: none;"><span>Overview</span></a></li>
                     
-    <li data-tab="extension" ><a href="#rel-ext-1.6.0" class="toc-link" aria-current="true"><span>v1.6.0</span></a></li>
+    <li data-tab="extension" ><a href="#rel-ext-1.7.0" class="toc-link" aria-current="true"><span>v1.7.0</span></a></li>
+  
+
+    <li data-tab="extension" ><a href="#rel-ext-1.6.0" class="toc-link" ><span>v1.6.0</span></a></li>
   
 
     <li data-tab="extension" ><a href="#rel-ext-1.5.0" class="toc-link" ><span>v1.5.0</span></a></li>
@@ -1769,6 +1778,9 @@
   
 
     <li data-tab="extension" ><a href="#rel-ext-1.0.0" class="toc-link" ><span>v1.0.0</span></a></li>
+  
+
+    <li data-tab="patches" style="display: none;"><a href="#rel-patches-1.7.0" class="toc-link" ><span>v1.7.0</span></a></li>
   
 
     <li data-tab="patches" style="display: none;"><a href="#rel-patches-1.6.0" class="toc-link" ><span>v1.6.0</span></a></li>
@@ -1866,13 +1878,81 @@
   <div id="panel-extension" class="tab-panel rn-panel active" data-panel-id="extension" >
     <div class="rn-timeline" id="releaseTimeline-extension">
       
+    <article class="rn-row" id="rel-ext-1.7.0">
+      <div class="rn-version-col">
+        <div class="rn-version-row">
+          <h3 class="rn-version-heading">
+            <a href="#rel-ext-1.7.0" class="rn-version-tag" title="View release 1.7.0">v1.7.0</a>
+          </h3>
+          <span class="rn-latest-tag">Latest</span>
+        </div>
+        <time class="rn-date-text" datetime="2026-10-05">October 5, 2026</time>
+      </div>
+      <div class="rn-card">
+        
+    <div class="rn-card-header">
+      <h3 class="rn-headline">Overhauled inline diffs, Auto Save safety, side-by-side reviews, and TLS fallback</h3>
+      
+    </div>
+  
+        <div class="rn-summary"><p>Inline diffs have been re-engineered to be safe to use alongside VS Code's Auto Save, featuring dynamic deletion masking to prevent disk corruption, non-finalizing auto-saves, and full undo/redo support. This release also introduces dedicated side-by-side diff review tabs with title bar actions, automatic TLS root certificate fallbacks for corporate networks, native Windows desktop notifications, and background CDE gateway authentication.</p></div>
+        <div class="rn-categories">
+          
+      <details class="rn-accordion" data-release-detail="" data-item-title="Highlights">
+        <summary class="rn-accordion-summary">
+          <span class="rn-cat-title">Highlights<span class="rn-count">(6)</span></span>
+          <svg class="rn-chevron" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </summary>
+        <ul class="rn-list">
+          <li class="rn-item"><strong>Inline Diff Auto Save Isolation & Deletion Masking</strong>: Re-architected the inline diff engine to eliminate file corruption risks and premature review finalization caused by VS Code's <code>files.autoSave</code> (<code>afterDelay</code> or <code>onFocusChange</code>):<ul class="rn-sublist"><li class="rn-subitem"><strong>Dynamic Deletion Masking (<code>hideDeletedLines</code>)</strong>: When Auto Save is enabled, Antigravity automatically omits staged deletion lines from the active editor buffer, rendering additions and ensuring Auto Save cannot flush red deleted hunk text into files on disk. If Auto Save is off, the full red/green strikethrough diff is displayed.</li><li class="rn-subitem"><strong>Non-Finalizing Auto-Saves</strong>: Auto-save events no longer accept or close pending reviews in the background; diff markers and controls remain interactive until you explicitly press <code>Cmd+S</code> (manual save) or click Accept/Reject.</li><li class="rn-subitem"><strong>Auto Save Advisory (<code>AutoSaveNotice</code>)</strong>: Prompts developers when an inline review begins with Auto Save active, offering one-click buttons to turn off Auto Save or switch to side-by-side diffs.</li></ul></li><li class="rn-item"><strong>Undoable Inline Diff Resolutions (<code>Ctrl+Z</code> / <code>Cmd+Z</code>)</strong>: Made per-change and whole-file Accept/Reject actions fully reversible via native editor undo/redo keybindings (<code>antigravity.inlineDiff.undo</code> / <code>antigravity.inlineDiff.redo</code>), restoring pending diff states without corrupting editor buffers.</li><li class="rn-item"><strong>Dedicated Side-by-Side Review Actions</strong>: Added dedicated title bar and context menu commands (<code>antigravity.sideBySide.acceptAll</code> and <code>antigravity.sideBySide.rejectAll</code>) when reviewing diffs side-by-side (<code>antigravity.sideBySideReviewPending</code>), automatically tracking hunk changes and closing review tabs once resolved.</li><li class="rn-item"><strong>Corporate Network & macOS Keychain TLS Fallback</strong>: Implemented <code>fetchWithRootFallback</code> in <code>root_fallback_fetch.ts</code>, resolving certificate trust failures (<code>UNABLE_TO_GET_ISSUER_CERT</code>) caused by cross-signed root CAs in corporate macOS keychains by falling back to Node's default root certificate store.</li><li class="rn-item"><strong>Windows Native Desktop Toast Notifications</strong>: Extended <code>VscodeNotificationDelegate</code> to support Windows 10 and 11 via PowerShell WinRT toast notifications (<code>ToastGeneric</code>), featuring direct conversation protocol launch URIs, custom app logo badges, and intelligent suppression when the chat panel is active.</li><li class="rn-item"><strong>Cloud Developer Environments (CDE) Native Auth & Background Cookie Refresh</strong>: Added an interactive PTY authentication terminal (<code>runCdeLoginTerminal</code>), silent pre-flight credential validation (<code>checkCdeAuth</code>), companion extension token synchronization (<code>onDidChangeHttpAccessToken</code>), and periodic background session cookie renewal (<code>CDE_COOKIE_REFRESH_INTERVAL_MS = 30m</code>).</li>
+        </ul>
+      </details>
+    
+
+      <details class="rn-accordion" data-release-detail="" data-item-title="Improvements">
+        <summary class="rn-accordion-summary">
+          <span class="rn-cat-title">Improvements<span class="rn-count">(6)</span></span>
+          <svg class="rn-chevron" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </summary>
+        <ul class="rn-list">
+          <li class="rn-item"><strong>Deferred Diff Renderer Switching</strong>:<ul class="rn-sublist"><li class="rn-subitem">Implemented <code>DeferredRendererSwitch</code> to defer switching between inline and side-by-side diff renderers until all active reviews finish, preventing in-flight reviews from being discarded.</li><li class="rn-subitem">Added <code>keepNewerReviews</code> option in <code>SideBySideDiffZoneRenderer</code> to avoid closing or reverting files if newer turns supersede an existing review.</li></ul></li><li class="rn-item"><strong>Decorations on Resolved Diffs</strong>:<ul class="rn-sublist"><li class="rn-subitem">Registered <code>resolved_diff_decorations</code> for virtual diff documents (<code>jetski-diff://</code>), decorating rejected insertions and deletions with inline annotations (<code>✗ Rejected</code>, <code>✗ Rejected (lines kept)</code>), strikethroughs, and explanatory hover tooltips.</li></ul></li><li class="rn-item"><strong>Multi-File Review Tab Management</strong>:<ul class="rn-sublist"><li class="rn-subitem">Agent turn reviews now open modified files as permanent tabs (<code>keepOpen: true</code>) instead of transient preview tabs, preventing tab churn when inspecting multi-file edits.</li><li class="rn-subitem">Persisted pending inline review snapshots across window reloads via workspace state key <code>jetski.pendingInlineEdits</code>.</li></ul></li><li class="rn-item"><strong>Enhanced Diagnostic & Error Formatting</strong>:<ul class="rn-sublist"><li class="rn-subitem">Added recursive error cause inspection (<code>describeError</code>), traversing up to 5 levels of nested <code>error.cause</code> to unpack undici <code>TypeError: fetch failed</code> and surface underlying connection/TLS failure codes.</li><li class="rn-subitem">Formatted <code>AggregateError</code> instances inline to expose root network causes during Happy Eyeballs socket connection failures.</li></ul></li><li class="rn-item"><strong>Diagnostic Privacy & Secret Protection</strong>:<ul class="rn-sublist"><li class="rn-subitem">Stripped developer home directory paths from plain-text feedback issue summaries, retaining full backend paths solely in encrypted diagnostic attachments.</li><li class="rn-subitem">Obfuscated Listnr feedback API keys to ensure compliance with Open VSX secret scanner requirements.</li><li class="rn-subitem">Injected <code>extensionVersion</code> and <code>backendBinaryVersion</code> metadata keys directly into Listnr telemetry payloads.</li></ul></li><li class="rn-item"><strong>Protocol & Schema Additions</strong>:<ul class="rn-sublist"><li class="rn-subitem"><code>codeium_common_pb.ts</code>: Added <code>MediaResolution</code> enum (<code>UNSPECIFIED = 0</code>, <code>LOW = 1</code>, <code>MEDIUM = 2</code>, <code>HIGH = 3</code>, <code>ULTRA_HIGH = 4</code>); added new models: <code>claude-opus-5-5-thinking</code> (1374), <code>barium-b-med-is-p20-tf</code> (1375), <code>barium-b-med-is-p50-tf</code> (1376), <code>sonnet-5.5-bon-le</code> (1377), <code>claude-sonnet-5-5-thinking</code> (1378), <code>opus-5.5-high-bon-le</code> (1380), <code>gemini-flash-next</code> (1381), <code>gemini-flash-next-default</code> (1382), <code>fable-5.1-high</code> (1383), <code>fable-5.1-internal</code> (1384), <code>fable-5.1-low</code> (1385), <code>fable-5.1-medium</code> (1386), <code>fable-5.1-max</code> (1387), <code>fable-5.1-dropdown</code> (1388), and <code>barium-b-no-lie-si-tf</code> (1389).</li><li class="rn-subitem"><code>cortex_pb.ts</code>: Added <code>ContribVariantMetadata</code> schema (<code>assigned_variant</code>, <code>eligible_variants</code>, <code>applied_variant</code>); added <code>ViewFileToolConfig.enable_open_document</code> (field 20).</li><li class="rn-subitem"><code>UserSettings</code>: Added <code>terminal_placement</code> (field 48, enum <code>TerminalPlacement</code>) and <code>agent_sound_volume</code> (field 49, int32).</li><li class="rn-subitem"><code>ConversationGroupConfig</code>: Added <code>sort_mode</code> (field 3, enum <code>ConversationGroupSortMode</code>) and <code>conversation_ids</code> (field 4, repeated string).</li><li class="rn-subitem"><code>DeploymentConfig</code> & Provisioning: Added <code>preserve_memory_mounts</code> (field 33), <code>enable_periodic_backup</code> (field 34), and <code>vmstorage_config</code> (field 35, <code>VmstorageConfig</code>); added <code>DeploymentStatusDetail</code>, <code>InstanceFailure</code>, and <code>X20QuotaUsage</code> messages; added <code>vmstorage_config_jspb</code> schemas (<code>MountedDirectory</code>, <code>VmstorageConfig</code>, <code>VolumeClientConfig</code>, <code>VolumeCreationConfig</code>).</li><li class="rn-subitem"><code>Project</code> & <code>Resource</code>: Added <code>Project.backend_type</code> (field 14, enum <code>BackendType</code>); added <code>remote_resource</code> (field 4, <code>RemoteResource</code>) in <code>Resource</code> oneof.</li></ul></li>
+        </ul>
+      </details>
+    
+
+      <details class="rn-accordion" data-release-detail="" data-item-title="Fixes">
+        <summary class="rn-accordion-summary">
+          <span class="rn-cat-title">Fixes<span class="rn-count">(5)</span></span>
+          <svg class="rn-chevron" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </summary>
+        <ul class="rn-list">
+          <li class="rn-item"><strong>Accurate Side-by-Side Diff Line Counts</strong>: Fixed an issue where the diff indicator in the chat UI and Changes Overview displayed <code>+0 -0</code> for modified files in side-by-side mode by introducing <code>countDiffLines</code> backed by unified diff hunk parsing (<code>getDiffHunks</code>) in <code>agent_edit_manager.ts</code>.</li><li class="rn-item"><strong>Auto Save Buffer Disk Corruption</strong>: Resolved an issue where VS Code's background Auto Save wrote staged deletion lines from inline diffs directly to disk by masking deletion ranges dynamically when <code>files.autoSave</code> is active.</li><li class="rn-item"><strong>macOS System Keychain Certificate Rejection</strong>: Fixed TLS handshakes failing with <code>UNABLE_TO_GET_ISSUER_CERT</code> behind enterprise inspection proxies or corp-managed Macs carrying cross-signed certificates in the System Keychain.</li><li class="rn-item"><strong>Stale Side-by-Side Review Reversions</strong>: Prevented obsolete review closures from overwriting fresh file edits when multiple edits to the same document occur in quick succession.</li><li class="rn-item"><strong>Notification Redundancy</strong>: Avoided spamming desktop toast notifications when the user is actively viewing the target conversation in the Antigravity chat panel.</li>
+        </ul>
+      </details>
+    
+
+      <details class="rn-accordion" data-release-detail="" data-item-title="Under the Hood">
+        <summary class="rn-accordion-summary">
+          <span class="rn-cat-title">Under the Hood<span class="rn-count">(5)</span></span>
+          <svg class="rn-chevron" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </summary>
+        <ul class="rn-list">
+          <p class="rn-section-note"><em>This section documents exact Google3 monorepo changes, schemas, and build revisions.</em></p><li class="rn-item"><strong>Core & Lifecycle (<code>extension/src/cloud/...</code>)</strong>:<ul class="rn-sublist"><li class="rn-subitem"><code>root_fallback_fetch.ts</code>:</li><li class="rn-subitem">Added <code>fetchWithRootFallback</code>, <code>findTlsTrustErrorCode</code>, <code>TLS_TRUST_ERROR_CODES</code>, <code>nodeDefaultCertificates</code>, and host caching in <code>fallbackHosts</code>.</li><li class="rn-subitem"><code>binary_downloader.ts</code>:</li><li class="rn-subitem">Replaced unhandled undici <code>TypeError: fetch failed</code> errors with <code>describeError</code> cause chain formatter.</li><li class="rn-subitem">Integrated <code>fetchWithRootFallback</code> for resilient release downloads.</li><li class="rn-subitem"><code>server_manager.ts</code>:</li><li class="rn-subitem">Added <code>checkCdeAuth</code> (pre-flight validation check via <code>AGY_CLI_CDE_AUTH_ACTION=check</code>).</li><li class="rn-subitem">Added <code>runCdeLoginTerminal</code> (PTY terminal session via <code>AGY_CLI_CDE_AUTH_ACTION=login</code>).</li><li class="rn-subitem">Added <code>abortActiveAuthTerminal</code> cleanup handler.</li><li class="rn-subitem"><code>cde_auth_service.ts</code>:</li><li class="rn-subitem">Switched environment check from <code>CLOUD_WORKSTATIONS</code> to <code>GOOGLE_CLOUD_WORKSTATIONS</code>.</li><li class="rn-subitem">Added <code>onDidChangeHttpAccessToken</code> subscription.</li><li class="rn-subitem"><code>webview_delegate.ts</code>:</li><li class="rn-subitem">Added <code>startBackgroundCookieRefresh</code>, <code>refreshCdeCookie</code>, and <code>CDE_COOKIE_REFRESH_INTERVAL_MS</code> (30m).</li><li class="rn-subitem">Injected iframe refresh script for background <code>credentials: 'include'</code> token fetch.</li><li class="rn-subitem"><code>auto_save_notice.ts</code>:</li><li class="rn-subitem">Added <code>AutoSaveNotice</code> checking <code>files.autoSave</code> with persistent global state <code>antigravity.autoSaveInlineNotice.dismissed</code>.</li><li class="rn-subitem"><code>deferred_renderer_switch.ts</code>:</li><li class="rn-subitem">Added <code>DeferredRendererSwitch</code> tracking <code>onDidChangeActiveDiffs</code>.</li><li class="rn-subitem"><code>vscode_notification_delegate.ts</code>:</li><li class="rn-subitem">Implemented <code>showWindowsNotification</code> using PowerShell WinRT <code>Windows.UI.Notifications.ToastNotificationManager</code>.</li><li class="rn-subitem">Added <code>isConversationVisible</code> suppression check.</li><li class="rn-subitem"><code>feedback.ts</code>:</li><li class="rn-subitem">Obfuscated <code>LISTNR_API_KEY</code> via array reversal (<code>OBFUSCATED_LISTNR_API_KEY</code>).</li><li class="rn-subitem">Omitted plain-text backend binary paths from user-facing summary strings.</li><li class="rn-subitem">Added <code>extensionVersion</code> and <code>backendBinaryVersion</code> to Listnr data.</li></ul></li><li class="rn-item"><strong>Jetski & Diff Zones (<code>extension/src/devtools/cider/...</code>)</strong>:<ul class="rn-sublist"><li class="rn-subitem"><code>inline_diff_manager.ts</code>:</li><li class="rn-subitem">Added <code>hideDeletionLines</code>, <code>restoreHiddenOriginal</code>, and <code>textDocumentOf</code> for auto-save compatibility.</li><li class="rn-subitem">Added <code>undoInReview</code>, <code>replayResolution</code>, <code>clearResolutionHistory</code>, and <code>updateUndoContext</code>.</li><li class="rn-subitem"><code>side_by_side_diff_zone_renderer.ts</code>:</li><li class="rn-subitem">Added <code>keepNewerReviews</code> option and <code>renders</code> tracking map to prevent stale review overwrites.</li><li class="rn-subitem">Added <code>closeReviewTabs(fileUri)</code> closing open diff tabs cleanly.</li><li class="rn-subitem"><code>side_by_side_review_actions.ts</code>:</li><li class="rn-subitem">Registered <code>antigravity.sideBySide.acceptAll</code> and <code>antigravity.sideBySide.rejectAll</code> commands.</li><li class="rn-subitem"><code>resolved_diff_decorations.ts</code>:</li><li class="rn-subitem">Added <code>registerResolvedDiffDecorations</code> rendering <code>✗ Rejected</code> badges and strikethrough styling for <code>jetski-diff://</code> virtual schemes.</li><li class="rn-subitem"><code>agent_edit_manager.ts</code>:</li><li class="rn-subitem">Added <code>keepOpen</code> flag to <code>AddAgentEditMessage</code>.</li><li class="rn-subitem">Added <code>undoableUserResolutions</code>, <code>openSideBySideDiffs</code>, and <code>readOnlyNavigationWithoutOpenReview</code> options.</li><li class="rn-subitem">Added snapshotting of pending reviews to <code>PENDING_INLINE_EDITS_KEY</code>.</li></ul></li><li class="rn-item"><strong>Protobuf & IPC Schemas (<code>extension/src/blaze-out/</code> & <code>extension/src/third_party/jetski/</code>)</strong>:<ul class="rn-sublist"><li class="rn-subitem"><code>codeium_common_pb.ts</code>: Added <code>MediaResolution</code> enum; registered model enum placeholders 1374 through 1389.</li><li class="rn-subitem"><code>cortex_pb.ts</code>: Added <code>ContribVariantMetadata</code>; added <code>ViewFileToolConfig.enable_open_document</code>.</li><li class="rn-subitem"><code>UserSettings</code>: Added <code>terminal_placement</code> (48) and <code>agent_sound_volume</code> (49).</li><li class="rn-subitem"><code>ConversationGroupConfig</code>: Added <code>sort_mode</code> (3) and <code>conversation_ids</code> (4).</li><li class="rn-subitem"><code>DeploymentConfig</code>: Added <code>preserve_memory_mounts</code> (33), <code>enable_periodic_backup</code> (34), and <code>vmstorage_config</code> (35).</li><li class="rn-subitem"><code>Project</code> / <code>Resource</code>: Added <code>Project.backend_type</code> (14) and <code>Resource.remote_resource</code> (4).</li><li class="rn-subitem"><code>vmstorage_config_jspb</code>: Added <code>MountedDirectory</code>, <code>VmstorageConfig</code>, <code>VolumeClientConfig</code>, and <code>VolumeCreationConfig</code>.</li></ul></li><li class="rn-item"><strong>Webview Bridges (<code>extension/bridge.js</code>, <code>extension/loading_bridge.js</code>)</strong>:<ul class="rn-sublist"><li class="rn-subitem"><code>loading_bridge.js</code>: Added <code>promptAuth</code> event handling with dedicated <code>auth-container</code> UI.</li></ul></li><li class="rn-item"><strong>Build Metadata (<code>extension/package.json</code>)</strong>:<ul class="rn-sublist"><li class="rn-subitem"><code>BUILD_BLAZE_RELEASE</code>: <code>release blaze-2026.09.16-7 (mainline @981987536)</code></li><li class="rn-subitem"><code>BUILD_EMBED_LABEL</code>: <code>antigravity_vscode_extension_1.7.0_RC00</code></li><li class="rn-subitem"><code>BUILD_HOSTNAME</code>: <code>livj7.prod.google.com</code></li></ul></li>
+        </ul>
+      </details>
+    
+        </div>
+      </div>
+    </article>
+  
+
     <article class="rn-row" id="rel-ext-1.6.0">
       <div class="rn-version-col">
         <div class="rn-version-row">
           <h3 class="rn-version-heading">
             <a href="#rel-ext-1.6.0" class="rn-version-tag" title="View release 1.6.0">v1.6.0</a>
           </h3>
-          <span class="rn-latest-tag">Latest</span>
+          
         </div>
         <time class="rn-date-text" datetime="2026-09-29">September 29, 2026</time>
       </div>
@@ -2405,13 +2485,61 @@
   <div id="panel-patches" class="tab-panel rn-panel " data-panel-id="patches" style="display: none;">
     <div class="rn-timeline" id="releaseTimeline-patches">
       
+    <article class="rn-row" id="rel-patches-1.7.0">
+      <div class="rn-version-col">
+        <div class="rn-version-row">
+          <h3 class="rn-version-heading">
+            <a href="#rel-patches-1.7.0" class="rn-version-tag" title="View release 1.7.0">v1.7.0</a>
+          </h3>
+          <span class="rn-latest-tag">Latest</span>
+        </div>
+        <time class="rn-date-text" datetime="2026-10-05">October 5, 2026</time>
+      </div>
+      <div class="rn-card">
+        
+    <div class="rn-card-header">
+      <h3 class="rn-headline">Compatibility update and upstream retirement for Extension v1.7.0</h3>
+      
+    <a href="https://github.com/lildaveloper/antigravity-extension-changelog/tree/main/packages/extension-patches" target="_blank" rel="noopener noreferrer" class="subnav-pill external-link rn-card-action">GitHub <span class="arrow" aria-hidden="true">↗</span></a>
+  
+    </div>
+  
+        <div class="rn-summary"><p>Audited all companion hotfixes against Google Antigravity Extension v1.7.0 release. The <code>line_counts</code> hotfix is now resolved upstream by Google and retired, while <code>auto_open_priority</code> has been updated with <code>keepOpen</code> support and remains active.</p></div>
+        <div class="rn-categories">
+          
+      <details class="rn-accordion" data-release-detail="" data-item-title="Active Hotfixes">
+        <summary class="rn-accordion-summary">
+          <span class="rn-cat-title">Active Hotfixes<span class="rn-count">(1)</span></span>
+          <svg class="rn-chevron" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </summary>
+        <ul class="rn-list">
+          <li class="rn-item"><strong>Prioritize Auto-Open on Agent Edits (<code>auto_open_priority</code>)</strong>:<ul class="rn-sublist"><li class="rn-subitem">Updated replacement pattern to accommodate upstream's new <code>keepOpen</code> argument in <code>getOpenOptions</code>, ensuring files open cleanly while preserving <code>autoOpenFiles</code> precedence over <code>skipOpen</code>.</li></ul></li>
+        </ul>
+      </details>
+    
+
+      <details class="rn-accordion" data-release-detail="" data-item-title="Resolved Upstream">
+        <summary class="rn-accordion-summary">
+          <span class="rn-cat-title">Resolved Upstream<span class="rn-count">(1)</span></span>
+          <svg class="rn-chevron" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </summary>
+        <ul class="rn-list">
+          <li class="rn-item"><strong>Accurate Side-by-Side Line Counts (<code>line_counts</code>)</strong>:<ul class="rn-sublist"><li class="rn-subitem"><strong>Resolved in Extension v1.7.0</strong>: Google natively resolved the <code>+0 -0</code> bug in Extension v1.7.0 by introducing <code>countDiffLines</code> using <code>getDiffHunks</code> in <code>agent_edit_manager.ts</code> and activating <code>openSideBySideDiffs: true</code>.</li><li class="rn-subitem">This hotfix is no longer needed and has been retired from the active patch registry.</li></ul></li>
+        </ul>
+      </details>
+    
+        </div>
+      </div>
+    </article>
+  
+
     <article class="rn-row" id="rel-patches-1.6.0">
       <div class="rn-version-col">
         <div class="rn-version-row">
           <h3 class="rn-version-heading">
             <a href="#rel-patches-1.6.0" class="rn-version-tag" title="View release 1.6.0">v1.6.0</a>
           </h3>
-          <span class="rn-latest-tag">Latest</span>
+          
         </div>
         <time class="rn-date-text" datetime="2026-09-30">September 30, 2026</time>
       </div>

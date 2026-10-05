@@ -16,19 +16,19 @@ const TARGET_1 = `                /** @type {boolean} */
                     await this.revealDocument(normalizedUri, false);
                 }`;
 
-const REPLACEMENT_1 = `                const { shouldOpen, preview } = this.getOpenOptions(message.skipOpen, message.strictNav);
+const REPLACEMENT_1 = `                const { shouldOpen, preview } = this.getOpenOptions(message.skipOpen, message.strictNav, message.keepOpen);
                 if (shouldOpen) {
                     await this.revealDocument(normalizedUri, preview);
                 }`;
 
-const TARGET_2 = `    getOpenOptions(skipOpen, strictNav = false) {
+const TARGET_2 = `    getOpenOptions(skipOpen, strictNav = false, keepOpen = false) {
         if (skipOpen === true) {
             return { shouldOpen: false, preview: true };
         }
         /** @type {boolean} */
         const autoOpenAll = this.isAutoOpenEnabled();
         if (strictNav) {
-            return { shouldOpen: true, preview: true };
+            return { shouldOpen: true, preview: !keepOpen };
         }
         if (autoOpenAll) {
             return { shouldOpen: true, preview: false };
@@ -36,14 +36,14 @@ const TARGET_2 = `    getOpenOptions(skipOpen, strictNav = false) {
         return { shouldOpen: false, preview: true };
     }`;
 
-const REPLACEMENT_2 = `    getOpenOptions(skipOpen, strictNav = false) {
+const REPLACEMENT_2 = `    getOpenOptions(skipOpen, strictNav = false, keepOpen = false) {
         /** @type {boolean} */
         const autoOpenAll = this.isAutoOpenEnabled();
         if (autoOpenAll) {
             return { shouldOpen: true, preview: false };
         }
         if (strictNav) {
-            return { shouldOpen: true, preview: true };
+            return { shouldOpen: true, preview: !keepOpen };
         }
         if (skipOpen === true) {
             return { shouldOpen: false, preview: true };

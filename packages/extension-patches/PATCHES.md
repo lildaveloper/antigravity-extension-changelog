@@ -10,73 +10,31 @@ The goal of this project is to maintain hotfixes for known issues in the Google 
 
 | Patch ID | Name | Upstream Status | Target Scope | Verified Version |
 | :--- | :--- | :--- | :--- | :--- |
-| `line_counts` | Accurate Side-by-Side Line Counts | Active | Diff hunk line count calculation in side-by-side mode | v1.6.0 |
-| `auto_open_priority` | Prioritize autoOpenFiles over skipOpen | Active | File reveal logic on agent edit events | v1.6.0 |
+| `auto_open_priority` | Prioritize autoOpenFiles over skipOpen | Active | File reveal logic on agent edit events | v1.7.0 |
+| `line_counts` | Accurate Side-by-Side Line Counts | Resolved Upstream (Retired in v1.7.0) | Diff hunk line count calculation in side-by-side mode | v1.7.0 |
 
 ---
 
 ## Active Patches
 
-### 1. `line_counts` - Accurate Side-by-Side Line Counts
-
-* **Patch File:** [`patches/line_counts.js`](patches/line_counts.js)
-* **Status:** Active (Not resolved upstream)
-* **Target Version:** v1.6.0 (Verified)
-
-#### Problem Statement
-When `antigravity.enableInlineDiff` is set to `false`, the diff indicator in the chat UI frequently displays `+0 -0` for modified files, even when dozens of lines have been added or removed.
-
-#### Root Cause Analysis
-In `extension.js`, `computeLineCounts(original, modified)` uses a naive length subtraction calculation:
-```javascript
-function computeLineCounts(original, modified) {
-    const originalLines = original === '' ? [] : original.split(/\r?\n/);
-    const modifiedLines = modified === '' ? [] : modified.split(/\r?\n/);
-    const diff = modifiedLines.length - originalLines.length;
-    return {
-        numLinesInserted: Math.max(0, diff),
-        numLinesDeleted: Math.max(0, -diff),
-    };
-}
-```
-If a file has 10 lines replaced with 10 different lines, `diff` is `0`, resulting in `numLinesInserted: 0` and `numLinesDeleted: 0`.
-
-#### Fix Mechanism
-The patch injects a call to Antigravity's internal diff engine (`google3.devtools.cider.extensions.jetski.diff_zones.diff_helper.getDiffHunks`) to parse the actual unified diff hunks:
-```javascript
-const hunks = helper.getDiffHunks(original, modified);
-for (const hunk of hunks) {
-    for (const line of hunk.lines) {
-        if (line.startsWith('+')) numLinesInserted++;
-        else if (line.startsWith('-')) numLinesDeleted++;
-    }
-}
-```
-It includes a graceful fallback to the length difference method if the internal diff helper is unavailable.
-
-#### Upstream Retirement Criteria
-Google updates `computeLineCounts` in upstream releases to parse actual diff hunks rather than calculating line count delta.
-
----
-
-### 2. `auto_open_priority` - Prioritize autoOpenFiles over skipOpen
+### 1. `auto_open_priority` - Prioritize autoOpenFiles over skipOpen
 
 * **Patch File:** [`patches/auto_open_priority.js`](patches/auto_open_priority.js)
 * **Status:** Active (Not resolved upstream)
-* **Target Version:** v1.6.0 (Verified)
+* **Target Version:** v1.7.0 (Verified)
 
 #### Problem Statement
 Users who configure `"antigravity.autoOpenFiles": true` expect files modified by the AI agent to open automatically in the editor for review. However, agent edit stream events frequently send `skipOpen: true`, which unconditionally suppresses the auto-open behavior and keeps modified files hidden in the background.
 
 #### Root Cause Analysis
-In `getOpenOptions(skipOpen, strictNav = false)`, the `skipOpen` flag is evaluated before checking `this.isAutoOpenEnabled()`:
+In `getOpenOptions(skipOpen, strictNav = false, keepOpen = false)`, the `skipOpen` flag is evaluated before checking `this.isAutoOpenEnabled()`:
 ```javascript
-getOpenOptions(skipOpen, strictNav = false) {
+getOpenOptions(skipOpen, strictNav = false, keepOpen = false) {
     if (skipOpen === true) {
         return { shouldOpen: false, preview: true };
     }
     const autoOpenAll = this.isAutoOpenEnabled();
-    if (strictNav) return { shouldOpen: true, preview: true };
+    if (strictNav) return { shouldOpen: true, preview: !keepOpen };
     if (autoOpenAll) return { shouldOpen: true, preview: false };
     return { shouldOpen: false, preview: true };
 }
@@ -85,12 +43,12 @@ getOpenOptions(skipOpen, strictNav = false) {
 #### Fix Mechanism
 The patch reorders the priority so that explicit user configuration (`autoOpenAll = this.isAutoOpenEnabled()`) takes precedence over the agent's default `skipOpen` flag:
 ```javascript
-getOpenOptions(skipOpen, strictNav = false) {
+getOpenOptions(skipOpen, strictNav = false, keepOpen = false) {
     const autoOpenAll = this.isAutoOpenEnabled();
     if (autoOpenAll) {
         return { shouldOpen: true, preview: false };
     }
-    if (strictNav) return { shouldOpen: true, preview: true };
+    if (strictNav) return { shouldOpen: true, preview: !keepOpen };
     if (skipOpen === true) return { shouldOpen: false, preview: true };
     return { shouldOpen: false, preview: true };
 }
@@ -98,6 +56,22 @@ getOpenOptions(skipOpen, strictNav = false) {
 
 #### Upstream Retirement Criteria
 Google adjusts `getOpenOptions` upstream so that user-configured `antigravity.autoOpenFiles: true` takes precedence over internal `skipOpen` parameters.
+
+---
+
+## Resolved Upstream Patches (Archive)
+
+### 1. `line_counts` - Accurate Side-by-Side Line Counts
+
+* **Patch File:** [`patches/line_counts.js`](patches/line_counts.js)
+* **Status:** Resolved Upstream (Retired in v1.7.0)
+* **Retired In:** Extension v1.7.0
+
+#### Upstream Resolution
+In Extension v1.7.0, Google resolved this issue natively by introducing `countDiffLines` in `agent_edit_manager.ts`, using Antigravity's internal diff engine (`getDiffHunks`) to parse unified diff hunks and count inserted and deleted lines, paired with `openSideBySideDiffs: true`. This hotfix is no longer needed and has been retired.
+
+#### Original Problem Statement
+When `antigravity.enableInlineDiff` was set to `false`, the diff indicator in the chat UI frequently displayed `+0 -0` for modified files, even when dozens of lines had been added or removed, due to naive length subtraction (`modifiedLines.length - originalLines.length`).
 
 ---
 

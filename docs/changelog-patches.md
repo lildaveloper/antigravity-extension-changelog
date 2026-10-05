@@ -8,6 +8,23 @@ Community hotfixes and upstream resolution tracking for installed Antigravity re
 
 ---
 
+## [v1.7.0] - 2026-10-05
+
+### Compatibility update and upstream retirement for Extension v1.7.0
+
+Audited all companion hotfixes against Google Antigravity Extension v1.7.0 release. The `line_counts` hotfix is now resolved upstream by Google and retired, while `auto_open_priority` has been updated with `keepOpen` support and remains active.
+
+### Active Hotfixes
+- **Prioritize Auto-Open on Agent Edits (`auto_open_priority`)**:
+  - Updated replacement pattern to accommodate upstream's new `keepOpen` argument in `getOpenOptions`, ensuring files open cleanly while preserving `autoOpenFiles` precedence over `skipOpen`.
+
+### Resolved Upstream
+- **Accurate Side-by-Side Line Counts (`line_counts`)**:
+  - **Resolved in Extension v1.7.0**: Google natively resolved the `+0 -0` bug in Extension v1.7.0 by introducing `countDiffLines` using `getDiffHunks` in `agent_edit_manager.ts` and activating `openSideBySideDiffs: true`.
+  - This hotfix is no longer needed and has been retired from the active patch registry.
+
+---
+
 ## [v1.6.0] - 2026-09-30
 
 ### Accurate side-by-side line counts and prioritized file reveal

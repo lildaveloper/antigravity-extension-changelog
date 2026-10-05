@@ -29,38 +29,48 @@ head -n 20 packages/extension-history/CHANGELOG.md
 Note the new version `<NEW_VERSION>` (e.g. `1.7.0`) and release date.
 
 ### Step 2: Read Active Patches and Upstream Retirement Criteria
-Inspect `packages/extension-patches/PATCHES.md` and each file in `packages/extension-patches/patches/`:
-* `line_counts`: Target is `computeLineCounts` in `extension.js`. Upstream retirement criteria: Google parses actual unified diff hunks rather than calculating line count delta (`modifiedLines.length - originalLines.length`).
-* `auto_open_priority`: Target is file reveal on agent edit events in `extension.js`. Upstream retirement criteria: Google prioritizes `autoOpenFiles` setting over internal `skipOpen` flag.
+Inspect `packages/extension-patches/PATCHES.md` (specifically the **Upstream Status Matrix** and **Active Patches** sections) and `packages/extension-patches/patches/index.js`:
+1. Dynamically enumerate all patches currently marked as **Active** in `PATCHES.md`.
+2. For each active patch, carefully review its:
+   - **Problem Statement**: What symptom or issue does this patch solve for the user?
+   - **Root Cause Analysis**: What mechanism or code flow causes the issue?
+   - **Upstream Retirement Criteria**: What conditions indicate that Google resolved the issue natively?
+   - **Target Scope**: Which subsystems or source files in `packages/extension-history/extension/src/` govern this feature?
 
 ### Step 3: Inspect Upstream Changes in Extracted Sources & Bundle
-Inspect the newly reconstituted Google3 sources in `packages/extension-history/extension/src/` to see how Google modified the targeted areas:
-```bash
-# Check if computeLineCounts changed
-git diff HEAD~1 packages/extension-history/extension/src/devtools/cider/extensions/jetski/diff_zones/
 
-# Check if auto-open or skipOpen logic changed
-git diff HEAD~1 packages/extension-history/extension/src/cloud/developer_experience/antigravity_extensions/vscode/
-```
-To test whether the active patch string replacements match cleanly in the newly downloaded `.vsix` release bundle:
-```bash
-node -e "
-const cp = require('child_process');
-const content = cp.execSync('unzip -p packages/extension-history/releases/google.google-antigravity-<NEW_VERSION>.vsix \"extension/extension.js\"', { maxBuffer: 50 * 1024 * 1024 }).toString();
-const { ALL_PATCHES } = require('./packages/extension-patches/patches');
-for (const p of ALL_PATCHES) {
-  const matched = p.REPLACEMENTS.every(([target]) => content.includes(target));
-  console.log(p.ID, 'clean match in new bundle:', matched);
-}
-"
-```
+> [!WARNING]
+> **Avoid Target Tunnel Vision**: Our patches are hotfixes that target symptoms at specific code locations. Upstream Google engineers often fix bugs at the architectural or caller level (e.g. introducing a new helper, rewiring the caller, or changing configuration flags) while leaving the old function sitting as untouched dead code in the bundle.
+> **Never assume a bug is still present just because the target string in your patch still matches in `extension.js`.** Always trace the end-to-end data flow in the extracted sources (`packages/extension-history/extension/src/`).
+
+1. **Semantic Source Diff Inspection**:
+   For each active patch identified in Step 2, inspect the git diff in `packages/extension-history/extension/src/` across its relevant subsystems:
+   ```bash
+   git diff HEAD~1 packages/extension-history/extension/src/<SUBSYSTEM_PATH>/
+   ```
+   *Trace the full execution path: Did Google add a new function or helper that bypasses the old logic? Did a caller change how options are evaluated? Did a new setting or default flag get introduced?*
+
+2. **Bundle Syntax Matching Test**:
+   Verify whether active patches still match cleanly in the release `.vsix` bundle:
+   ```bash
+   node -e "
+   const cp = require('child_process');
+   const content = cp.execSync('unzip -p packages/extension-history/releases/google.google-antigravity-<NEW_VERSION>.vsix \"extension/extension.js\"', { maxBuffer: 50 * 1024 * 1024 }).toString();
+   const { ALL_PATCHES } = require('./packages/extension-patches/patches');
+   for (const p of ALL_PATCHES) {
+     const matched = p.REPLACEMENTS.every(([target]) => content.includes(target));
+     console.log(p.ID, 'clean match in new bundle:', matched);
+   }
+   "
+   ```
 
 ### Step 4: Determine Status for Each Patch
 For each patch, categorize into one of three states:
 1. **Resolved Upstream (Retire Patch)**:
-   - Google fixed the underlying issue upstream!
+   - Google fixed the underlying issue upstream (either at our target site or architecturally elsewhere in the subsystem).
    - Mark the patch as **Resolved Upstream (Retired in v<NEW_VERSION>)** in `packages/extension-patches/PATCHES.md`.
-   - Remove the patch module from `packages/extension-patches/patches/index.js`.
+   - Remove the patch module from `ALL_PATCHES` in `packages/extension-patches/patches/index.js` (retain the patch file as an archive reference).
+   - Document the upstream resolution in `packages/extension-history/CHANGELOG.md` under Fixes if not already noted.
 2. **Still Needed & Fully Compatible**:
    - The bug is still present and Google's code still matches our `ORIGINAL` replacement string.
    - Patch is verified working for `<NEW_VERSION>`.
@@ -76,18 +86,26 @@ const TARGET_EXTENSION_VERSION = '<NEW_VERSION>';
 ```
 
 ### Step 6: Prepend Release Entry in `packages/extension-patches/CHANGELOG.md`
-Prepend a new release block directly under the `---` separator in `packages/extension-patches/CHANGELOG.md`:
+Prepend a new release block directly under the `---` separator in `packages/extension-patches/CHANGELOG.md`.
+
+Use separate sections for **`### Active Hotfixes`** and **`### Resolved Upstream`** so the documentation site generates distinct, informative accordion dropdowns:
 
 ```markdown
 ## [v<NEW_VERSION>] - <YYYY-MM-DD>
 
-### <Headline summarizing status, e.g. "Compatibility update for Extension v<NEW_VERSION>">
+### <Headline summarizing status, e.g. "Compatibility update and upstream retirement for Extension v<NEW_VERSION>">
 
 <1-2 sentences summarizing which patches are active, verified, or retired upstream.>
 
-### Fixes
-- **<Patch Name or Upstream Resolution> (`<patch_id>`)**:
-  - <Status: Verified compatible, updated syntax, or retired as resolved upstream by Google in v<NEW_VERSION>>.
+### Active Hotfixes
+- **<Patch Name> (`<patch_id>`)**:
+  - <Status: Verified compatible or updated syntax for v<NEW_VERSION>>.
+
+### Resolved Upstream
+- **<Patch Name> (`<patch_id>`)**:
+  - **Resolved in Extension v<NEW_VERSION>**: <Technical details of how Google fixed it upstream>.
+  - This hotfix is no longer needed and has been retired from the active patch registry.
+```
 ```
 
 ### Step 7: Recompile Documentation
