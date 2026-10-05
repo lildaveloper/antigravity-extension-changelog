@@ -69,7 +69,7 @@ jspb$o$google$protobuf$Timestamp.fromObject = function(obj) {
 };
 }
 
-var jspb$o$exa$project_pb$GitFolder;
-Object.defineProperty(this, 'jspb$o$exa$project_pb$GitFolder', {
-  get() { return jspb$o$exa$project_pb$GitFolder; },
-  set(v) { jspb$o$exa$project_pb$GitFolder = v; },
+var jspb$o$devtools_jetski_provisioning$VolumeClientConfig;
+Object.defineProperty(this, 'jspb$o$devtools_jetski_provisioning$VolumeClientConfig', {
+  get() { return jspb$o$devtools_jetski_provisioning$VolumeClientConfig; },
+  set(v) { jspb$o$devtools_jetski_provisioning$VolumeClientConfig = v; },

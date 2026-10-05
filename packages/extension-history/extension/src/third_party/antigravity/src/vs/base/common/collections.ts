@@ -103,6 +103,29 @@ function diffSets(before, after) {
 }
 exports.diffSets = diffSets;
 /**
+ * Checks whether two sets contain exactly the same elements.
+ *
+ * @template T
+ * @param {!ReadonlySet<T>} a - The first set.
+ * @param {!ReadonlySet<T>} b - The second set.
+ * @return {boolean} `true` if both sets have the same size and every element of `a` is also in `b`.
+ */
+function equalSets(a, b) {
+    if (a === b) {
+        return true;
+    }
+    if (a.size !== b.size) {
+        return false;
+    }
+    for (const element of a) {
+        if (!b.has(element)) {
+            return false;
+        }
+    }
+    return true;
+}
+exports.equalSets = equalSets;
+/**
  * @template K, V
  * @param {!Map<K, V>} before
  * @param {!Map<K, V>} after
@@ -203,8 +226,6 @@ class SetWithKey {
     has(value) {
         return this._map.has(this.toKey(value));
     }
-    // go/vscode-patch/typescript#ts56
-    // TODO(b/365500459): go/ts56upgrade - Fix after TS 5.6 upgrade
     /**
      * @public
      * @return {!SetIterator<!Array<?>>}
@@ -214,8 +235,6 @@ class SetWithKey {
             yield [entry, entry];
         }
     }
-    // go/vscode-patch/typescript#ts56
-    // TODO(b/365500459): go/ts56upgrade - Fix after TS 5.6 upgrade
     /**
      * @public
      * @return {!SetIterator<T>}
@@ -223,8 +242,6 @@ class SetWithKey {
     keys() {
         return this.values();
     }
-    // go/vscode-patch/typescript#ts56
-    // TODO(b/365500459): go/ts56upgrade - Fix after TS 5.6 upgrade
     /**
      * @public
      * @return {!SetIterator<T>}
@@ -254,8 +271,6 @@ class SetWithKey {
          */
         entry => callbackfn.call(thisArg, entry, entry, this)));
     }
-    // go/vscode-patch/typescript#ts56
-    // TODO(b/365500459): go/ts56upgrade - Fix after TS 5.6 upgrade
     /**
      * @public
      * @return {!SetIterator<T>}

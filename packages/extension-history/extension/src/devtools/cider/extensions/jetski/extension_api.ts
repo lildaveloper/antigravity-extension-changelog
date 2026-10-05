@@ -271,6 +271,16 @@ class ExtensionApiImpl {
         this.terminalPanelProvider = provider;
     }
     /**
+     * Registers the main chat view (JetskiWebviewProvider), used to skip
+     * notifications for the conversation that the user can already see.
+     * @public
+     * @param {{isVisible: function(): boolean}} provider
+     * @return {void}
+     */
+    setChatViewProvider(provider) {
+        this.chatViewProvider = provider;
+    }
+    /**
      * Registers the SettingsEditorProvider with this extension API instance.
      * @public
      * @param {!tsickle_settings_editor_provider_15.SettingsEditorProvider} provider
@@ -560,10 +570,12 @@ class ExtensionApiImpl {
          * @param {string} fileUri
          * @param {string} originalContents
          * @param {string} modifiedContents
+         * @param {(undefined|boolean)} preview
+         * @param {(undefined|string)} outcomeLabel
          * @return {!Promise<void>}
          */
-        async (fileUri, originalContents, modifiedContents) => {
-            await this.openVirtualDiff(fileUri, originalContents, modifiedContents, `Diff: ${fileUri.substring(fileUri.lastIndexOf('/') + 1)} (Resolved)`);
+        async (fileUri, originalContents, modifiedContents, preview, outcomeLabel) => {
+            await this.openVirtualDiff(fileUri, originalContents, modifiedContents, `Diff: ${fileUri.substring(fileUri.lastIndexOf('/') + 1)} (${outcomeLabel ?? 'Resolved'})`, preview);
         }));
         this.context.subscriptions.push(this.agentEditManager.onDidChangeDiffZones((/**
          * @param {!Array<!tsickle_agent_edit_manager_5.FileAgentEditState>} states
@@ -1156,7 +1168,8 @@ class ExtensionApiImpl {
                 ? fileUri
                 : (fileUri?.toString() ?? this.getActiveEditorOrTabUri());
             if (uriStr) {
-                await this.agentEditManager.handleResolveAllAgentEditsInFile(uriStr, true);
+                await this.agentEditManager.handleResolveAllAgentEditsInFile(uriStr, true, 
+                /* userAction= */ true);
             }
         })), vscode.commands.registerCommand('antigravity.prioritized.agentRejectAllInFile', (/**
          * @param {(undefined|string|!tsickle_vscode_8.Uri)=} fileUri
@@ -1168,7 +1181,8 @@ class ExtensionApiImpl {
                 ? fileUri
                 : (fileUri?.toString() ?? this.getActiveEditorOrTabUri());
             if (uriStr) {
-                await this.agentEditManager.handleResolveAllAgentEditsInFile(uriStr, false);
+                await this.agentEditManager.handleResolveAllAgentEditsInFile(uriStr, false, 
+                /* userAction= */ true);
             }
         })));
     }
@@ -1620,7 +1634,24 @@ class ExtensionApiImpl {
                     return {};
                 }
                 /** @type {!tsickle_vscode_8.Uri} */
-                const uri = (0, workspace_1.toCiderWebclientUri)(request.fileUri);
+                const rawUri = (0, workspace_1.toCiderWebclientUri)(request.fileUri);
+                // When a #L fragment is present, the webview sets `request.line` to the
+                // fragment's start line. Parse the fragment directly so we also capture
+                // the end line for range links (e.g. #L10-L20), falling back to
+                // `request.line` when no fragment is present.
+                /** @type {(null|!RegExpExecArray)} */
+                const match = /^L?(\d+)(?::\d+)?(?:-L?(\d+)(?::\d+)?)?$/i.exec(rawUri.fragment);
+                /** @type {number} */
+                const startLine = match ? Number(match[1]) : (request.line ?? 0);
+                /** @type {number} */
+                const endLine = match?.[2] ? Number(match[2]) : startLine;
+                // Strip fragments (e.g. #L118 or #L10-L20) to ensure the document URI
+                // matches open workspace documents and does not spawn duplicate tabs.
+                /** @type {!tsickle_vscode_8.Uri} */
+                const uri = rawUri.with({ fragment: '' });
+                if (await this.agentEditManager.revealPendingDiff(uri.toString())) {
+                    return {};
+                }
                 if (isWorkspaceRoot(uri)) {
                     await this.changeWorkspace((0, protobuf_1.create)(iframe_messages_pb_1.ChangeWorkspaceRequestSchema, {
                         workspaceUri: request.fileUri,
@@ -1663,10 +1694,14 @@ class ExtensionApiImpl {
                 }
                 /** @type {!tsickle_vscode_8.TextDocumentShowOptions} */
                 const options = { preview: true };
-                if (request.line > 0) {
+                if (startLine > 0) {
                     /** @type {!tsickle_vscode_8.Position} */
-                    const pos = new vscode.Position(request.line - 1, 0);
-                    options.selection = new vscode.Range(pos, pos);
+                    const startPos = new vscode.Position(startLine - 1, 0);
+                    /** @type {!tsickle_vscode_8.Position} */
+                    const endPos = endLine > startLine
+                        ? new vscode.Position(endLine - 1, Number.MAX_SAFE_INTEGER)
+                        : startPos;
+                    options.selection = new vscode.Range(startPos, endPos);
                 }
                 await vscode.window.showTextDocument(doc, options);
             }
@@ -1786,9 +1821,10 @@ class ExtensionApiImpl {
      * @param {string} originalContents
      * @param {string} modifiedContents
      * @param {(undefined|string)=} title
+     * @param {(undefined|boolean)=} preview
      * @return {!Promise<void>}
      */
-    async openVirtualDiff(fileUri, originalContents, modifiedContents, title) {
+    async openVirtualDiff(fileUri, originalContents, modifiedContents, title, preview) {
         this.originalContentsMap.set(fileUri, originalContents);
         this.modifiedContentsMap.set(fileUri, modifiedContents);
         /** @type {string} */
@@ -1810,7 +1846,31 @@ class ExtensionApiImpl {
         // already cached. Invalidate them so the contents set above are picked up.
         this.onDidChangeTextDocumentContentEmitter.fire(originalUri);
         this.onDidChangeTextDocumentContentEmitter.fire(modifiedUri);
-        await vscode.commands.executeCommand('vscode.diff', originalUri, modifiedUri, finalTitle);
+        // `vscode.diff` on URIs that are already open only reveals the existing
+        // tab and keeps its old title, so e.g. Review on another turn of the same
+        // file would still say "(Resolved: Accepted)" from the previous one. Close
+        // such a tab first so the diff reopens with the right title.
+        /** @type {!Array<!tsickle_vscode_8.Tab>} */
+        const staleTabs = (vscode.window.tabGroups?.all ?? [])
+            .flatMap((/**
+         * @param {!tsickle_vscode_8.TabGroup} group
+         * @return {!ReadonlyArray<!tsickle_vscode_8.Tab>}
+         */
+        (group) => group.tabs))
+            .filter((/**
+         * @param {!tsickle_vscode_8.Tab} tab
+         * @return {boolean}
+         */
+        (tab) => {
+            /** @type {(undefined|{modified: (undefined|!tsickle_vscode_8.Uri)})} */
+            const input = (/** @type {(undefined|{modified: (undefined|!tsickle_vscode_8.Uri)})} */ (tab.input));
+            return (input?.modified?.toString() === modifiedUri.toString() &&
+                tab.label !== finalTitle);
+        }));
+        if (staleTabs.length > 0) {
+            await vscode.window.tabGroups.close(staleTabs);
+        }
+        await vscode.commands.executeCommand('vscode.diff', originalUri, modifiedUri, finalTitle, ...(preview === undefined ? [] : [{ preview }]));
     }
     /**
      * @public
@@ -1852,7 +1912,15 @@ class ExtensionApiImpl {
      * @return {!Promise<*>}
      */
     async addAgentEdit(request) {
-        await this.agentEditManager.handleAddAgentEdit(request);
+        // The iframe bridge fills proto3 defaults, so a message sent without a
+        // turn (a file clicked in the review pane) arrives with conversationId ''
+        // and turnIndex 0 instead of undefined. Every real turn has a conversation
+        // id, so treat '' as "no turn"; otherwise AgentEditManager's
+        // navigation-only path never runs and the review pane can't reveal an
+        // open review. See b/548760759.
+        await this.agentEditManager.handleAddAgentEdit(request.conversationId
+            ? request
+            : { ...request, conversationId: undefined, turnIndex: undefined });
         return {};
     }
     /**
@@ -1869,7 +1937,8 @@ class ExtensionApiImpl {
      * @return {!Promise<*>}
      */
     async resolveAllAgentEdits(request) {
-        await this.agentEditManager.handleResolveAllAgentEdits(request.accept);
+        await this.agentEditManager.handleResolveAllAgentEdits(request.accept, 
+        /* userAction= */ true);
         return {};
     }
     /**
@@ -2024,18 +2093,24 @@ class ExtensionApiImpl {
         const cascadeId = request.payload?.cascadeId;
         /** @type {(undefined|string)} */
         const activeConversationId = this.context.workspaceState.get('lastConversationId');
-        // Only suppress if the delegate requests suppression when the window is focused
-        // (default true for Cider browser notifications, false for VS Code desktop toasts)
-        // AND the notification is for the active conversation.
+        /** @type {boolean} */
+        const isActiveConversation = Boolean(cascadeId && cascadeId === activeConversationId);
+        /** @type {boolean} */
+        const isConversationVisible = Boolean(isActiveConversation && this.chatViewProvider?.isVisible());
+        // Suppress notifications for the active conversation while the window is
+        // focused, unless the delegate opts out (VS Code desktop toasts, since the
+        // user may be editing code with the chat hidden). Even then, suppress them
+        // if the chat is visible, since the user can already see the conversation.
         /** @type {boolean} */
         const shouldSuppressWhenFocused = this.browserNotificationDelegate?.suppressWhenWindowFocused !== false;
-        if (shouldSuppressWhenFocused &&
-            vscode.window.state.focused &&
-            cascadeId &&
-            cascadeId === activeConversationId) {
+        if (vscode.window.state.focused &&
+            isActiveConversation &&
+            (shouldSuppressWhenFocused || isConversationVisible)) {
             return {};
         }
-        await this.browserNotificationDelegate?.showBrowserNotification(request);
+        await this.browserNotificationDelegate?.showBrowserNotification(request, {
+            isConversationVisible,
+        });
         return {};
     }
     /**
@@ -2179,8 +2254,7 @@ class ExtensionApiImpl {
             return { canResolve: true };
         }
         /** @type {boolean} */
-        const canResolve = (await this.connectionResolver?.canResolveConnection(request.type)) ??
-            false;
+        const canResolve = (await this.connectionResolver?.canResolveConnection(request)) ?? false;
         return { canResolve };
     }
     /**
@@ -2495,6 +2569,11 @@ if (false) {
      * @private
      */
     ExtensionApiImpl.prototype.terminalPanelProvider;
+    /**
+     * @type {(undefined|{isVisible: function(): boolean})}
+     * @private
+     */
+    ExtensionApiImpl.prototype.chatViewProvider;
     /**
      * Tracks per-terminal shell-integration state (last command, exit code, and
      * a capped buffer of recent output) for every open terminal.

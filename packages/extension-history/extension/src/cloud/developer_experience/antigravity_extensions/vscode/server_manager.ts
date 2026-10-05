@@ -57,6 +57,31 @@ exports.LINUX_SYSTEM_CA_PATHS = [
  */
 exports.MACOS_SYSTEM_CA_PATH = '/etc/ssl/cert.pem';
 /**
+ * Environment variable specifying the CDE authentication CLI action.
+ * @type {string}
+ */
+exports.AGY_CLI_CDE_AUTH_ACTION_ENV = 'AGY_CLI_CDE_AUTH_ACTION';
+/**
+ * Value for running pre-flight credential and token check.
+ * @type {string}
+ */
+exports.CDE_AUTH_ACTION_CHECK = 'check';
+/**
+ * Value for running interactive terminal login.
+ * @type {string}
+ */
+exports.CDE_AUTH_ACTION_LOGIN = 'login';
+/**
+ * Title of the native terminal opened for user authentication.
+ * @type {string}
+ */
+exports.CDE_AUTH_TERMINAL_NAME = 'Antigravity Auth';
+/**
+ * Timeout in milliseconds for silent pre-flight credential validation.
+ * @type {number}
+ */
+exports.CDE_AUTH_CHECK_TIMEOUT_MS = 10000;
+/**
  * Resolves the default OS root CA certificate bundle path if present.
  * @param {string=} platform
  * @param {function(string): boolean=} fsExists
@@ -80,8 +105,12 @@ function resolveSystemCaBundlePath(platform = process.platform, fsExists = fs.ex
 exports.resolveSystemCaBundlePath = resolveSystemCaBundlePath;
 /**
  * Initializes security environment variables (such as OS CA certificates) in the current
- * extension host process so outbound network requests (e.g. manifest/binary downloads)
- * succeed behind corporate TLS inspection proxies (e.g. Zscaler).
+ * extension host process so child processes it spawns (the `agy` backend, `agy --version`
+ * probes) trust corporate TLS inspection proxies (e.g. Zscaler).
+ *
+ * Node reads `NODE_EXTRA_CA_CERTS` and `NODE_USE_SYSTEM_CA` only at process startup, so
+ * setting them here does not change what the extension host's own `fetch`/`https` trust;
+ * those go through VS Code's `http.systemCertificates` / `http.fetchAdditionalSupport`.
  * @param {string=} platform
  * @param {function(string): boolean=} fsExists
  * @return {void}
@@ -1087,6 +1116,7 @@ class AntigravityServerManager {
      */
     async stop() {
         this.isStopping = true;
+        this.abortActiveAuthTerminal();
         if (!this.serverProcess) {
             return;
         }
@@ -1126,6 +1156,125 @@ class AntigravityServerManager {
                 done();
             }), 5000);
         }));
+    }
+    /**
+     * Performs a silent pre-flight validation check using `AGY_CLI_CDE_AUTH_ACTION=check`.
+     * Automatically refreshes expired access tokens on disk if a valid refresh token exists.
+     * Resolves with `true` if exit code is 0 (authenticated); `false` if non-zero, expired without refresh, or execution error.
+     * Rejects if binary acquisition fails.
+     * @public
+     * @param {!tsickle_vscode_10.ExtensionContext} context
+     * @return {!Promise<boolean>}
+     */
+    async checkCdeAuth(context) {
+        /** @type {string} */
+        const binaryPath = await this.acquireBinaryPath(context);
+        return new Promise((/**
+         * @param {function((boolean|!PromiseLike<boolean>)): void} resolve
+         * @return {void}
+         */
+        (resolve) => {
+            const serverEnv = buildServerEnvironment();
+            serverEnv[exports.AGY_CLI_CDE_AUTH_ACTION_ENV] = exports.CDE_AUTH_ACTION_CHECK;
+            (0, child_process_1.execFile)(binaryPath, [], {
+                env: serverEnv,
+                timeout: exports.CDE_AUTH_CHECK_TIMEOUT_MS,
+            }, (/**
+             * @param {(null|?)} error
+             * @return {void}
+             */
+            (error) => {
+                if (error) {
+                    resolve(false);
+                    return;
+                }
+                resolve(true);
+            }));
+        }));
+    }
+    /**
+     * Spawns a dedicated native terminal running the CLI in login mode (`AGY_CLI_CDE_AUTH_ACTION=login`).
+     * Uses `shellPath` to ensure a real OS PTY without intermediate shell wrappers.
+     * Resolves with `true` when the process exits with code 0; `false` on abort or non-zero exit.
+     * Rejects if binary acquisition fails.
+     * @public
+     * @param {!tsickle_vscode_10.ExtensionContext} context
+     * @return {!Promise<boolean>}
+     */
+    async runCdeLoginTerminal(context) {
+        /** @type {string} */
+        const binaryPath = await this.acquireBinaryPath(context);
+        this.abortActiveAuthTerminal();
+        return new Promise((/**
+         * @param {function((boolean|!PromiseLike<boolean>)): void} resolve
+         * @return {void}
+         */
+        (resolve) => {
+            const serverEnv = buildServerEnvironment();
+            serverEnv[exports.AGY_CLI_CDE_AUTH_ACTION_ENV] = exports.CDE_AUTH_ACTION_LOGIN;
+            /** @type {!tsickle_vscode_10.Terminal} */
+            const terminal = vscode.window.createTerminal({
+                name: exports.CDE_AUTH_TERMINAL_NAME,
+                shellPath: binaryPath,
+                env: serverEnv,
+            });
+            this.activeAuthTerminal = terminal;
+            terminal.show();
+            /** @type {boolean} */
+            let settled = false;
+            /** @type {function(boolean, boolean): void} */
+            const finish = (/**
+             * @param {boolean} success
+             * @param {boolean} disposeTerminal
+             * @return {void}
+             */
+            (success, disposeTerminal) => {
+                if (settled) {
+                    return;
+                }
+                settled = true;
+                disposable.dispose();
+                if (this.activeAuthTerminal === terminal) {
+                    this.activeAuthTerminal = undefined;
+                    this.abortActiveLoginSession = undefined;
+                }
+                if (disposeTerminal) {
+                    try {
+                        terminal.dispose();
+                    }
+                    catch {
+                        // Ignored
+                    }
+                }
+                resolve(success);
+            });
+            /** @type {!tsickle_vscode_10.Disposable} */
+            const disposable = vscode.window.onDidCloseTerminal((/**
+             * @param {!tsickle_vscode_10.Terminal} closedTerminal
+             * @return {void}
+             */
+            (closedTerminal) => {
+                if (closedTerminal === terminal) {
+                    finish(closedTerminal.exitStatus?.code === 0, false);
+                }
+            }));
+            this.abortActiveLoginSession = (/**
+             * @return {void}
+             */
+            () => {
+                finish(false, true);
+            });
+        }));
+    }
+    /**
+     * @private
+     * @return {void}
+     */
+    abortActiveAuthTerminal() {
+        /** @type {(undefined|function(): void)} */
+        const abort = this.abortActiveLoginSession;
+        this.abortActiveLoginSession = undefined;
+        abort?.();
     }
 }
 exports.AntigravityServerManager = AntigravityServerManager;
@@ -1177,6 +1326,16 @@ if (false) {
      * @private
      */
     AntigravityServerManager.prototype.isStopping;
+    /**
+     * @type {(undefined|!tsickle_vscode_10.Terminal)}
+     * @private
+     */
+    AntigravityServerManager.prototype.activeAuthTerminal;
+    /**
+     * @type {(undefined|function(): void)}
+     * @private
+     */
+    AntigravityServerManager.prototype.abortActiveLoginSession;
     /**
      * Fires when the backend server process terminates unexpectedly (i.e. not via
      * an intentional {\@link stop}). Consumers (e.g. the webview renderer) use this

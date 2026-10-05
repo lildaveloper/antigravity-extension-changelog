@@ -29,13 +29,20 @@ const utils_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zone
 class SideBySideDiffZoneRenderer {
     /**
      * @public
+     * @param {{keepNewerReviews: (undefined|boolean)}=} options With `keepNewerReviews`, a close that finishes after a newer
+     *     review of the file started doesn't restore or save over it.
      */
-    constructor() {
+    constructor(options = {}) {
+        this.options = options;
         this.type = 'sideBySide';
         /**
          * Maps normalized fileUri -> original file contents for potential revert.
          */
         this.fallbackEdits = new Map();
+        /**
+         * Bumped per file on each render, so an older close can tell it's stale.
+         */
+        this.renders = new Map();
         this.providerDisposable =
             vscode.workspace.registerTextDocumentContentProvider(SideBySideDiffZoneRenderer.FALLBACK_SCHEME, this);
     }
@@ -58,6 +65,7 @@ class SideBySideDiffZoneRenderer {
         /** @type {string} */
         const normalizedUri = (0, utils_1.normalizeUri)(fileUri);
         this.fallbackEdits.set(normalizedUri, originalContents);
+        this.renders.set(normalizedUri, (this.renders.get(normalizedUri) ?? 0) + 1);
         /** @type {string} */
         const currentContent = doc.getText();
         if (currentContent !== modifiedContents) {
@@ -144,11 +152,22 @@ class SideBySideDiffZoneRenderer {
             return false;
         }
         this.fallbackEdits.delete(normalizedUri);
+        /** @type {(undefined|number)} */
+        const render = this.renders.get(normalizedUri);
+        // A newer review of the file started while this one was closing.
+        /** @type {function(): boolean} */
+        const superseded = (/**
+         * @return {boolean}
+         */
+        () => !!this.options.keepNewerReviews &&
+            this.renders.get(normalizedUri) !== render);
         /** @type {!tsickle_vscode_1.Uri} */
         const uri = vscode.Uri.parse(fileUri);
         if (!accept) {
             /** @type {!tsickle_vscode_1.TextDocument} */
             const doc = await vscode.workspace.openTextDocument(uri);
+            if (superseded())
+                return false;
             /** @type {!tsickle_vscode_1.WorkspaceEdit} */
             const edit = new vscode.WorkspaceEdit();
             if (doc.lineCount === 0) {
@@ -164,11 +183,45 @@ class SideBySideDiffZoneRenderer {
         try {
             /** @type {!tsickle_vscode_1.TextDocument} */
             const freshDoc = await vscode.workspace.openTextDocument(uri);
+            if (superseded())
+                return false;
             await freshDoc.save();
         }
         catch (saveErr) {
             console.error(`[Jetski] Failed to save document ${fileUri}:`, saveErr);
         }
+        return true;
+    }
+    /**
+     * @public
+     * @param {string} fileUri
+     * @return {!Promise<boolean>}
+     */
+    async closeReviewTabs(fileUri) {
+        /** @type {string} */
+        const normalizedUri = (0, utils_1.normalizeUri)(fileUri);
+        /** @type {!Array<!tsickle_vscode_1.Tab>} */
+        const tabs = (vscode.window.tabGroups?.all ?? [])
+            .flatMap((/**
+         * @param {!tsickle_vscode_1.TabGroup} group
+         * @return {!ReadonlyArray<!tsickle_vscode_1.Tab>}
+         */
+        (group) => group.tabs))
+            .filter((/**
+         * @param {!tsickle_vscode_1.Tab} tab
+         * @return {boolean}
+         */
+        (tab) => {
+            if (!(tab.input instanceof vscode.TabInputTextDiff)) {
+                return false;
+            }
+            return ((/** @type {!tsickle_vscode_1.TabInputTextDiff} */ (tab.input)).original.scheme ===
+                SideBySideDiffZoneRenderer.FALLBACK_SCHEME &&
+                (0, utils_1.normalizeUri)((/** @type {!tsickle_vscode_1.TabInputTextDiff} */ (tab.input)).modified.toString()) === normalizedUri);
+        }));
+        if (tabs.length === 0)
+            return false;
+        await vscode.window.tabGroups.close(tabs, /* preserveFocus= */ true);
         return true;
     }
     /**
@@ -224,8 +277,19 @@ if (false) {
      */
     SideBySideDiffZoneRenderer.prototype.fallbackEdits;
     /**
+     * Bumped per file on each render, so an older close can tell it's stale.
+     * @const {!Map<string, number>}
+     * @private
+     */
+    SideBySideDiffZoneRenderer.prototype.renders;
+    /**
      * @const {!tsickle_vscode_1.Disposable}
      * @private
      */
     SideBySideDiffZoneRenderer.prototype.providerDisposable;
+    /**
+     * @const {{keepNewerReviews: (undefined|boolean)}}
+     * @private
+     */
+    SideBySideDiffZoneRenderer.prototype.options;
 }

@@ -23,8 +23,10 @@ const tsickle_semver_6 = goog.requireType("google3.third_party.javascript.typing
 const tsickle_stream_7 = goog.requireType("google3.third_party.javascript.typings.node.node.stream");
 const tsickle_promises_8 = goog.requireType("google3.third_party.javascript.typings.node.node.stream.promises");
 const tsickle_web_9 = goog.requireType("google3.third_party.javascript.typings.node.node.stream.web");
-const tsickle_util_10 = goog.requireType("google3.third_party.javascript.typings.node.node.util");
-const tsickle_vscode_11 = goog.requireType("vscode");
+const tsickle_tls_10 = goog.requireType("google3.third_party.javascript.typings.node.node.tls");
+const tsickle_util_11 = goog.requireType("google3.third_party.javascript.typings.node.node.util");
+const tsickle_vscode_12 = goog.requireType("vscode");
+const tsickle_root_fallback_fetch_13 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.root_fallback_fetch");
 const child_process_1 = goog.require('google3.third_party.javascript.typings.node.node.child_process');
 const crypto_1 = goog.require('google3.third_party.javascript.typings.node.node.crypto');
 const fs_1 = goog.require('google3.third_party.javascript.typings.node.node.fs');
@@ -33,9 +35,13 @@ const path_1 = goog.require('google3.third_party.javascript.typings.node.node.pa
 const semver_1 = goog.require('google3.third_party.javascript.typings.semver.index');
 const stream_1 = goog.require('google3.third_party.javascript.typings.node.node.stream');
 const promises_1 = goog.require('google3.third_party.javascript.typings.node.node.stream.promises');
+const tls = goog.require('google3.third_party.javascript.typings.node.node.tls');
 const util_1 = goog.require('google3.third_party.javascript.typings.node.node.util');
 const vscode = goog.require('vscode'); // from //third_party/javascript/typings/vscode
 // from //third_party/javascript/typings/vscode
+const root_fallback_fetch_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.root_fallback_fetch');
+exports.findTlsTrustErrorCode = root_fallback_fetch_1.findTlsTrustErrorCode;
+exports.TLS_TRUST_ERROR_CODES = root_fallback_fetch_1.TLS_TRUST_ERROR_CODES;
 const execFileAsync = (0, util_1.promisify)(child_process_1.execFile);
 /**
  * Checks whether a path exists asynchronously using fs/promises.
@@ -83,7 +89,7 @@ function getDefaultReleaseBaseUrl() {
 exports.getDefaultReleaseBaseUrl = getDefaultReleaseBaseUrl;
 /**
  * @param {string} rawUrl
- * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
+ * @param {(undefined|!tsickle_vscode_12.OutputChannel)=} outputChannel
  * @param {string=} sourceDescription
  * @return {string}
  */
@@ -139,8 +145,8 @@ function validateAndNormalizeReleaseBaseUrl(rawUrl, outputChannel, sourceDescrip
  *   protects against transport corruption and tampering in transit, not against a hostile origin.
  * - Signature verification: NOT enforced. `verifyBinarySignature` exists as an unwired primitive;
  *   see its documentation for what must be true before it can be enabled.
- * @param {(undefined|!tsickle_vscode_11.WorkspaceConfiguration)=} config
- * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
+ * @param {(undefined|!tsickle_vscode_12.WorkspaceConfiguration)=} config
+ * @param {(undefined|!tsickle_vscode_12.OutputChannel)=} outputChannel
  * @return {string}
  */
 function resolveReleaseBaseUrl(config, outputChannel) {
@@ -149,7 +155,7 @@ function resolveReleaseBaseUrl(config, outputChannel) {
     if (envUrl && envUrl.trim()) {
         return validateAndNormalizeReleaseBaseUrl(envUrl.trim(), outputChannel, 'environment variable AGY_RELEASE_BASE_URL');
     }
-    /** @type {!tsickle_vscode_11.WorkspaceConfiguration} */
+    /** @type {!tsickle_vscode_12.WorkspaceConfiguration} */
     const activeConfig = config ?? vscode.workspace.getConfiguration('antigravity');
     /** @type {(undefined|string)} */
     const configured = activeConfig.get('releaseBaseUrl');
@@ -279,6 +285,392 @@ function isRetryableError(error) {
     return !isNonRetryableHttpError(error);
 }
 exports.isRetryableError = isRetryableError;
+/**
+ * Upper bound on how many nested `cause` links `describeError` follows.
+ * @type {number}
+ */
+const MAX_ERROR_CAUSE_DEPTH = 5;
+/**
+ * Upper bound on how many `AggregateError.errors` members `describeError` renders.
+ * @type {number}
+ */
+const MAX_AGGREGATE_ERROR_MEMBERS = 3;
+/**
+ * Renders a single error (without following its `cause`) as `message (code)`.
+ *
+ * Node system errors already embed the code in the message (`getaddrinfo ENOTFOUND host`,
+ * `connect ECONNREFUSED 1.2.3.4:443`), so the code is only appended when the message does not
+ * already contain it (e.g. TLS failures: `unable to get local issuer certificate
+ * (UNABLE_TO_GET_ISSUER_CERT_LOCALLY)`). Happy-Eyeballs connection failures surface as an
+ * `AggregateError` with an empty message, so its members are rendered inline instead.
+ * @param {*} error
+ * @return {string}
+ */
+function formatErrorWithoutCause(error) {
+    if (typeof error !== 'object' || error === null) {
+        return String(error);
+    }
+    const { name, message, code, errors } = (/** @type {{name: *, message: *, code: *, errors: *}} */ (error));
+    /** @type {string} */
+    const codeText = typeof code === 'string' || typeof code === 'number' ? String(code) : '';
+    /** @type {string} */
+    let text = typeof message === 'string' ? message : '';
+    if (!text) {
+        text = typeof name === 'string' && name ? name : String(error);
+    }
+    if (codeText && !text.includes(codeText)) {
+        text += ` (${codeText})`;
+    }
+    if (Array.isArray(errors) && (/** @type {!Array<?>} */ (errors)).length > 0) {
+        /** @type {!Array<string>} */
+        const members = (/** @type {!Array<?>} */ (errors)).slice(0, MAX_AGGREGATE_ERROR_MEMBERS)
+            .map((/**
+         * @param {?} member
+         * @return {string}
+         */
+        (member) => formatErrorWithoutCause(member)));
+        /** @type {number} */
+        const extra = (/** @type {!Array<?>} */ (errors)).length - members.length;
+        text += ` [${members.join('; ')}${extra > 0 ? `; +${extra} more` : ''}]`;
+    }
+    return text;
+}
+/**
+ * Formats an error for logs, telemetry, and user-facing messages, including its `cause` chain.
+ *
+ * Node's global `fetch` (undici) rejects every transport-level failure with a bare
+ * `TypeError: fetch failed` and stores the actionable detail (`ENOTFOUND`, `ECONNREFUSED`,
+ * `ECONNRESET`, `UNABLE_TO_GET_ISSUER_CERT_LOCALLY`, proxy errors, ...) on `error.cause`.
+ * Reporting only `error.message` therefore hides the one field that distinguishes a DNS block
+ * from a TLS interception or a firewall drop, which is what made the `fetch failed` bucket in
+ * b/561536914 untriageable. Output shape: `fetch failed; cause: getaddrinfo ENOTFOUND host`.
+ * @param {*} error
+ * @return {string}
+ */
+function describeError(error) {
+    /** @type {!Array<string>} */
+    const parts = [];
+    /** @type {!Set<*>} */
+    const seen = new Set();
+    /** @type {*} */
+    let current = error;
+    for (let depth = 0; depth <= MAX_ERROR_CAUSE_DEPTH &&
+        current !== undefined &&
+        current !== null &&
+        !seen.has(current); depth++) {
+        seen.add(current);
+        parts.push(formatErrorWithoutCause(current));
+        current =
+            typeof current === 'object'
+                ? ((/** @type {{cause: *}} */ (current))).cause
+                : undefined;
+    }
+    return parts.join('; cause: ');
+}
+exports.describeError = describeError;
+/**
+ * Returns true for rejections produced by an `AbortSignal` (`AbortError`) or by
+ * `AbortSignal.timeout` / the download stall guard (`TimeoutError`).
+ * @param {*} error
+ * @return {boolean}
+ */
+function isTimeoutOrAbortError(error) {
+    if (typeof error !== 'object' || error === null) {
+        return false;
+    }
+    /** @type {*} */
+    const name = ((/** @type {{name: *}} */ (error))).name;
+    return name === 'TimeoutError' || name === 'AbortError';
+}
+/**
+ * Distinguished-name fields used to describe a certificate.
+ * @record
+ */
+function CertificateName() { }
+/* istanbul ignore if */
+if (false) {
+    /**
+     * @const {(undefined|string)}
+     * @public
+     */
+    CertificateName.prototype.CN;
+    /**
+     * @const {(undefined|string)}
+     * @public
+     */
+    CertificateName.prototype.O;
+}
+/**
+ * Subset of `tls.DetailedPeerCertificate` needed to describe a presented chain.
+ * @record
+ */
+function CertificateChainInput() { }
+exports.CertificateChainInput = CertificateChainInput;
+/* istanbul ignore if */
+if (false) {
+    /**
+     * @const {(undefined|!CertificateName)}
+     * @public
+     */
+    CertificateChainInput.prototype.subject;
+    /**
+     * @const {(undefined|!CertificateName)}
+     * @public
+     */
+    CertificateChainInput.prototype.issuer;
+    /**
+     * @const {(undefined|!CertificateChainInput)}
+     * @public
+     */
+    CertificateChainInput.prototype.issuerCertificate;
+}
+/**
+ * Upper bound on chain links followed by `summarizeCertificateChain`.
+ * @type {number}
+ */
+const MAX_CERTIFICATE_CHAIN_DEPTH = 10;
+/**
+ * @param {(undefined|!CertificateName)} name
+ * @return {string}
+ */
+function formatCertificateName(name) {
+    /** @type {!Array<string>} */
+    const parts = [];
+    if (name?.O) {
+        parts.push(`O=${name.O}`);
+    }
+    if (name?.CN) {
+        parts.push(`CN=${name.CN}`);
+    }
+    return parts.length > 0 ? parts.join(', ') : 'unknown';
+}
+/**
+ * Describes who signed the leaf certificate and where the presented chain ends, e.g.
+ * `issuer O=Example Proxy Inc., CN=Example Intermediate; root O=Example Proxy Inc., CN=Example Root`.
+ * Node marks a self-signed root by pointing `issuerCertificate` back at itself; a chain whose
+ * last certificate is not self-signed stopped short of a root (the server did not send it and
+ * the probe's own trust store does not hold it), so the summary names the issuer that is
+ * missing rather than mislabelling the last presented certificate as the root.
+ * @param {!CertificateChainInput} leaf
+ * @return {string}
+ */
+function summarizeCertificateChain(leaf) {
+    /** @type {string} */
+    const issuer = formatCertificateName(leaf.issuer);
+    /** @type {!Set<!CertificateChainInput>} */
+    const seen = new Set([leaf]);
+    /** @type {!CertificateChainInput} */
+    let top = leaf;
+    while (top.issuerCertificate &&
+        !seen.has(top.issuerCertificate) &&
+        seen.size < MAX_CERTIFICATE_CHAIN_DEPTH) {
+        top = top.issuerCertificate;
+        seen.add(top);
+    }
+    /** @type {boolean} */
+    const selfSigned = top.issuerCertificate === top;
+    if (selfSigned) {
+        /** @type {string} */
+        const root = formatCertificateName(top.subject);
+        return root === issuer
+            ? `issuer ${issuer}`
+            : `issuer ${issuer}; root ${root}`;
+    }
+    if (top === leaf) {
+        return `issuer ${issuer}; only the leaf certificate was presented`;
+    }
+    /** @type {string} */
+    const last = formatCertificateName(top.subject);
+    /** @type {string} */
+    const missing = formatCertificateName(top.issuer);
+    return `issuer ${issuer}; chain ends at ${last}, issued by ${missing} (not presented)`;
+}
+exports.summarizeCertificateChain = summarizeCertificateChain;
+/**
+ * Time budget for the diagnostic TLS probe that runs after a trust failure.
+ * @type {number}
+ */
+const TLS_PROBE_TIMEOUT_MS = 3000;
+/**
+ * Reads the certificate chain presented by the host behind `url`; see `probeTlsIssuer`.
+ * @typedef {function(string): !Promise<(undefined|string)>}
+ */
+exports.TlsIssuerProbe;
+/**
+ * Probe results by `host:port`; the presented chain does not change within a session.
+ * @type {!Map<string, !Promise<(undefined|string)>>}
+ */
+const tlsIssuerProbeCache = new Map();
+/**
+ * After a TLS trust failure, reconnects to the host once to read the certificate chain it
+ * actually presents so the error can name the intercepting product. The connection is
+ * diagnostic only: certificate verification is disabled so the handshake completes, no
+ * application data is sent or received, and nothing from it is used except the certificate
+ * identity. Resolves `undefined` (never rejects) if the host cannot be reached in time.
+ * Results are memoized per host for the lifetime of the process.
+ * @param {string} url
+ * @param {?=} connect
+ * @return {!Promise<(undefined|string)>}
+ */
+async function probeTlsIssuer(url, connect = tls.connect) {
+    /** @type {string} */
+    let host;
+    /** @type {number} */
+    let port;
+    try {
+        /** @type {!URL} */
+        const parsed = new URL(url);
+        if (parsed.protocol !== 'https:') {
+            return undefined;
+        }
+        host = parsed.hostname;
+        port = parsed.port ? Number(parsed.port) : 443;
+    }
+    catch {
+        return undefined;
+    }
+    /** @type {string} */
+    const cacheKey = `${host}:${port}`;
+    /** @type {(undefined|!Promise<(undefined|string)>)} */
+    let pending = tlsIssuerProbeCache.get(cacheKey);
+    if (!pending) {
+        pending = probeTlsIssuerUncached(host, port, connect);
+        tlsIssuerProbeCache.set(cacheKey, pending);
+    }
+    return await pending;
+}
+exports.probeTlsIssuer = probeTlsIssuer;
+/**
+ * @param {string} host
+ * @param {number} port
+ * @param {?} connect
+ * @return {!Promise<(undefined|string)>}
+ */
+function probeTlsIssuerUncached(host, port, connect) {
+    return new Promise((/**
+     * @param {function((undefined|string|!PromiseLike<(undefined|string)>)): void} resolve
+     * @return {void}
+     */
+    (resolve) => {
+        /** @type {boolean} */
+        let settled = false;
+        /** @type {(undefined|?)} */
+        let socket;
+        /** @type {(undefined|?)} */
+        let timer;
+        /** @type {function((undefined|string)): void} */
+        const finish = (/**
+         * @param {(undefined|string)} value
+         * @return {void}
+         */
+        (value) => {
+            if (settled) {
+                return;
+            }
+            settled = true;
+            if (timer !== undefined) {
+                clearTimeout(timer);
+            }
+            socket?.destroy();
+            resolve(value);
+        });
+        timer = setTimeout((/**
+         * @return {void}
+         */
+        () => {
+            finish(undefined);
+        }), TLS_PROBE_TIMEOUT_MS);
+        try {
+            socket = connect({
+                host,
+                port,
+                servername: host,
+                rejectUnauthorized: false,
+            });
+        }
+        catch {
+            finish(undefined);
+            return;
+        }
+        socket.once('secureConnect', (/**
+         * @return {void}
+         */
+        () => {
+            try {
+                const cert = socket?.getPeerCertificate(true);
+                finish(cert && Object.keys(cert).length > 0
+                    ? summarizeCertificateChain(cert)
+                    : undefined);
+            }
+            catch {
+                finish(undefined);
+            }
+        }));
+        socket.once('error', (/**
+         * @return {void}
+         */
+        () => {
+            finish(undefined);
+        }));
+    }));
+}
+/**
+ * Explains a TLS trust failure against `url` in terms a user can act on. By the time this is
+ * shown, `fetchWithRootFallback` has already retried with Node's default root certificates, so
+ * neither VS Code's certificate list nor Node's own could anchor the chain. `chainSummary` is
+ * the output of `summarizeCertificateChain` for the chain the host actually presented, when
+ * the diagnostic probe could obtain it.
+ * @param {string} url
+ * @param {string} code
+ * @param {(undefined|string)=} chainSummary
+ * @return {string}
+ */
+function buildTlsTrustAdvice(url, code, chainSummary) {
+    /** @type {string} */
+    let host = url;
+    try {
+        host = new URL(url).hostname;
+    }
+    catch {
+        // Keep the raw URL.
+    }
+    /** @type {string} */
+    const presented = chainSummary
+        ? ` A direct TLS connection to the host (bypassing any proxy) presented: ${chainSummary}.`
+        : '';
+    return (`The VS Code extension host could not verify the certificate chain for ${host} ` +
+        `(${code}), neither with VS Code's certificate list nor with Node's bundled root ` +
+        `certificates.${presented} When curl or a browser can reach the site, this usually means a ` +
+        `proxy, VPN, or endpoint-security product re-signs HTTPS with its own CA, or a system ` +
+        `proxy/PAC that only VS Code uses sits in the path.\n` +
+        `To fix it: export the signing CA named above from your OS trust store as a PEM file and ` +
+        `start VS Code with the NODE_EXTRA_CA_CERTS environment variable pointing at it (it must ` +
+        `be set before VS Code launches). To check for a proxy, set "http.proxySupport" to "off", ` +
+        `run "Developer: Reload Window" and retry. Please report which step helped.`);
+}
+exports.buildTlsTrustAdvice = buildTlsTrustAdvice;
+/**
+ * Builds the terminal error for a manifest fetch that failed at the transport layer. When the
+ * cause is an untrusted certificate chain, probes the host for the chain it presents, logs it,
+ * and appends remediation so the UI error is actionable instead of a bare `fetch failed`.
+ * @param {string} baseMessage
+ * @param {string} failedUrl
+ * @param {*} err
+ * @param {(undefined|!tsickle_vscode_12.OutputChannel)} outputChannel
+ * @param {function(string): !Promise<(undefined|string)>} tlsIssuerProbe
+ * @return {!Promise<!Error>}
+ */
+async function buildManifestFetchError(baseMessage, failedUrl, err, outputChannel, tlsIssuerProbe) {
+    /** @type {(undefined|string)} */
+    const tlsCode = (0, root_fallback_fetch_1.findTlsTrustErrorCode)(err);
+    if (!tlsCode) {
+        return new Error(baseMessage);
+    }
+    /** @type {(undefined|string)} */
+    const chainSummary = await tlsIssuerProbe(failedUrl);
+    outputChannel?.appendLine(`[INSTALL] TLS diagnostic for ${failedUrl}: ${tlsCode}; presented chain: ${chainSummary ?? 'unavailable'}`);
+    return new Error(`${baseMessage}\n\n${buildTlsTrustAdvice(failedUrl, tlsCode, chainSummary)}`);
+}
 /**
  * Options to configure exponential backoff retry behavior for network operations.
  * @record
@@ -526,7 +918,7 @@ exports.clearBinaryVersionCache = clearBinaryVersionCache;
  * unavailable. Reuses the in-memory version cached against the binary's
  * filesystem identity.
  * @param {string} binaryPath
- * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
+ * @param {(undefined|!tsickle_vscode_12.OutputChannel)=} outputChannel
  * @return {!Promise<(undefined|string)>}
  */
 async function getBinaryVersionString(binaryPath, outputChannel) {
@@ -573,7 +965,7 @@ exports.getBinaryVersionString = getBinaryVersionString;
  * cache) to avoid redundant subprocess spawns.
  * @param {string} binaryPath
  * @param {string} minVersion
- * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
+ * @param {(undefined|!tsickle_vscode_12.OutputChannel)=} outputChannel
  * @return {!Promise<(undefined|string)>}
  */
 async function verifyBinaryVersion(binaryPath, minVersion, outputChannel) {
@@ -902,11 +1294,11 @@ function resolveTotalBytes(response, isPartialContent, existingBytes) {
 }
 /**
  * A single download attempt: resolve the resume offset, fetch, validate, and stream to disk.
- * @param {{url: string, destPath: string, attempt: number, inactivityTimeoutMs: number, preservePartialOnError: boolean, progressCallback: (undefined|function(number, (undefined|number)=): void)}} options
+ * @param {{url: string, destPath: string, attempt: number, inactivityTimeoutMs: number, preservePartialOnError: boolean, progressCallback: (undefined|function(number, (undefined|number)=): void), log: (undefined|function(string): void)}} options
  * @return {!Promise<void>}
  */
 async function attemptDownload(options) {
-    const { url, destPath, attempt, inactivityTimeoutMs, preservePartialOnError, progressCallback, } = options;
+    const { url, destPath, attempt, inactivityTimeoutMs, preservePartialOnError, progressCallback, log, } = options;
     /** @type {boolean} */
     const canResume = attempt > 1 || preservePartialOnError;
     /** @type {number} */
@@ -917,11 +1309,27 @@ async function attemptDownload(options) {
     try {
         /** @type {?} */
         const headers = buildDownloadHeaders(url, destPath, existingBytes);
-        /** @type {!Response} */
-        const response = await fetch(url, {
+        /** @type {!RequestInit} */
+        const requestInit = {
             signal: stallGuard.signal,
-            ...(Object.keys(headers).length > 0 ? { headers } : {}),
-        });
+        };
+        if (Object.keys(headers).length > 0) {
+            requestInit.headers = headers;
+        }
+        /** @type {!Response} */
+        let response;
+        try {
+            response = await (0, root_fallback_fetch_1.fetchWithRootFallback)(url, requestInit, { log });
+        }
+        catch (err) {
+            // A stall-guard abort rejects with the guard's own `TimeoutError`; it already names the URL
+            // and `categorizeServerStartError` keys off that name, so it must pass through unchanged.
+            // Any other rejection is an undici transport failure whose message is a bare `fetch failed`.
+            if (isTimeoutOrAbortError(err)) {
+                throw err;
+            }
+            throw new Error(`Failed to download ${url}: ${describeError(err)}`);
+        }
         stallGuard.reset();
         /** @type {boolean} */
         const isPartialContent = existingBytes > 0 && response.status === 206;
@@ -977,14 +1385,17 @@ async function attemptDownload(options) {
  *   additionally only appended once its `Content-Range` confirms the body starts at the requested
  *   offset; otherwise the partial file is discarded and the next attempt restarts from byte 0.
  * - Immediately aborts on non-retryable 4xx client errors (e.g. 400 Bad Request, 401/403 Auth, 404 Not Found).
+ * - Certificate-trust failures fall back to Node's root certificates; see `fetchWithRootFallback`.
+ *   `log` receives one line per fallback decision.
  * @param {string} url
  * @param {string} destPath
  * @param {(undefined|function(number, (undefined|number)=): void)=} progressCallback
  * @param {(undefined|!RetryOptions)=} retryOptions
  * @param {(undefined|function(*, number, number): void)=} onRetry
+ * @param {(undefined|function(string): void)=} log
  * @return {!Promise<void>}
  */
-async function downloadFile(url, destPath, progressCallback, retryOptions, onRetry) {
+async function downloadFile(url, destPath, progressCallback, retryOptions, onRetry, log) {
     /** @type {number} */
     const inactivityTimeoutMs = retryOptions?.timeoutMs ?? exports.DEFAULT_DOWNLOAD_INACTIVITY_TIMEOUT_MS;
     /** @type {boolean} */
@@ -1001,6 +1412,7 @@ async function downloadFile(url, destPath, progressCallback, retryOptions, onRet
             inactivityTimeoutMs,
             preservePartialOnError,
             progressCallback,
+            log,
         })), retryOptions, onRetry, isRetryableError);
         clearDownloadResumeState(destPath);
     }
@@ -1051,7 +1463,7 @@ exports.resolvePlatformBinaryInfo = resolvePlatformBinaryInfo;
  * Fetches and parses a ReleaseManifest JSON directly from a URL with retry logic.
  * @param {string} url
  * @param {?} retryOptions
- * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
+ * @param {(undefined|!tsickle_vscode_12.OutputChannel)=} outputChannel
  * @return {!Promise<!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest>}
  */
 async function fetchManifestFromUrl(url, retryOptions, outputChannel) {
@@ -1060,9 +1472,11 @@ async function fetchManifestFromUrl(url, retryOptions, outputChannel) {
      */
     async () => {
         /** @type {!Response} */
-        const response = await fetch(url, {
-            signal: AbortSignal.timeout(retryOptions.timeoutMs),
-        });
+        const response = await (0, root_fallback_fetch_1.fetchWithRootFallback)(url, { signal: AbortSignal.timeout(retryOptions.timeoutMs) }, { log: (/**
+             * @param {string} line
+             * @return {(undefined|void)}
+             */
+            (line) => outputChannel?.appendLine(line)) });
         if (response.status !== 200) {
             throw HttpError.fromResponse(response);
         }
@@ -1079,9 +1493,7 @@ async function fetchManifestFromUrl(url, retryOptions, outputChannel) {
      * @return {void}
      */
     (err, attempt, delayMs) => {
-        /** @type {string} */
-        const errMsg = err instanceof Error ? (/** @type {!Error} */ (err)).message : String(err);
-        outputChannel?.appendLine(`[INSTALL] Manifest fetch attempt ${attempt} from ${url} failed: ${errMsg}. Retrying in ${delayMs}ms...`);
+        outputChannel?.appendLine(`[INSTALL] Manifest fetch attempt ${attempt} from ${url} failed: ${describeError(err)}. Retrying in ${delayMs}ms...`);
     }), isRetryableError);
 }
 exports.fetchManifestFromUrl = fetchManifestFromUrl;
@@ -1090,7 +1502,7 @@ exports.fetchManifestFromUrl = fetchManifestFromUrl;
  * the corresponding /{version}/manifest.json manifest.
  * @param {string} baseUrlNoSlash
  * @param {?} retryOptions
- * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
+ * @param {(undefined|!tsickle_vscode_12.OutputChannel)=} outputChannel
  * @return {!Promise<{manifest: (undefined|!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest), errorSnippet: (undefined|string)}>}
  */
 async function fetchVersionedManifestCandidate(baseUrlNoSlash, retryOptions, outputChannel) {
@@ -1100,9 +1512,11 @@ async function fetchVersionedManifestCandidate(baseUrlNoSlash, retryOptions, out
      */
     async () => {
         /** @type {!Response} */
-        const res = await fetch(`${baseUrlNoSlash}/latest`, {
-            signal: AbortSignal.timeout(retryOptions.timeoutMs),
-        });
+        const res = await (0, root_fallback_fetch_1.fetchWithRootFallback)(`${baseUrlNoSlash}/latest`, { signal: AbortSignal.timeout(retryOptions.timeoutMs) }, { log: (/**
+             * @param {string} line
+             * @return {(undefined|void)}
+             */
+            (line) => outputChannel?.appendLine(line)) });
         if (res.status !== 200) {
             throw HttpError.fromResponse(res);
         }
@@ -1139,12 +1553,16 @@ async function fetchVersionedManifestCandidate(baseUrlNoSlash, retryOptions, out
  *   the transport layer or host is unreachable. In that scenario, candidate probing aborts immediately without
  *   attempting subsequent candidates on the same unreachable host, preventing the ~94.5s freeze (b/559283462).
  * - Candidate timeout: Bounded to 1 attempt and a 5-second socket timeout per candidate by default.
+ * - TLS trust failures: when the transport error is an untrusted certificate chain, the host is
+ *   probed once (via `tlsIssuerProbe`, injectable for tests) for the chain it presents and the
+ *   thrown error carries remediation steps; see `buildTlsTrustAdvice`.
  * @param {string} releaseBaseUrl
  * @param {(undefined|!RetryOptions)=} retryOptions
- * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
+ * @param {(undefined|!tsickle_vscode_12.OutputChannel)=} outputChannel
+ * @param {function(string): !Promise<(undefined|string)>=} tlsIssuerProbe
  * @return {!Promise<!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest>}
  */
-async function fetchReleaseManifest(releaseBaseUrl, retryOptions, outputChannel) {
+async function fetchReleaseManifest(releaseBaseUrl, retryOptions, outputChannel, tlsIssuerProbe = probeTlsIssuer) {
     /** @type {!Array<string>} */
     const errors = [];
     // Default candidate probing to 1 attempt and a 5000ms timeout per candidate,
@@ -1172,8 +1590,8 @@ async function fetchReleaseManifest(releaseBaseUrl, retryOptions, outputChannel)
         }
         catch (err) {
             /** @type {string} */
-            const errMsg = err instanceof Error ? (/** @type {!Error} */ (err)).message : String(err);
-            throw new Error(`Failed to fetch valid release manifest from direct JSON URL ${releaseBaseUrl}. Details:\n- ${releaseBaseUrl}: ${errMsg}`);
+            const errMsg = describeError(err);
+            throw await buildManifestFetchError(`Failed to fetch valid release manifest from direct JSON URL ${releaseBaseUrl}. Details:\n- ${releaseBaseUrl}: ${errMsg}`, releaseBaseUrl, err, outputChannel, tlsIssuerProbe);
         }
     }
     /** @type {string} */
@@ -1190,13 +1608,15 @@ async function fetchReleaseManifest(releaseBaseUrl, retryOptions, outputChannel)
     }
     catch (err) {
         /** @type {string} */
-        const errMsg = err instanceof Error ? (/** @type {!Error} */ (err)).message : String(err);
+        const errMsg = describeError(err);
         errors.push(`- ${platformManifestUrl}: ${errMsg}`);
         if (!HttpError.isHttpError(err)) {
-            throw new Error(`Failed to fetch release manifest for ${releaseBaseUrl}. Details:\n${errors.join('\n')}`);
+            throw await buildManifestFetchError(`Failed to fetch release manifest for ${releaseBaseUrl}. Details:\n${errors.join('\n')}`, platformManifestUrl, err, outputChannel, tlsIssuerProbe);
         }
     }
     // Candidate 2 (Fallback / Test Build): try /latest -> /<version>/manifest.json based on data shape
+    /** @type {string} */
+    const latestUrl = `${baseUrlNoSlash}/latest`;
     try {
         /** @type {{manifest: (undefined|!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest), errorSnippet: (undefined|string)}} */
         const candidate2Result = await fetchVersionedManifestCandidate(baseUrlNoSlash, candidateRetryOptions, outputChannel);
@@ -1204,15 +1624,15 @@ async function fetchReleaseManifest(releaseBaseUrl, retryOptions, outputChannel)
             return candidate2Result.manifest;
         }
         if (candidate2Result.errorSnippet) {
-            errors.push(`- ${baseUrlNoSlash}/latest: ${candidate2Result.errorSnippet}`);
+            errors.push(`- ${latestUrl}: ${candidate2Result.errorSnippet}`);
         }
     }
     catch (err) {
         /** @type {string} */
-        const errMsg = err instanceof Error ? (/** @type {!Error} */ (err)).message : String(err);
-        errors.push(`- ${baseUrlNoSlash}/latest: ${errMsg}`);
+        const errMsg = describeError(err);
+        errors.push(`- ${latestUrl}: ${errMsg}`);
         if (!HttpError.isHttpError(err)) {
-            throw new Error(`Failed to fetch release manifest for ${releaseBaseUrl}. Details:\n${errors.join('\n')}`);
+            throw await buildManifestFetchError(`Failed to fetch release manifest for ${releaseBaseUrl}. Details:\n${errors.join('\n')}`, latestUrl, err, outputChannel, tlsIssuerProbe);
         }
     }
     // Candidate 3 (Legacy Fallback): try /releases/latest/manifest.json
@@ -1223,7 +1643,7 @@ async function fetchReleaseManifest(releaseBaseUrl, retryOptions, outputChannel)
     }
     catch (err) {
         /** @type {string} */
-        const errMsg = err instanceof Error ? (/** @type {!Error} */ (err)).message : String(err);
+        const errMsg = describeError(err);
         errors.push(`- ${legacyUrl}: ${errMsg}`);
     }
     throw new Error(`Failed to fetch release manifest from all candidate endpoints for ${releaseBaseUrl}. Details:\n${errors.join('\n')}`);
@@ -1285,14 +1705,14 @@ const DOWNLOAD_PROGRESS_STEP_PERCENT = 10;
  * - Any subsequent install or direct caller passes a fresh `progress` object, starting cleanly at 0
  *   even if `destPath` is reused, and entries are garbage-collected automatically when the
  *   notification closes without requiring manual teardown.
- * @type {!WeakMap<!tsickle_vscode_11.Progress<{message: (undefined|string), increment: (undefined|number)}>, number>}
+ * @type {!WeakMap<!tsickle_vscode_12.Progress<{message: (undefined|string), increment: (undefined|number)}>, number>}
  */
 const downloadProgressHighWater = new WeakMap();
 /**
  * Builds the `onChunk` and `onRetry` callbacks for `downloadWithProgress`, keeping per-attempt
  * threshold state (`lastMessagePercent`) and cross-attempt high-water tracking encapsulated.
- * @param {!tsickle_vscode_11.OutputChannel} outputChannel
- * @param {(undefined|!tsickle_vscode_11.Progress<{message: (undefined|string), increment: (undefined|number)}>)=} progress
+ * @param {!tsickle_vscode_12.OutputChannel} outputChannel
+ * @param {(undefined|!tsickle_vscode_12.Progress<{message: (undefined|string), increment: (undefined|number)}>)=} progress
  * @return {{onChunk: function(number, (undefined|number)=): void, onRetry: function(*, number, number): void}}
  */
 function createDownloadProgressReporter(outputChannel, progress) {
@@ -1350,9 +1770,7 @@ function createDownloadProgressReporter(outputChannel, progress) {
          * @return {void}
          */
         (error, attempt, delayMs) => {
-            /** @type {string} */
-            const errMsg = error instanceof Error ? (/** @type {!Error} */ (error)).message : String(error);
-            outputChannel.appendLine(`[INSTALL] Download attempt ${attempt} failed: ${errMsg}. Retrying in ${delayMs}ms...`);
+            outputChannel.appendLine(`[INSTALL] Download attempt ${attempt} failed: ${describeError(error)}. Retrying in ${delayMs}ms...`);
             progress?.report({
                 message: `Download attempt ${attempt} failed, retrying in ${delayMs}ms...`,
             });
@@ -1370,15 +1788,19 @@ function createDownloadProgressReporter(outputChannel, progress) {
  * Exported for testing; production callers go through `acquireInstalledBinaryPath`.
  * @param {string} url
  * @param {string} destPath
- * @param {!tsickle_vscode_11.OutputChannel} outputChannel
- * @param {(undefined|!tsickle_vscode_11.Progress<{message: (undefined|string), increment: (undefined|number)}>)=} progress
+ * @param {!tsickle_vscode_12.OutputChannel} outputChannel
+ * @param {(undefined|!tsickle_vscode_12.Progress<{message: (undefined|string), increment: (undefined|number)}>)=} progress
  * @param {(undefined|!RetryOptions)=} retryOptions
  * @return {!Promise<void>}
  */
 async function downloadWithProgress(url, destPath, outputChannel, progress, retryOptions) {
     /** @type {{onChunk: function(number, (undefined|number)=): void, onRetry: function(*, number, number): void}} */
     const reporter = createDownloadProgressReporter(outputChannel, progress);
-    await downloadFile(url, destPath, reporter.onChunk, retryOptions, reporter.onRetry);
+    await downloadFile(url, destPath, reporter.onChunk, retryOptions, reporter.onRetry, (/**
+     * @param {string} line
+     * @return {void}
+     */
+    (line) => outputChannel.appendLine(line)));
 }
 exports.downloadWithProgress = downloadWithProgress;
 /**
@@ -1389,8 +1811,8 @@ exports.downloadWithProgress = downloadWithProgress;
  * @throws Error if checksum verification fails or if no checksum is provided in manifest.
  * @param {string} filePath The local filesystem path to the downloaded binary file.
  * @param {!PlatformBinaryInfo} binaryInfo Platform release metadata containing expected sha512/sha256 digests.
- * @param {!tsickle_vscode_11.OutputChannel} outputChannel VS Code output channel for logging verification diagnostics.
- * @param {(undefined|!tsickle_vscode_11.Progress<{message: (undefined|string), increment: (undefined|number)}>)=} progress Optional progress reporter to update verification status.
+ * @param {!tsickle_vscode_12.OutputChannel} outputChannel VS Code output channel for logging verification diagnostics.
+ * @param {(undefined|!tsickle_vscode_12.Progress<{message: (undefined|string), increment: (undefined|number)}>)=} progress Optional progress reporter to update verification status.
  * @return {!Promise<void>}
  */
 async function verifyBinaryChecksum(filePath, binaryInfo, outputChannel, progress) {
@@ -1520,7 +1942,7 @@ if (false) {
      */
     RetryOnLockOptions.prototype.initialDelayMs;
     /**
-     * @const {(undefined|!tsickle_vscode_11.OutputChannel)}
+     * @const {(undefined|!tsickle_vscode_12.OutputChannel)}
      * @public
      */
     RetryOnLockOptions.prototype.outputChannel;
@@ -1543,7 +1965,7 @@ async function retryOnLock(fn, options) {
     const maxAttempts = options?.maxAttempts ?? 5;
     /** @type {number} */
     let delay = options?.initialDelayMs ?? 100;
-    /** @type {(undefined|!tsickle_vscode_11.OutputChannel)} */
+    /** @type {(undefined|!tsickle_vscode_12.OutputChannel)} */
     const outputChannel = options?.outputChannel;
     /** @type {function(number): !Promise<void>} */
     const sleep = options?.sleepFn ??
@@ -1582,7 +2004,7 @@ exports.retryOnLock = retryOnLock;
  * Scans the binary installation directory and deletes any leftover `*.old.*` binary backups.
  * Failures to delete specific files (e.g. if still locked by active processes) are non-fatal.
  * @param {string} installDir
- * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
+ * @param {(undefined|!tsickle_vscode_12.OutputChannel)=} outputChannel
  * @param {(undefined|!PromoteOptions)=} options
  * @return {!Promise<void>}
  */
@@ -1680,7 +2102,7 @@ if (false) {
  * Failures are non-fatal and never block startup; anything that cannot be deleted now is simply
  * retried on the next activation.
  * @param {string} installDir
- * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
+ * @param {(undefined|!tsickle_vscode_12.OutputChannel)=} outputChannel
  * @param {(undefined|!CleanupDownloadArtifactsOptions)=} options
  * @return {!Promise<void>}
  */
@@ -1747,7 +2169,7 @@ exports.cleanupStaleDownloadArtifacts = cleanupStaleDownloadArtifacts;
  *      out transient antivirus (e.g. Windows Defender) or indexing file locks.
  * @param {string} sourcePath
  * @param {string} installPath
- * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
+ * @param {(undefined|!tsickle_vscode_12.OutputChannel)=} outputChannel
  * @param {(undefined|!PromoteOptions)=} options
  * @return {!Promise<void>}
  */
@@ -1834,8 +2256,8 @@ exports.promoteBinarySafely = promoteBinarySafely;
  * @param {string} filePath
  * @param {string} signatureBase64
  * @param {(string|?)} publicKey
- * @param {(undefined|!tsickle_vscode_11.OutputChannel)=} outputChannel
- * @param {(undefined|!tsickle_vscode_11.Progress<{message: (undefined|string), increment: (undefined|number)}>)=} progress
+ * @param {(undefined|!tsickle_vscode_12.OutputChannel)=} outputChannel
+ * @param {(undefined|!tsickle_vscode_12.Progress<{message: (undefined|string), increment: (undefined|number)}>)=} progress
  * @return {!Promise<void>}
  */
 async function verifyBinarySignature(filePath, signatureBase64, publicKey, outputChannel, progress) {
@@ -1900,12 +2322,12 @@ if (false) {
      */
     UnpackOptions.prototype.isTarGz;
     /**
-     * @const {!tsickle_vscode_11.OutputChannel}
+     * @const {!tsickle_vscode_12.OutputChannel}
      * @public
      */
     UnpackOptions.prototype.outputChannel;
     /**
-     * @const {(undefined|!tsickle_vscode_11.Progress<{message: (undefined|string), increment: (undefined|number)}>)}
+     * @const {(undefined|!tsickle_vscode_12.Progress<{message: (undefined|string), increment: (undefined|number)}>)}
      * @public
      */
     UnpackOptions.prototype.progress;
@@ -2019,7 +2441,7 @@ function resolveVerifiedBinaryInfo(manifest) {
 }
 /**
  * @param {!google3$cloud$developer_experience$antigravity_extensions$vscode$binary_downloader.ReleaseManifest} manifest
- * @param {!tsickle_vscode_11.OutputChannel} outputChannel
+ * @param {!tsickle_vscode_12.OutputChannel} outputChannel
  * @return {!PlatformBinaryInfo}
  */
 function requireVerifiedBinaryInfo(manifest, outputChannel) {
@@ -2073,7 +2495,7 @@ if (false) {
  * Re-fetches the release manifest before a retry and, if the artifact rotated, discards the
  * partial download via `discardPartialDownload` so the next attempt starts from byte 0 against the
  * new release.
- * @param {{attempt: number, releaseBaseUrl: string, stagingPath: string, currentTarget: !ResolvedInstallTarget, retryOptions: (undefined|!RetryOptions), outputChannel: !tsickle_vscode_11.OutputChannel}} options
+ * @param {{attempt: number, releaseBaseUrl: string, stagingPath: string, currentTarget: !ResolvedInstallTarget, retryOptions: (undefined|!RetryOptions), outputChannel: !tsickle_vscode_12.OutputChannel}} options
  * @return {!Promise<!ResolvedInstallTarget>}
  */
 async function refreshReleaseMetadata(options) {
@@ -2130,22 +2552,22 @@ exports.AcquireBinaryOptions = AcquireBinaryOptions;
 /* istanbul ignore if */
 if (false) {
     /**
-     * @const {!tsickle_vscode_11.ExtensionContext}
+     * @const {!tsickle_vscode_12.ExtensionContext}
      * @public
      */
     AcquireBinaryOptions.prototype.context;
     /**
-     * @const {!tsickle_vscode_11.OutputChannel}
+     * @const {!tsickle_vscode_12.OutputChannel}
      * @public
      */
     AcquireBinaryOptions.prototype.outputChannel;
     /**
-     * @const {(undefined|!tsickle_vscode_11.Progress<{message: (undefined|string), increment: (undefined|number)}>)}
+     * @const {(undefined|!tsickle_vscode_12.Progress<{message: (undefined|string), increment: (undefined|number)}>)}
      * @public
      */
     AcquireBinaryOptions.prototype.progress;
     /**
-     * @const {(undefined|!tsickle_vscode_11.WorkspaceConfiguration)}
+     * @const {(undefined|!tsickle_vscode_12.WorkspaceConfiguration)}
      * @public
      */
     AcquireBinaryOptions.prototype.configOverride;
@@ -2177,7 +2599,7 @@ async function acquireInstalledBinaryPath(options) {
     /** @type {?} */
     const extVersion = context?.extension?.packageJSON?.version ?? 'unknown';
     outputChannel.appendLine(`[INSTALL] Initializing update check. Platform: ${process.platform}-${process.arch}, Extension Version: ${extVersion}`);
-    /** @type {!tsickle_vscode_11.WorkspaceConfiguration} */
+    /** @type {!tsickle_vscode_12.WorkspaceConfiguration} */
     const config = configOverride ?? vscode.workspace.getConfiguration('antigravity');
     /** @type {string} */
     const releaseBaseUrl = resolveReleaseBaseUrl(config, outputChannel);
@@ -2230,7 +2652,7 @@ async function acquireInstalledBinaryPath(options) {
         }
         catch (err) {
             outputChannel.appendLine(`[INSTALL] Could not fetch release manifest: ${err}. Falling back to validation target version ${exports.MIN_AGY_VERSION}.`);
-            outputChannel.appendLine(`[INSTALL] Fast-path update check skipped (${err}). Continuing with existing binary v${existingValidVersion}.`);
+            outputChannel.appendLine(`[INSTALL] Fast-path update check skipped; continuing with existing binary v${existingValidVersion}.`);
             return installPath;
         }
         finally {
@@ -2268,16 +2690,16 @@ async function acquireInstalledBinaryPath(options) {
         outputChannel.appendLine(`[INSTALL] Installed binary is valid (actual version ${installedVersion} >= target ${targetVersion}). Skipping download.`);
         return installPath;
     }
-    /** @type {function((undefined|!tsickle_vscode_11.Progress<{message: (undefined|string), increment: (undefined|number)}>)=): !Promise<string>} */
+    /** @type {function((undefined|!tsickle_vscode_12.Progress<{message: (undefined|string), increment: (undefined|number)}>)=): !Promise<string>} */
     const runInstall = (/**
-     * @param {(undefined|!tsickle_vscode_11.Progress<{message: (undefined|string), increment: (undefined|number)}>)=} installProgress
+     * @param {(undefined|!tsickle_vscode_12.Progress<{message: (undefined|string), increment: (undefined|number)}>)=} installProgress
      * @return {!Promise<string>}
      */
     async (installProgress) => {
         try {
             installProgress?.report({ message: 'Checking Antigravity releases...' });
             outputChannel.appendLine('[INSTALL] Checking Antigravity releases...');
-            /** @type {!tsickle_vscode_11.WorkspaceConfiguration} */
+            /** @type {!tsickle_vscode_12.WorkspaceConfiguration} */
             const config = configOverride ?? vscode.workspace.getConfiguration('antigravity');
             /** @type {string} */
             const releaseBaseUrl = resolveReleaseBaseUrl(config, outputChannel);
@@ -2346,9 +2768,7 @@ async function acquireInstalledBinaryPath(options) {
                  * @return {void}
                  */
                 (error, attempt, delayMs) => {
-                    /** @type {string} */
-                    const errMsg = error instanceof Error ? (/** @type {!Error} */ (error)).message : String(error);
-                    outputChannel.appendLine(`[INSTALL] Binary acquisition attempt ${attempt} failed: ${errMsg}. Retrying in ${delayMs}ms...`);
+                    outputChannel.appendLine(`[INSTALL] Binary acquisition attempt ${attempt} failed: ${describeError(error)}. Retrying in ${delayMs}ms...`);
                 }));
                 await unpackAndPromote({
                     stagingPath,
@@ -2375,7 +2795,7 @@ async function acquireInstalledBinaryPath(options) {
         }
         catch (error) {
             /** @type {string} */
-            const errMsg = error instanceof Error ? (/** @type {!Error} */ (error)).message : String(error);
+            const errMsg = describeError(error);
             outputChannel.appendLine(`[INSTALL ERROR] ${errMsg}`);
             // Offline / network failure fallback: If downloading the update failed due to network/server issues,
             // but an existing installed binary is present on disk and satisfies MIN_AGY_VERSION, fall back to
@@ -2402,7 +2822,7 @@ async function acquireInstalledBinaryPath(options) {
         title: 'Installing Antigravity Backend...',
         cancellable: false,
     }, (/**
-     * @param {!tsickle_vscode_11.Progress<{message: (undefined|string), increment: (undefined|number)}>} notificationProgress
+     * @param {!tsickle_vscode_12.Progress<{message: (undefined|string), increment: (undefined|number)}>} notificationProgress
      * @return {!Promise<string>}
      */
     async (notificationProgress) => {

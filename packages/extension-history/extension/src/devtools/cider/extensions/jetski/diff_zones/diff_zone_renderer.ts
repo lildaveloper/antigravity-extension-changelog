@@ -58,6 +58,12 @@ if (false) {
      * @public
      */
     HunkResolutionEvent.prototype.final;
+    /**
+     * Set after Ctrl+Z / Ctrl+Y: every change still pending in the review.
+     * @type {(undefined|!Array<string>)}
+     * @public
+     */
+    HunkResolutionEvent.prototype.pendingHunkHashes;
 }
 /**
  * Summary info of a diff hunk used for line count stats and hashing.
@@ -147,6 +153,71 @@ if (false) {
  */
 exports.StoredResolutionResolver;
 /**
+ * A range of whole lines, 0-based and inclusive.
+ * @record
+ */
+function LineRange() { }
+exports.LineRange = LineRange;
+/* istanbul ignore if */
+if (false) {
+    /**
+     * @type {number}
+     * @public
+     */
+    LineRange.prototype.startLine;
+    /**
+     * @type {number}
+     * @public
+     */
+    LineRange.prototype.endLine;
+}
+/**
+ * Where the rejected changes are in a read-only (Resolved) diff.
+ * @record
+ */
+function RejectedChanges() { }
+exports.RejectedChanges = RejectedChanges;
+/* istanbul ignore if */
+if (false) {
+    /**
+     * The added lines of each rejected change, in the agent's proposal (the
+     * diff's right side). The user threw these lines away.
+     * @type {!Array<!LineRange>}
+     * @public
+     */
+    RejectedChanges.prototype.modifiedRanges;
+    /**
+     * The deleted lines of each rejected change that only deletes lines, in the
+     * original (the diff's left side). The user kept these lines.
+     * @type {!Array<!LineRange>}
+     * @public
+     */
+    RejectedChanges.prototype.originalRanges;
+}
+/**
+ * How the read-only diff of a resolved edit describes the saved decisions.
+ * The diff itself always shows the agent's proposal.
+ * @record
+ */
+function ResolvedDiffView() { }
+exports.ResolvedDiffView = ResolvedDiffView;
+/* istanbul ignore if */
+if (false) {
+    /**
+     * Shown in the title, e.g. "Resolved: Rejected" or
+     * "Resolved: 2 of 3 accepted".
+     * @type {string}
+     * @public
+     */
+    ResolvedDiffView.prototype.outcomeLabel;
+    /**
+     * Set when at least one change was rejected, so it can be marked.
+     * @type {(undefined|!RejectedChanges)}
+     * @public
+     */
+    ResolvedDiffView.prototype.rejectedChanges;
+}
+/**
  * Abstract interface for rendering and interacting with diff zones across different
  * environments (e.g., Cider native DiffZones, VS Code side-by-side diffs, VS Code inline decorations, or No-op).
  * @record
@@ -216,12 +287,14 @@ if (false) {
     DiffZoneRenderer.prototype.rejectFocusedHunk = function (fileUri) { };
     /**
      * Closes and resolves the active diff zone for a specific file (accepting or reverting changes).
+     * `undoable` lets Ctrl+Z reopen the review (inline only).
      * @public
      * @param {string} fileUri
      * @param {boolean} accept
+     * @param {(undefined|{undoable: (undefined|boolean)})=} options
      * @return {!Promise<boolean>}
      */
-    DiffZoneRenderer.prototype.closeDiffZone = function (fileUri, accept) { };
+    DiffZoneRenderer.prototype.closeDiffZone = function (fileUri, accept, options) { };
     /**
      * Disposes a file's diff zone without saving or reverting disk.
      * @public
@@ -243,6 +316,12 @@ if (false) {
      */
     DiffZoneRenderer.prototype.disposeAll = function () { };
     /**
+     * Disposes on shutdown without editing or saving files.
+     * @public
+     * @return {void}
+     */
+    DiffZoneRenderer.prototype.disposeForShutdown = function () { };
+    /**
      * Optional provider for original file contents in virtual document schemas (e.g. side-by-side diff view).
      * @public
      * @param {!tsickle_vscode_4.Uri} uri
@@ -263,6 +342,28 @@ if (false) {
      * @return {!Promise<void>}
      */
     DiffZoneRenderer.prototype.revealDocument = function (fileUri, preview) { };
+    /**
+     * Closes the review tabs of `fileUri` (side-by-side only). Returns whether
+     * any was open.
+     * @public
+     * @param {string} fileUri
+     * @return {!Promise<boolean>}
+     */
+    DiffZoneRenderer.prototype.closeReviewTabs = function (fileUri) { };
+    /**
+     * Describes the read-only diff of a resolved edit from the decisions saved
+     * for this renderer's hunks (`getStoredResolution` looks up a hunk hash as
+     * computed by `renderTextEdit`). The diff always shows the agent's
+     * proposal; this provides the title's label and where the rejected changes
+     * are. Returns undefined when the outcome is unknown; the default
+     * "Resolved" title is then used.
+     * @public
+     * @param {string} originalContents
+     * @param {string} modifiedContents
+     * @param {function(string): (undefined|!tsickle_hunk_storage_6.HunkResolutionAction)} getStoredResolution
+     * @return {(undefined|!ResolvedDiffView)}
+     */
+    DiffZoneRenderer.prototype.getResolvedDiffView = function (originalContents, modifiedContents, getStoredResolution) { };
 }
 /**
  * Counts inserted/deleted lines between original and modified content strings.

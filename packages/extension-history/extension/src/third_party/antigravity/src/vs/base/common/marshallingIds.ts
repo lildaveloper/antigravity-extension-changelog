@@ -44,7 +44,7 @@ var MarshalledId = {
     LanguageModelThinkingPart: 22,
     LanguageModelPromptTsxPart: 23,
     LanguageModelDataPart: 24,
-    ChatSessionContext: 25,
+    AgentSessionContext: 25,
     ChatResponsePullRequestPart: 26,
 };
 exports.MarshalledId = MarshalledId;
@@ -72,5 +72,5 @@ MarshalledId[MarshalledId.LanguageModelTextPart] = 'LanguageModelTextPart';
 MarshalledId[MarshalledId.LanguageModelThinkingPart] = 'LanguageModelThinkingPart';
 MarshalledId[MarshalledId.LanguageModelPromptTsxPart] = 'LanguageModelPromptTsxPart';
 MarshalledId[MarshalledId.LanguageModelDataPart] = 'LanguageModelDataPart';
-MarshalledId[MarshalledId.ChatSessionContext] = 'ChatSessionContext';
+MarshalledId[MarshalledId.AgentSessionContext] = 'AgentSessionContext';
 MarshalledId[MarshalledId.ChatResponsePullRequestPart] = 'ChatResponsePullRequestPart';

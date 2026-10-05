@@ -13,6 +13,7 @@ goog.require('jspb$devtools_jetski_provisioning$MutableChatConfig');
 goog.require('jspb$devtools_jetski_provisioning$MutableCustomizationConfig');
 goog.require('jspb$devtools_jetski_provisioning$MutableMemoryConfig');
 goog.require('jspb$devtools_jetski_provisioning$MutableSidecar');
+goog.require('jspb$devtools_jetski_provisioning$MutableVmstorageConfig');
 goog.require('jspb$exa$config_pb$MutableUserConfig');
 goog.require('jspb$exa$project_pb$MutableProject');
 goog.require('jspb$jetbox_state_pb$MutableJetboxAppState');
@@ -30,6 +31,7 @@ goog.requireType('jspb$ro.devtools_jetski_provisioning$ReadonlyChatConfig');
 goog.requireType('jspb$ro.devtools_jetski_provisioning$ReadonlyCustomizationConfig');
 goog.requireType('jspb$ro.devtools_jetski_provisioning$ReadonlyMemoryConfig');
 goog.requireType('jspb$ro.devtools_jetski_provisioning$ReadonlySidecar');
+goog.requireType('jspb$ro.devtools_jetski_provisioning$ReadonlyVmstorageConfig');
 goog.requireType('jspb$ro.exa$config_pb$ReadonlyUserConfig');
 goog.requireType('jspb$ro.exa$project_pb$ReadonlyProject');
 goog.requireType('jspb$ro.jetbox_state_pb$ReadonlyJetboxAppState');
@@ -1577,6 +1579,174 @@ jspb$devtools_jetski_provisioning$MutableDeploymentConfig = class extends jspb_i
   }
 
 
+  /**
+   * optional bool preserve_memory_mounts = 33;
+   * @override
+   * @return {boolean}
+   */
+  getPreserveMemoryMounts() {
+    return jspb_internal_adapters.getBooleanFieldWithDefault(this, 33);
+  }
+
+
+  /**
+   * @param {boolean|null|undefined} value
+   * @return {!jspb$devtools_jetski_provisioning$MutableDeploymentConfig} returns this
+   */
+  setPreserveMemoryMounts(value) {
+    return jspb_internal_adapters.setBooleanField(this, 33, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$devtools_jetski_provisioning$MutableDeploymentConfig} returns this
+   */
+  clearPreserveMemoryMounts() {
+    return jspb_internal_adapters.clearField(this, 33);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasPreserveMemoryMounts() {
+    return jspb_internal_adapters.hasBooleanField(this, 33);
+  }
+
+
+  /**
+   * optional bool preserve_memory_mounts = 33;
+   * @override
+   * @return {boolean|undefined}
+   */
+  getPreserveMemoryMountsOrUndefined() {
+    return jspb_internal_adapters.getBooleanFieldOrUndefined(this, 33);
+  }
+
+
+  /**
+   * optional bool enable_periodic_backup = 34;
+   * @override
+   * @return {boolean}
+   */
+  getEnablePeriodicBackup() {
+    return jspb_internal_adapters.getBooleanFieldWithDefault(this, 34);
+  }
+
+
+  /**
+   * @param {boolean|null|undefined} value
+   * @return {!jspb$devtools_jetski_provisioning$MutableDeploymentConfig} returns this
+   */
+  setEnablePeriodicBackup(value) {
+    return jspb_internal_adapters.setBooleanField(this, 34, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$devtools_jetski_provisioning$MutableDeploymentConfig} returns this
+   */
+  clearEnablePeriodicBackup() {
+    return jspb_internal_adapters.clearField(this, 34);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasEnablePeriodicBackup() {
+    return jspb_internal_adapters.hasBooleanField(this, 34);
+  }
+
+
+  /**
+   * optional bool enable_periodic_backup = 34;
+   * @override
+   * @return {boolean|undefined}
+   */
+  getEnablePeriodicBackupOrUndefined() {
+    return jspb_internal_adapters.getBooleanFieldOrUndefined(this, 34);
+  }
+
+
+  /**
+   * optional VmstorageConfig vmstorage_config = 35;
+   * @override
+   * @return {!jspb$devtools_jetski_provisioning$MutableVmstorageConfig|undefined}
+   */
+  getVmstorageConfig() {
+    return jspb_internal_adapters.getWrapperFieldOrUndefined(this, jspb$devtools_jetski_provisioning$MutableVmstorageConfig, 35);
+  }
+
+
+  /**
+   * optional VmstorageConfig vmstorage_config = 35;
+   * @override
+   * @return {!jspb$ro.devtools_jetski_provisioning$ReadonlyVmstorageConfig}
+   */
+  getReadonlyVmstorageConfig() {
+    return jspb_internal_adapters.getReadonlyWrapperField(this, jspb$devtools_jetski_provisioning$MutableVmstorageConfig, 35);
+  }
+
+
+  /**
+   * optional VmstorageConfig vmstorage_config = 35;
+   * @param {!jspb_internal_public_for_gencode.OrUndefinedToken<U>=} legacyOrUndefined
+   * @return {!jspb$devtools_jetski_provisioning$MutableVmstorageConfig|R}
+   * @template U
+   * @template R := cond(eq(U, 'undefined'), 'undefined', 'jspb$devtools_jetski_provisioning$MutableVmstorageConfig') =:
+   * @tsType (legacyOrUndefined: import('google3/javascript/apps/jspb/internal_public').OrUndefinedToken<undefined>): ಠ_ಠ.clutz.jspb$devtools_jetski_provisioning$MutableVmstorageConfig|undefined
+   * @tsType (): ಠ_ಠ.clutz.jspb$devtools_jetski_provisioning$MutableVmstorageConfig
+   */
+  getMutableVmstorageConfig(legacyOrUndefined) {
+    return jspb_internal_adapters.getMutableWrapperField(this, jspb$devtools_jetski_provisioning$MutableVmstorageConfig, 35, legacyOrUndefined);
+  }
+
+
+  /**
+   * @param {!jspb$ro.devtools_jetski_provisioning$ReadonlyVmstorageConfig|null|undefined} value
+   * @return {!jspb$devtools_jetski_provisioning$MutableDeploymentConfig} returns this
+   */
+  setVmstorageConfig(value) {
+    return jspb_internal_adapters.setWrapperField(this, jspb$devtools_jetski_provisioning$MutableVmstorageConfig, 35, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$devtools_jetski_provisioning$MutableDeploymentConfig} returns this
+   */
+  clearVmstorageConfig() {
+    return jspb_internal_adapters.clearField(this, 35);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasVmstorageConfig() {
+    return jspb_internal_adapters.hasWrapperField(this, jspb$devtools_jetski_provisioning$MutableVmstorageConfig, 35);
+  }
+
+
+  /**
+   * optional VmstorageConfig vmstorage_config = 35;
+   * @override
+   * @return {!jspb$ro.devtools_jetski_provisioning$ReadonlyVmstorageConfig|undefined}
+   */
+  getVmstorageConfigOrUndefined() {
+    return jspb_internal_adapters.getReadonlyWrapperFieldOrUndefined(this, jspb$devtools_jetski_provisioning$MutableVmstorageConfig, 35);
+  }
+
+
 };
 
 /**
@@ -1627,7 +1797,10 @@ jspb$devtools_jetski_provisioning$MutableDeploymentConfig.hasInstance = /** @pur
  *  additionalLsArgsList: (?Array<string>|undefined),
  *  extraFilesMap: (?Array<!Array<string>>|undefined),
  *  enableControlPlaneMonitoring: (?boolean|undefined),
- *  x20GeminiDirPrefix: (?string|undefined)
+ *  x20GeminiDirPrefix: (?string|undefined),
+ *  preserveMemoryMounts: (?boolean|undefined),
+ *  enablePeriodicBackup: (?boolean|undefined),
+ *  vmstorageConfig: (?jspb$devtools_jetski_provisioning$MutableVmstorageConfig.ObjectFormat|undefined)
  * }}
  */
 jspb$devtools_jetski_provisioning$MutableDeploymentConfig.ObjectFormat;
@@ -1710,7 +1883,10 @@ if (goog.DEBUG && !COMPILED) {
  *  additionalLsArgsList: (!ReadonlyArray<string>|undefined),
  *  extraFilesMap: (!ReadonlyMap<string,string>|undefined),
  *  enableControlPlaneMonitoring: (boolean|undefined),
- *  x20GeminiDirPrefix: (string|undefined)
+ *  x20GeminiDirPrefix: (string|undefined),
+ *  preserveMemoryMounts: (boolean|undefined),
+ *  enablePeriodicBackup: (boolean|undefined),
+ *  vmstorageConfig: (!jspb$ro.devtools_jetski_provisioning$ReadonlyVmstorageConfig|undefined)
  * }}
  */
 jspb$devtools_jetski_provisioning$MutableDeploymentConfig.FieldsInterface;
@@ -1748,7 +1924,7 @@ jspb$devtools_jetski_provisioning$MutableDeploymentConfig.fromFields = /** @pure
  */
 jspb$devtools_jetski_provisioning$MutableDeploymentConfig.getFields = /** @pureOrBreakMyCode */ (jspb_internal_public_for_gencode.makeGetFieldsForTesting());
 
-var jspb$b$exa$config_pb$ConversationGroupConfig;
-Object.defineProperty(this, 'jspb$b$exa$config_pb$ConversationGroupConfig', {
-  get() { return jspb$b$exa$config_pb$ConversationGroupConfig; },
-  set(v) { jspb$b$exa$config_pb$ConversationGroupConfig = v; },
+var jspb$b$google$protobuf$Timestamp;
+Object.defineProperty(this, 'jspb$b$google$protobuf$Timestamp', {
+  get() { return jspb$b$google$protobuf$Timestamp; },
+  set(v) { jspb$b$google$protobuf$Timestamp = v; },

@@ -38,7 +38,8 @@ jspb$b$exa$project_pb$Project.fields = /** @pureOrBreakMyCode */([
   jspb$b$exa$project_pb$ProjectSettings.fields,
   jspb$b$google$protobuf$Timestamp.fields,
   jspb_internal_binary.RWBool,
-  -1
+  -1,
+  jspb_internal_binary.REnumIgnoringDefaultWEnum
 ]);
 
 /**

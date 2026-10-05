@@ -16,8 +16,10 @@ var module = module || { id: 'devtools/cider/extensions/jetski/diff_zones/hunk_s
 goog.require('google3.third_party.javascript.tslib.tslib');
 const tsickle_hash_1 = goog.requireType("google3.devtools.cider.extensionutils.vscode.hash");
 const tsickle_vscode_2 = goog.requireType("vscode");
+const tsickle_utils_3 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.utils");
 const hash_1 = goog.require('google3.devtools.cider.extensionutils.vscode.hash');
 // from //devtools/cider/extensions:vscode
+const utils_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.utils');
 /**
  * Key for storing resolved hunks in workspace state.
  * @type {string}
@@ -32,6 +34,14 @@ exports.CONTENT_SNAPSHOTS_KEY = 'jetski.contentSnapshots';
 const MAX_ENTRIES = 5000;
 /** @type {number} */
 const MAX_SNAPSHOT_ENTRIES = 1000;
+/**
+ * Key for storing the modified text an inline review was built with, when it
+ * differs from the turn's reported text (see `recordReviewedContents`).
+ * @type {string}
+ */
+exports.REVIEWED_CONTENTS_KEY = 'jetski.reviewedContents';
+/** @type {number} */
+const MAX_REVIEWED_CONTENTS_ENTRIES = 200;
 /** @type {number} */
 const TTL_MS = 7 * 24 * 60 * 60 * 1000;
 // 7 days
@@ -125,6 +135,29 @@ if (false) {
  */
 function ContentSnapshotsStorage() { }
 /**
+ * Modified text an inline review was built with.
+ * @record
+ */
+function ReviewedContents() { }
+/* istanbul ignore if */
+if (false) {
+    /**
+     * @type {string}
+     * @public
+     */
+    ReviewedContents.prototype.contents;
+    /**
+     * @type {number}
+     * @public
+     */
+    ReviewedContents.prototype.timestamp;
+}
+/**
+ * Storage for reviewed contents, keyed like content snapshots.
+ * @record
+ */
+function ReviewedContentsStorage() { }
+/**
  * Computes a hash for a hunk based on its insertions, deletions, and surrounding context.
  * @param {!ReadonlyArray<string>} insertions
  * @param {!ReadonlyArray<string>} deletions
@@ -137,21 +170,62 @@ function computeHunkHash(insertions, deletions, context) {
     return (0, hash_1.hash)(content).toString(36);
 }
 exports.computeHunkHash = computeHunkHash;
-// TODO(vishalkumaar): Remove default values. They might hide bugs.
+/**
+ * Returns the file URI segments to use for storage keys: the normalized URI
+ * first (the canonical form used for all writes), followed by the raw URI if
+ * it differs. The raw form keeps entries stored before keys were normalized
+ * (e.g. `file:///c:/x` vs `file:///c%3A/x`) discoverable.
+ * @param {(undefined|string)} fileUri
+ * @return {!Array<string>}
+ */
+function getFileUriCandidates(fileUri) {
+    if (!fileUri) {
+        return [fileUri ?? 'unknown'];
+    }
+    /** @type {string} */
+    const normalized = (0, utils_1.normalizeUri)(fileUri);
+    return normalized === fileUri ? [fileUri] : [normalized, fileUri];
+}
+/**
+ * Returns the context keys (canonical first, then legacy) for a hunk context.
+ * @param {!HunkContext} hunkContext
+ * @return {!Array<string>}
+ */
+function getSnapshotKeyCandidates(hunkContext) {
+    // TODO(vishalkumaar): Remove default values. They might hide bugs.
+    return getFileUriCandidates(hunkContext.fileUri).map((/**
+     * @param {string} fileUri
+     * @return {string}
+     */
+    (fileUri) => `${hunkContext.conversationId ?? 'default'}_${hunkContext.turnIndex ?? -1}_${fileUri}`));
+}
+/**
+ * Returns the hunk keys (canonical first, then legacy) for a hunk.
+ * @param {!HunkContext} hunkContext
+ * @param {string} hunkHash
+ * @return {!Array<string>}
+ */
+function getHunkKeyCandidates(hunkContext, hunkHash) {
+    return getSnapshotKeyCandidates(hunkContext).map((/**
+     * @param {string} contextKey
+     * @return {string}
+     */
+    (contextKey) => `${contextKey}_${hunkHash}`));
+}
 /**
  * @param {!HunkContext} hunkContext
  * @param {string} hunkHash
  * @return {string}
  */
 function getHunkKey(hunkContext, hunkHash) {
-    return `${hunkContext.conversationId ?? 'default'}_${hunkContext.turnIndex ?? -1}_${hunkContext.fileUri ?? 'unknown'}_${hunkHash}`;
+    return getHunkKeyCandidates(hunkContext, hunkHash)[0];
 }
 /**
  * @param {!HunkContext} hunkContext
  * @return {string}
  */
 function getSnapshotKey(hunkContext) {
-    return `${hunkContext.conversationId ?? 'default'}_${hunkContext.turnIndex ?? -1}_${hunkContext.fileUri ?? 'unknown'}`;
+    return getSnapshotKeyCandidates(hunkContext)[0];
 }
 /**
  * Handles persistent storage of resolved hunks.
@@ -248,6 +322,17 @@ class HunkStorage {
         return this.persist();
     }
     /**
+     * Forgets a hunk's resolution, e.g. after Ctrl+Z makes it pending again.
+     * @public
+     * @param {!HunkContext} hunkContext
+     * @param {string} hunkHash
+     * @return {!Promise<void>}
+     */
+    clearResolution(hunkContext, hunkHash) {
+        delete this.getStorage()[getHunkKey(hunkContext, hunkHash)];
+        return this.persist();
+    }
+    /**
      * Gets the recorded resolution for a hunk.
      * @public
      * @param {!HunkContext} hunkContext The context of the hunk.
@@ -257,9 +342,14 @@ class HunkStorage {
     getResolution(hunkContext, hunkHash) {
         /** @type {!ResolvedHunksStorage} */
         const storage = this.getStorage();
-        /** @type {string} */
-        const key = getHunkKey(hunkContext, hunkHash);
-        return storage[key]?.action;
+        for (const key of getHunkKeyCandidates(hunkContext, hunkHash)) {
+            /** @type {!HunkResolutionAction} */
+            const action = storage[key]?.action;
+            if (action !== undefined) {
+                return action;
+            }
+        }
+        return undefined;
     }
     /**
      * Checks whether any resolutions exist for a given hunk context (i.e., for a
@@ -277,11 +367,19 @@ class HunkStorage {
         /** @type {(undefined|string)} */
         const fileUri = hunkContext.fileUri;
         if (hunkContext.turnIndex != null) {
-            /** @type {string} */
-            const prefix = `${hunkContext.conversationId ?? 'default'}_${hunkContext.turnIndex}_${fileUri ?? 'unknown'}_`;
+            /** @type {!Array<string>} */
+            const prefixes = getSnapshotKeyCandidates(hunkContext).map((/**
+             * @param {string} contextKey
+             * @return {string}
+             */
+            (contextKey) => `${contextKey}_`));
             for (const key in storage) {
                 if (Object.prototype.hasOwnProperty.call(storage, key) &&
-                    key.startsWith(prefix)) {
+                    prefixes.some((/**
+                     * @param {string} prefix
+                     * @return {boolean}
+                     */
+                    (prefix) => key.startsWith(prefix)))) {
                     return true;
                 }
             }
@@ -296,14 +394,22 @@ class HunkStorage {
         const conversationPrefix = hunkContext.conversationId
             ? `${hunkContext.conversationId}_`
             : undefined;
-        /** @type {string} */
-        const fileSegment = `_${fileUri}_`;
+        /** @type {!Array<string>} */
+        const fileSegments = getFileUriCandidates(fileUri).map((/**
+         * @param {string} candidate
+         * @return {string}
+         */
+        (candidate) => `_${candidate}_`));
         for (const key in storage) {
             if (Object.prototype.hasOwnProperty.call(storage, key)) {
                 if (conversationPrefix && !key.startsWith(conversationPrefix)) {
                     continue;
                 }
-                if (key.includes(fileSegment)) {
+                if (fileSegments.some((/**
+                 * @param {string} segment
+                 * @return {boolean}
+                 */
+                (segment) => key.includes(segment)))) {
                     return true;
                 }
             }
@@ -338,9 +444,14 @@ class HunkStorage {
     getSnapshot(hunkContext) {
         /** @type {!ContentSnapshotsStorage} */
         const storage = this.getSnapshotStorage();
-        /** @type {string} */
-        const key = getSnapshotKey(hunkContext);
-        return storage[key]?.contentHash;
+        for (const key of getSnapshotKeyCandidates(hunkContext)) {
+            /** @type {string} */
+            const contentHash = storage[key]?.contentHash;
+            if (contentHash !== undefined) {
+                return contentHash;
+            }
+        }
+        return undefined;
     }
     /**
      * Clears the content snapshot for a conversation/turn/file context.
@@ -352,10 +463,49 @@ class HunkStorage {
     clearSnapshot(hunkContext) {
         /** @type {!ContentSnapshotsStorage} */
         const storage = this.getSnapshotStorage();
-        /** @type {string} */
-        const key = getSnapshotKey(hunkContext);
-        delete storage[key];
+        for (const key of getSnapshotKeyCandidates(hunkContext)) {
+            delete storage[key];
+        }
         return this.persistSnapshots();
+    }
+    /**
+     * Records the modified text an inline review was built with, for a
+     * conversation/turn/file context.
+     *
+     * Only needed when it differs from the text the turn reports (e.g. a
+     * formatter ran and the review used the file on disk instead): hunk
+     * decisions are keyed by hashes of the reviewed hunks, so a later lookup
+     * must diff the same text to find them.
+     *
+     * @public
+     * @param {!HunkContext} hunkContext The context (conversationId, turnIndex, fileUri).
+     * @param {string} contents The modified text the review was built with.
+     * @return {!Promise<void>} A promise that resolves when the contents are persisted.
+     */
+    recordReviewedContents(hunkContext, contents) {
+        /** @type {!ReviewedContentsStorage} */
+        const storage = this.getReviewedContentsStorage();
+        storage[getSnapshotKey(hunkContext)] = { contents, timestamp: Date.now() };
+        return this.persistReviewedContents();
+    }
+    /**
+     * Gets the modified text recorded by `recordReviewedContents`, if any.
+     *
+     * @public
+     * @param {!HunkContext} hunkContext The context to check.
+     * @return {(undefined|string)} The reviewed contents, or undefined if none were recorded.
+     */
+    getReviewedContents(hunkContext) {
+        /** @type {!ReviewedContentsStorage} */
+        const storage = this.getReviewedContentsStorage();
+        for (const key of getSnapshotKeyCandidates(hunkContext)) {
+            /** @type {string} */
+            const contents = storage[key]?.contents;
+            if (contents !== undefined) {
+                return contents;
+            }
+        }
+        return undefined;
     }
     /**
      * Computes a hash of content for snapshot comparison.
@@ -470,6 +620,38 @@ class HunkStorage {
         if (snapshotsChanged) {
             await this.persistSnapshots();
         }
+        // 4. Reviewed Contents Cleanup
+        /** @type {!ReviewedContentsStorage} */
+        const reviewed = this.getReviewedContentsStorage();
+        /** @type {boolean} */
+        let reviewedChanged = false;
+        for (const key in reviewed) {
+            if (Object.prototype.hasOwnProperty.call(reviewed, key)) {
+                if (now - reviewed[key].timestamp > TTL_MS) {
+                    delete reviewed[key];
+                    reviewedChanged = true;
+                }
+            }
+        }
+        /** @type {!Array<!Array<?>>} */
+        const reviewedEntries = Object.entries(reviewed);
+        if (reviewedEntries.length > MAX_REVIEWED_CONTENTS_ENTRIES) {
+            reviewedEntries.sort((/**
+             * @param {!Array<?>} a
+             * @param {!Array<?>} b
+             * @return {number}
+             */
+            (a, b) => a[1].timestamp - b[1].timestamp));
+            /** @type {number} */
+            const toDelete = reviewedEntries.length - MAX_REVIEWED_CONTENTS_ENTRIES;
+            for (let i = 0; i < toDelete; i++) {
+                delete reviewed[reviewedEntries[i][0]];
+            }
+            reviewedChanged = true;
+        }
+        if (reviewedChanged) {
+            await this.persistReviewedContents();
+        }
     }
     /**
      * @private
@@ -497,6 +679,30 @@ class HunkStorage {
     }
     /**
      * @private
+     * @return {!ReviewedContentsStorage}
+     */
+    getReviewedContentsStorage() {
+        if (!this.reviewedContentsStorage) {
+            try {
+                this.reviewedContentsStorage =
+                    this.context.workspaceState.get(exports.REVIEWED_CONTENTS_KEY, {});
+            }
+            catch (e) {
+                console.error('Failed to load reviewed contents storage', e);
+                this.reviewedContentsStorage = {};
+            }
+        }
+        return this.reviewedContentsStorage;
+    }
+    /**
+     * @private
+     * @return {!Promise<void>}
+     */
+    async persistReviewedContents() {
+        await this.context.workspaceState.update(exports.REVIEWED_CONTENTS_KEY, this.getReviewedContentsStorage());
+    }
+    /**
+     * @private
      * @return {!Promise<void>}
      */
     async persistSnapshots() {
@@ -516,6 +722,11 @@ if (false) {
      * @private
      */
     HunkStorage.prototype.snapshotStorage;
+    /**
+     * @type {(undefined|!ReviewedContentsStorage)}
+     * @private
+     */
+    HunkStorage.prototype.reviewedContentsStorage;
     /**
      * @type {!Promise<void>}
      * @private

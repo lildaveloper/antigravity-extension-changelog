@@ -270,7 +270,7 @@ class ExtUri {
                 return extpath.isEqualOrParent(originalFSPath(base), originalFSPath(parentCandidate), this._ignorePathCasing(base)) && base.query === parentCandidate.query && (ignoreFragment || base.fragment === parentCandidate.fragment);
             }
             if ((0, exports.isEqualAuthority)(base.authority, parentCandidate.authority)) {
-                return extpath.isEqualOrParent(base.path, parentCandidate.path, this._ignorePathCasing(base), '/') && base.query === parentCandidate.query && (ignoreFragment || base.fragment === parentCandidate.fragment);
+                return extpath.isEqualOrParent(base.path, parentCandidate.path, this._ignorePathCasing(base), true) && base.query === parentCandidate.query && (ignoreFragment || base.fragment === parentCandidate.fragment);
             }
         }
         return false;
@@ -296,10 +296,11 @@ class ExtUri {
     /**
      * @public
      * @param {!tsickle_uri_7.URI} resource
+     * @param {(undefined|string)=} suffix
      * @return {string}
      */
-    basename(resource) {
-        return paths.posix.basename(resource.path);
+    basename(resource, suffix) {
+        return paths.posix.basename(resource.path, suffix);
     }
     /**
      * @public
@@ -552,7 +553,7 @@ exports.isEqualOrParent = exports.extUri.isEqualOrParent.bind(exports.extUri);
 exports.getComparisonKey = exports.extUri.getComparisonKey.bind(exports.extUri);
 /** @type {function(!tsickle_uri_7.URI): string} */
 exports.basenameOrAuthority = exports.extUri.basenameOrAuthority.bind(exports.extUri);
-/** @type {function(!tsickle_uri_7.URI): string} */
+/** @type {function(!tsickle_uri_7.URI, (undefined|string)=): string} */
 exports.basename = exports.extUri.basename.bind(exports.extUri);
 /** @type {function(!tsickle_uri_7.URI): string} */
 exports.extname = exports.extUri.extname.bind(exports.extUri);

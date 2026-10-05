@@ -24,7 +24,8 @@ goog.require('jspb_internal_public_for_gencode');
 jspb$b$jetbox_state_pb$GoogleSpecificConfig.fields = /** @pureOrBreakMyCode */([
   0,
   jspb_internal_binary.RWEnum,
-  jspb$b$jetbox_state_pb$CogWorkspaceConfig.fields
+  jspb$b$jetbox_state_pb$CogWorkspaceConfig.fields,
+  jspb_internal_binary.RWBool
 ]);
 
 /**

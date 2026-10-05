@@ -996,7 +996,7 @@ jspb$jetbox_state_pb$MutableJetboxAppState.fromFields = /** @pureOrBreakMyCode *
  */
 jspb$jetbox_state_pb$MutableJetboxAppState.getFields = /** @pureOrBreakMyCode */ (jspb_internal_public_for_gencode.makeGetFieldsForTesting());
 
-var jspb$google$protobuf$MutableTimestamp;
-Object.defineProperty(this, 'jspb$google$protobuf$MutableTimestamp', {
-  get() { return jspb$google$protobuf$MutableTimestamp; },
-  set(v) { jspb$google$protobuf$MutableTimestamp = v; },
+var jspb$exa$project_pb$MutableGitFolder;
+Object.defineProperty(this, 'jspb$exa$project_pb$MutableGitFolder', {
+  get() { return jspb$exa$project_pb$MutableGitFolder; },
+  set(v) { jspb$exa$project_pb$MutableGitFolder = v; },

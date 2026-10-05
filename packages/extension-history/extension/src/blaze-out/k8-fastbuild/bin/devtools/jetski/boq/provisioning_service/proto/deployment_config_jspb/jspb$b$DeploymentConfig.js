@@ -12,6 +12,7 @@ goog.require('jspb$b$devtools_jetski_provisioning$ChatConfig');
 goog.require('jspb$b$devtools_jetski_provisioning$CustomizationConfig');
 goog.require('jspb$b$devtools_jetski_provisioning$MemoryConfig');
 goog.require('jspb$b$devtools_jetski_provisioning$Sidecar');
+goog.require('jspb$b$devtools_jetski_provisioning$VmstorageConfig');
 goog.require('jspb$b$exa$config_pb$UserConfig');
 goog.require('jspb$b$exa$project_pb$Project');
 goog.require('jspb$b$jetbox_state_pb$JetboxAppState');
@@ -65,7 +66,10 @@ jspb$b$devtools_jetski_provisioning$DeploymentConfig.fields = /** @pureOrBreakMy
   jspb_internal_binary.RWMapEntry,
   jspb_internal_binary.StringRequireUtf8StringRequireUtf8Map,
   jspb_internal_binary.RWBool,
-  jspb_internal_binary.RStringRequireUtf8WString
+  jspb_internal_binary.RStringRequireUtf8WString,
+  jspb_internal_binary.RWBool,
+  -1,
+  jspb$b$devtools_jetski_provisioning$VmstorageConfig.fields
 ]);
 
 /**
@@ -76,7 +80,7 @@ jspb$b$devtools_jetski_provisioning$DeploymentConfig.fields = /** @pureOrBreakMy
 jspb$devtools_jetski_provisioning$MutableDeploymentConfig.prototype.serializeBinary = /** @pureOrBreakMyCode */(jspb_internal_public_for_gencode.makePrototypeSerializeBinaryFunction(jspb$b$devtools_jetski_provisioning$DeploymentConfig.fields));
 
 
-var jspb$devtools_jetski_provisioning$MutableInstanceMetrics;
-Object.defineProperty(this, 'jspb$devtools_jetski_provisioning$MutableInstanceMetrics', {
-  get() { return jspb$devtools_jetski_provisioning$MutableInstanceMetrics; },
-  set(v) { jspb$devtools_jetski_provisioning$MutableInstanceMetrics = v; },
+var jspb$devtools_jetski_provisioning$MutableInstanceFailure;
+Object.defineProperty(this, 'jspb$devtools_jetski_provisioning$MutableInstanceFailure', {
+  get() { return jspb$devtools_jetski_provisioning$MutableInstanceFailure; },
+  set(v) { jspb$devtools_jetski_provisioning$MutableInstanceFailure = v; },

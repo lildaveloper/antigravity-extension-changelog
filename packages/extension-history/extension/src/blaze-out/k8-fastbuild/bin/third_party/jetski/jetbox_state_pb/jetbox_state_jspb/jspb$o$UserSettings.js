@@ -76,6 +76,8 @@ jspb$o$jetbox_state_pb$UserSettings.internal_toObject = function(msg) {
     sandboxEnabledAtV2Migration: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getBooleanFieldLegacyNullable(msg, 45)),
     vertexServiceTier: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getStringFieldLegacyNullable(msg, 46)),
     sandboxProxy: jspb$o$jetbox_state_pb$UserSettings$SandboxProxy.internal_toObject(msg.getSandboxProxy()),
+    terminalPlacement: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getEnumFieldLegacyNullable(msg, 48)),
+    agentSoundVolume: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getInt32FieldLegacyNullable(msg, 49)),
   }));
 
 };
@@ -168,6 +170,8 @@ jspb$o$jetbox_state_pb$UserSettings.fromObject = function(obj) {
   jspb_internal_adapters.setWrapperField(msg,
       jspb$jetbox_state_pb$UserSettings$MutableSandboxProxy,
       47, jspb_internal_public_for_gencode.fromObjectNullable(obj.sandboxProxy, jspb$o$jetbox_state_pb$UserSettings$SandboxProxy.fromObject));
+  jspb_internal_adapters.setEnumField(msg, 48, obj.terminalPlacement);
+  jspb_internal_adapters.setInt32Field(msg, 49, obj.agentSoundVolume);
   return msg;
 };
 }

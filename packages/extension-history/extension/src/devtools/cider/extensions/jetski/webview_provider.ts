@@ -89,11 +89,24 @@ class JetskiWebviewProvider {
          * @return {void}
          */
         () => {
+            // The panel may be closed directly (e.g. via its tab), not only through
+            // `toggle()`. Fall back to the sidebar view so that `isVisible()` and
+            // `refresh()` do not touch the disposed panel, which throws.
             this.editorPanel = undefined;
+            this.view = this.sidebarView;
             this.isSidebarVisible = true;
             void vscode.commands.executeCommand('setContext', 'isJetskiSidebarHidden', !this.isSidebarVisible);
         }));
         await this.resolveWebview(this.editorPanel);
+    }
+    /**
+     * Returns whether the chat is currently on screen, in either the sidebar
+     * view or the editor panel.
+     * @public
+     * @return {boolean}
+     */
+    isVisible() {
+        return this.view?.visible ?? false;
     }
     /**
      * Refreshes the webview content (e.g. after URL change).

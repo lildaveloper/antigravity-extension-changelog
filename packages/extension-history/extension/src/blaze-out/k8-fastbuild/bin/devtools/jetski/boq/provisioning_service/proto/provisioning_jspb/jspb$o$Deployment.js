@@ -11,6 +11,7 @@ goog.provide('jspb$o$devtools_jetski_provisioning$Deployment');
 goog.require('jspb$devtools_jetski_provisioning$MutableBlueprintBinding');
 goog.require('jspb$devtools_jetski_provisioning$MutableDeployment');
 goog.require('jspb$devtools_jetski_provisioning$MutableDeploymentConfig');
+goog.require('jspb$devtools_jetski_provisioning$MutableDeploymentStatusDetail');
 goog.require('jspb$devtools_jetski_provisioning$MutableInstance');
 goog.require('jspb$devtools_jetski_provisioning$MutableInstanceMetrics');
 goog.require('jspb$devtools_jetski_provisioning$MutableProvisioningConfig');
@@ -18,6 +19,7 @@ goog.require('jspb$google$protobuf$MutableDuration');
 goog.require('jspb$google$protobuf$MutableTimestamp');
 goog.require('jspb$o$devtools_jetski_provisioning$BlueprintBinding');
 goog.require('jspb$o$devtools_jetski_provisioning$DeploymentConfig');
+goog.require('jspb$o$devtools_jetski_provisioning$DeploymentStatusDetail');
 goog.require('jspb$o$devtools_jetski_provisioning$Instance');
 goog.require('jspb$o$devtools_jetski_provisioning$InstanceMetrics');
 goog.require('jspb$o$devtools_jetski_provisioning$ProvisioningConfig');
@@ -63,6 +65,8 @@ jspb$o$devtools_jetski_provisioning$Deployment.internal_toObject = function(msg)
     desiredReplicas: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getInt32FieldLegacyNullable(msg, 18)),
     instancesList: jspb_internal_public_for_gencode.toObjectList(msg.getInstancesList(), jspb$o$devtools_jetski_provisioning$Instance.internal_toObject),
     autoRenewalEligibility: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getEnumFieldLegacyNullable(msg, 28)),
+    uptime7d: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getFloatingPointFieldLegacyNullable(msg, 29)),
+    statusDetail: jspb$o$devtools_jetski_provisioning$DeploymentStatusDetail.internal_toObject(msg.getStatusDetail()),
   }));
 
 };
@@ -147,6 +151,10 @@ jspb$o$devtools_jetski_provisioning$Deployment.fromObject = function(obj) {
   jspb_internal_adapters.setRepeatedWrapperField(msg, jspb$devtools_jetski_provisioning$MutableInstance,
       19, jspb_internal_public_for_gencode.fromObjectList(obj.instancesList,         jspb$o$devtools_jetski_provisioning$Instance.fromObject));
   jspb_internal_adapters.setEnumField(msg, 28, obj.autoRenewalEligibility);
+  jspb_internal_adapters.setFloatingPointField(msg, 29, obj.uptime7d);
+  jspb_internal_adapters.setWrapperField(msg,
+      jspb$devtools_jetski_provisioning$MutableDeploymentStatusDetail,
+      30, jspb_internal_public_for_gencode.fromObjectNullable(obj.statusDetail, jspb$o$devtools_jetski_provisioning$DeploymentStatusDetail.fromObject));
   return msg;
 };
 }

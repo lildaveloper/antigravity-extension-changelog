@@ -10,6 +10,7 @@ goog.provide('jspb$b$exa$project_pb$Resource');
 
 goog.require('jspb$b$exa$project_pb$GitFolder');
 goog.require('jspb$b$exa$project_pb$Google3');
+goog.require('jspb$b$exa$project_pb$RemoteResource');
 goog.require('jspb$exa$project_pb$MutableResource');
 goog.require('jspb_internal_binary');
 goog.require('jspb_internal_public_for_gencode');
@@ -29,7 +30,9 @@ jspb$b$exa$project_pb$Resource.fields = /** @pureOrBreakMyCode */([
   jspb_internal_binary.RMessageOneofWMessage,
   jspb$b$exa$project_pb$Google3.fields,
   jspb_internal_binary.RMessageOneofWMessage,
-  jspb$b$exa$project_pb$GitFolder.fields
+  jspb$b$exa$project_pb$GitFolder.fields,
+  jspb_internal_binary.RMessageOneofWMessage,
+  jspb$b$exa$project_pb$RemoteResource.fields
 ]);
 
 /**

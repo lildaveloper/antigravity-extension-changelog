@@ -246,6 +246,16 @@ function parseWorkspaceIdentifier(identifier) {
 }
 exports.parseWorkspaceIdentifier = parseWorkspaceIdentifier;
 /**
+ * Returns whether the given username belongs to an automated agent account
+ * (e.g., personal corpagent-eng-*, corpagent-lean-*, or shared groupagent-*).
+ * @param {string} username
+ * @return {boolean}
+ */
+function isAgentUsername(username) {
+    return /^(corpagent|groupagent|agent-casgtf)-/.test(username);
+}
+exports.isAgentUsername = isAgentUsername;
+/**
  * Details of a remote folder location (host and folder path).
  * @record
  */

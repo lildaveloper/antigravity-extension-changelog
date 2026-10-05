@@ -350,7 +350,7 @@ function binaryIndexOf(haystack, needle, offset = 0) {
         return 0;
     }
     if (needleLen === 1) {
-        return haystack.indexOf(needle[0]);
+        return haystack.indexOf(needle[0], offset);
     }
     if (needleLen > haystackLen - offset) {
         return -1;

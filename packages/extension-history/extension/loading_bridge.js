@@ -363,8 +363,8 @@
   a.getCssName = function (b, c) {
     function d(g) {
       g = g.split("-");
-      for (var q = [], k = 0; k < g.length; k++) q.push(e(g[k]));
-      return q.join("-");
+      for (var t = [], l = 0; l < g.length; l++) t.push(e(g[l]));
+      return t.join("-");
     }
     function e(g) {
       return a.cssNameMapping_[g] || g;
@@ -428,12 +428,12 @@
     b.prototype.constructor = b;
     b.base = function (e, f, g) {
       for (
-        var q = Array(arguments.length - 2), k = 2;
-        k < arguments.length;
-        k++
+        var t = Array(arguments.length - 2), l = 2;
+        l < arguments.length;
+        l++
       )
-        q[k - 2] = arguments[k];
-      return c.prototype[f].apply(e, q);
+        t[l - 2] = arguments[l];
+      return c.prototype[f].apply(e, t);
     };
   };
   a.scope = function (b) {
@@ -469,27 +469,34 @@
   function h(b, c = `unexpected value ${b}!`) {
     throw Error(c);
   }
-  const l = acquireVsCodeApi(),
+  const k = acquireVsCodeApi(),
     m = document.getElementById("loading-details"),
     n = document.getElementById("loading-error"),
     p = document.getElementById("error-message-text"),
-    r = document.getElementById("retry-button"),
-    t = document.getElementById("report-button"),
+    q = document.getElementById("retry-button"),
+    r = document.getElementById("report-button"),
     u = document.getElementById("loading-indicator"),
     v = document.getElementById("host-input-container"),
     w = document.getElementById("host-input"),
     x = document.getElementById("host-submit-button"),
     y = document.getElementById("host-input-message"),
-    z = document.getElementById("list-of-hosts");
-  r.addEventListener("click", () => {
-    l.postMessage({ type: "retry" });
+    z = document.getElementById("list-of-hosts"),
+    A = document.getElementById("auth-container"),
+    B = document.getElementById("auth-title"),
+    C = document.getElementById("auth-subtitle"),
+    D = document.getElementById("auth-button");
+  q.addEventListener("click", () => {
+    k.postMessage({ type: "retry" });
   });
-  t &&
-    t.addEventListener("click", () => {
-      l.postMessage({ type: "reportIssue" });
+  r &&
+    r.addEventListener("click", () => {
+      k.postMessage({ type: "reportIssue" });
     });
+  D?.addEventListener("click", () => {
+    k.postMessage({ type: "retry" });
+  });
   x.addEventListener("click", () => {
-    w && l.postMessage({ type: "submitHost", host: w.value });
+    w && k.postMessage({ type: "submitHost", host: w.value });
   });
   w.addEventListener("keydown", (b) => {
     b.key === "Enter" && x.click();
@@ -504,7 +511,8 @@
           n.classList.remove("visible"),
           (u.style.display = "flex"),
           (u.style.visibility = "visible"),
-          (v.style.display = "none"));
+          (v.style.display = "none"),
+          A && (A.style.display = "none"));
         m &&
           (b.data.message
             ? ((m.textContent = b.data.message), (m.style.opacity = "0.8"))
@@ -517,7 +525,8 @@
           ((n.style.visibility = "visible"),
           n.classList.add("visible"),
           (u.style.display = "none"),
-          (v.style.display = "none"));
+          (v.style.display = "none"),
+          A && (A.style.display = "none"));
         p &&
           (b.data.error
             ? ((p.textContent = b.data.error),
@@ -532,7 +541,8 @@
           ((n.style.visibility = "hidden"),
           n.classList.remove("visible"),
           (u.style.display = "none"),
-          (v.style.display = "flex"));
+          (v.style.display = "flex"),
+          A && (A.style.display = "none"));
         w && ((w.value = b.data.currentHost), w.focus(), w.select());
         if (z && ((z.textContent = ""), b.data.hosts))
           for (let c of b.data.hosts) {
@@ -546,7 +556,7 @@
             d.appendChild(e);
             d.appendChild(f);
             d.addEventListener("click", () => {
-              l.postMessage({ type: "submitHost", host: c });
+              k.postMessage({ type: "submitHost", host: c });
             });
             z.appendChild(d);
           }
@@ -554,6 +564,19 @@
           (y.textContent =
             b.data.message ??
             "Enter your Cloudtop hostname to start Jetski in Cider");
+        break;
+      case "promptAuth":
+        n &&
+          u &&
+          v &&
+          ((n.style.visibility = "hidden"),
+          n.classList.remove("visible"),
+          (u.style.display = "none"),
+          (v.style.display = "none"));
+        A && (A.style.display = "flex");
+        B && b.data.title && (B.textContent = b.data.title);
+        C && b.data.subtitle && (C.textContent = b.data.subtitle);
+        D && b.data.buttonLabel && (D.textContent = b.data.buttonLabel);
         break;
       case void 0:
         console.warn(
@@ -564,6 +587,6 @@
         h(b.data, `Unknown message type: ${b.data.type}`);
     }
   });
-  l.postMessage({ type: "ready" });
+  k.postMessage({ type: "ready" });
 })();
 //# sourceMappingURL=loading_bridge.sourcemap

@@ -11,6 +11,7 @@ goog.provide('jspb$ro.exa$project_pb$ReadonlyResource');
 
 goog.require('jspb$exa$project_pb$MutableGitFolder');
 goog.require('jspb$exa$project_pb$MutableGoogle3');
+goog.require('jspb$exa$project_pb$MutableRemoteResource');
 goog.require('jspb_internal_adapters');
 goog.require('jspb_internal_public_for_gencode');
 /** @suppress {extraRequire} */
@@ -21,6 +22,7 @@ goog.requireType('jspb$exa$project_pb$ImmutableResource');
 goog.requireType('jspb$r$exa$project_pb$Resource$internalDoNotUseReader');
 goog.requireType('jspb$ro.exa$project_pb$ReadonlyGitFolder');
 goog.requireType('jspb$ro.exa$project_pb$ReadonlyGoogle3');
+goog.requireType('jspb$ro.exa$project_pb$ReadonlyRemoteResource');
 
 /**
  * @final
@@ -246,6 +248,78 @@ jspb$exa$project_pb$MutableResource = class extends jspb_internal_public_for_gen
   }
 
 
+  /**
+   * optional RemoteResource remote_resource = 4;
+   * @override
+   * @return {!jspb$exa$project_pb$MutableRemoteResource|undefined}
+   */
+  getRemoteResource() {
+    return jspb_internal_adapters.getOneofWrapperFieldOrUndefined(this, jspb$exa$project_pb$MutableRemoteResource, 4, jspb$exa$project_pb$MutableResource.oneofGroup_type_);
+  }
+
+
+  /**
+   * optional RemoteResource remote_resource = 4;
+   * @override
+   * @return {!jspb$ro.exa$project_pb$ReadonlyRemoteResource}
+   */
+  getReadonlyRemoteResource() {
+    return jspb_internal_adapters.getReadonlyOneofWrapperField(this, jspb$exa$project_pb$MutableRemoteResource, 4, jspb$exa$project_pb$MutableResource.oneofGroup_type_);
+  }
+
+
+  /**
+   * optional RemoteResource remote_resource = 4;
+   * @param {!jspb_internal_public_for_gencode.OrUndefinedToken<U>=} legacyOrUndefined
+   * @return {!jspb$exa$project_pb$MutableRemoteResource|R}
+   * @template U
+   * @template R := cond(eq(U, 'undefined'), 'undefined', 'jspb$exa$project_pb$MutableRemoteResource') =:
+   * @tsType (legacyOrUndefined: import('google3/javascript/apps/jspb/internal_public').OrUndefinedToken<undefined>): ಠ_ಠ.clutz.jspb$exa$project_pb$MutableRemoteResource|undefined
+   * @tsType (): ಠ_ಠ.clutz.jspb$exa$project_pb$MutableRemoteResource
+   */
+  getMutableRemoteResource(legacyOrUndefined) {
+    return jspb_internal_adapters.getMutableOneofWrapperField(this, jspb$exa$project_pb$MutableRemoteResource, 4, jspb$exa$project_pb$MutableResource.oneofGroup_type_, legacyOrUndefined);
+  }
+
+
+  /**
+   * @param {!jspb$ro.exa$project_pb$ReadonlyRemoteResource|null|undefined} value
+   * @return {!jspb$exa$project_pb$MutableResource} returns this
+   */
+  setRemoteResource(value) {
+    return jspb_internal_adapters.setOneofWrapperField(this, jspb$exa$project_pb$MutableRemoteResource, 4, jspb$exa$project_pb$MutableResource.oneofGroup_type_, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$exa$project_pb$MutableResource} returns this
+   */
+  clearRemoteResource() {
+    return jspb_internal_adapters.clearOneofField(this, 4, jspb$exa$project_pb$MutableResource.oneofGroup_type_);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasRemoteResource() {
+    return jspb_internal_adapters.hasOneofWrapperField(this, jspb$exa$project_pb$MutableRemoteResource, 4, jspb$exa$project_pb$MutableResource.oneofGroup_type_);
+  }
+
+
+  /**
+   * optional RemoteResource remote_resource = 4;
+   * @override
+   * @return {!jspb$ro.exa$project_pb$ReadonlyRemoteResource|undefined}
+   */
+  getRemoteResourceOrUndefined() {
+    return jspb_internal_adapters.getReadonlyOneofWrapperFieldOrUndefined(this, jspb$exa$project_pb$MutableRemoteResource, 4, jspb$exa$project_pb$MutableResource.oneofGroup_type_);
+  }
+
+
 };
 
 /**
@@ -274,7 +348,8 @@ jspb$exa$project_pb$MutableResource.hasInstance = /** @pureOrBreakMyCode */ (jsp
  * @typedef {{
  *  folderUri: (?string|undefined),
  *  google3: (?jspb$exa$project_pb$MutableGoogle3.ObjectFormat|undefined),
- *  gitFolder: (?jspb$exa$project_pb$MutableGitFolder.ObjectFormat|undefined)
+ *  gitFolder: (?jspb$exa$project_pb$MutableGitFolder.ObjectFormat|undefined),
+ *  remoteResource: (?jspb$exa$project_pb$MutableRemoteResource.ObjectFormat|undefined)
  * }}
  */
 jspb$exa$project_pb$MutableResource.ObjectFormat;
@@ -328,7 +403,7 @@ if (goog.DEBUG && !COMPILED) {
  * @const
  * @nodts
  */
-jspb$exa$project_pb$MutableResource.oneofGroup_type_ = [1,2,3];
+jspb$exa$project_pb$MutableResource.oneofGroup_type_ = [1,2,3,4];
 
 if (goog.DEBUG && !COMPILED) {
   /**
@@ -343,7 +418,8 @@ if (goog.DEBUG && !COMPILED) {
  * @typedef {{
  *  folderUri: (string|undefined),
  *  google3: (!jspb$ro.exa$project_pb$ReadonlyGoogle3|undefined),
- *  gitFolder: (!jspb$ro.exa$project_pb$ReadonlyGitFolder|undefined)
+ *  gitFolder: (!jspb$ro.exa$project_pb$ReadonlyGitFolder|undefined),
+ *  remoteResource: (!jspb$ro.exa$project_pb$ReadonlyRemoteResource|undefined)
  * }}
  */
 jspb$exa$project_pb$MutableResource.FieldsInterface;

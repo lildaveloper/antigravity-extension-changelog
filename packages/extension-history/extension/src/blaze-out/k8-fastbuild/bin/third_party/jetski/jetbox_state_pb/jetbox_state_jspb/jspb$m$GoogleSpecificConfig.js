@@ -155,6 +155,54 @@ jspb$jetbox_state_pb$MutableGoogleSpecificConfig = class extends jspb_internal_p
   }
 
 
+  /**
+   * optional bool sync_jj_workspace_to_head = 3;
+   * @override
+   * @return {boolean}
+   */
+  getSyncJjWorkspaceToHead() {
+    return jspb_internal_adapters.getBooleanFieldWithDefault(this, 3);
+  }
+
+
+  /**
+   * @param {boolean|null|undefined} value
+   * @return {!jspb$jetbox_state_pb$MutableGoogleSpecificConfig} returns this
+   */
+  setSyncJjWorkspaceToHead(value) {
+    return jspb_internal_adapters.setBooleanField(this, 3, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$jetbox_state_pb$MutableGoogleSpecificConfig} returns this
+   */
+  clearSyncJjWorkspaceToHead() {
+    return jspb_internal_adapters.clearField(this, 3);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasSyncJjWorkspaceToHead() {
+    return jspb_internal_adapters.hasBooleanField(this, 3);
+  }
+
+
+  /**
+   * optional bool sync_jj_workspace_to_head = 3;
+   * @override
+   * @return {boolean|undefined}
+   */
+  getSyncJjWorkspaceToHeadOrUndefined() {
+    return jspb_internal_adapters.getBooleanFieldOrUndefined(this, 3);
+  }
+
+
 };
 
 /**
@@ -182,7 +230,8 @@ jspb$jetbox_state_pb$MutableGoogleSpecificConfig.hasInstance = /** @pureOrBreakM
  * Object form of GoogleSpecificConfig as accepted by the `fromObject` method.
  * @typedef {{
  *  magicWorkspaceVcs: (?number|undefined),
- *  magicWorkspaceCogConfig: (?jspb$jetbox_state_pb$MutableCogWorkspaceConfig.ObjectFormat|undefined)
+ *  magicWorkspaceCogConfig: (?jspb$jetbox_state_pb$MutableCogWorkspaceConfig.ObjectFormat|undefined),
+ *  syncJjWorkspaceToHead: (?boolean|undefined)
  * }}
  */
 jspb$jetbox_state_pb$MutableGoogleSpecificConfig.ObjectFormat;
@@ -242,7 +291,8 @@ if (goog.DEBUG && !COMPILED) {
  * Interface form of GoogleSpecificConfig as accepted by `fromFields` and produced by `getFields`.
  * @typedef {{
  *  magicWorkspaceVcs: (!jspb$e.exa$vcs_pb$VcsType|undefined),
- *  magicWorkspaceCogConfig: (!jspb$ro.jetbox_state_pb$ReadonlyCogWorkspaceConfig|undefined)
+ *  magicWorkspaceCogConfig: (!jspb$ro.jetbox_state_pb$ReadonlyCogWorkspaceConfig|undefined),
+ *  syncJjWorkspaceToHead: (boolean|undefined)
  * }}
  */
 jspb$jetbox_state_pb$MutableGoogleSpecificConfig.FieldsInterface;

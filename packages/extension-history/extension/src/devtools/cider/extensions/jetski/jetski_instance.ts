@@ -97,6 +97,12 @@ class JetskiInstance {
          */
         () => config.extensionApi));
         this.ready = (0, event_1.toPromise)(this.api.onAntigravityReady, this.disposables);
+        void this.ready.then((/**
+         * @return {void}
+         */
+        () => {
+            (0, util_1.getOutputChannel)().appendLine(`[${new Date().toISOString()}] [Jetski] Iframe ready (type: ${this.type})`);
+        }));
         this.api.onMouseEvent((/**
          * @param {?} __0
          * @return {*}

@@ -116,7 +116,7 @@ jspb$o$jetbox_state_pb$JetboxAppState.fromObject = function(obj) {
 };
 }
 
-var jspb$o$google$protobuf$Timestamp;
-Object.defineProperty(this, 'jspb$o$google$protobuf$Timestamp', {
-  get() { return jspb$o$google$protobuf$Timestamp; },
-  set(v) { jspb$o$google$protobuf$Timestamp = v; },
+var jspb$o$exa$project_pb$GitFolder;
+Object.defineProperty(this, 'jspb$o$exa$project_pb$GitFolder', {
+  get() { return jspb$o$exa$project_pb$GitFolder; },
+  set(v) { jspb$o$exa$project_pb$GitFolder = v; },

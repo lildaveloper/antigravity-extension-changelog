@@ -60,7 +60,7 @@ jspb$b$jetbox_state_pb$JetboxAppState.fields = /** @pureOrBreakMyCode */([
 jspb$jetbox_state_pb$MutableJetboxAppState.prototype.serializeBinary = /** @pureOrBreakMyCode */(jspb_internal_public_for_gencode.makePrototypeSerializeBinaryFunction(jspb$b$jetbox_state_pb$JetboxAppState.fields));
 
 
-var jspb$b$google$protobuf$Timestamp;
-Object.defineProperty(this, 'jspb$b$google$protobuf$Timestamp', {
-  get() { return jspb$b$google$protobuf$Timestamp; },
-  set(v) { jspb$b$google$protobuf$Timestamp = v; },
+var jspb$b$exa$project_pb$GitFolder;
+Object.defineProperty(this, 'jspb$b$exa$project_pb$GitFolder', {
+  get() { return jspb$b$exa$project_pb$GitFolder; },
+  set(v) { jspb$b$exa$project_pb$GitFolder = v; },

@@ -716,6 +716,246 @@ jspb$devtools_jetski_provisioning$MutableInstance = class extends jspb_internal_
   }
 
 
+  /**
+   * optional float uptime7d = 11;
+   * @override
+   * @return {number}
+   */
+  getUptime7d() {
+    return jspb_internal_adapters.getFloatingPointFieldWithDefault(this, 11);
+  }
+
+
+  /**
+   * @param {number|null|undefined} value
+   * @return {!jspb$devtools_jetski_provisioning$MutableInstance} returns this
+   */
+  setUptime7d(value) {
+    return jspb_internal_adapters.setFloatingPointField(this, 11, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$devtools_jetski_provisioning$MutableInstance} returns this
+   */
+  clearUptime7d() {
+    return jspb_internal_adapters.clearField(this, 11);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasUptime7d() {
+    return jspb_internal_adapters.hasFloatingPointField(this, 11);
+  }
+
+
+  /**
+   * optional float uptime7d = 11;
+   * @override
+   * @return {number|undefined}
+   */
+  getUptime7dOrUndefined() {
+    return jspb_internal_adapters.getFloatingPointFieldOrUndefined(this, 11);
+  }
+
+
+  /**
+   * optional string error_message = 12;
+   * @override
+   * @return {string}
+   */
+  getErrorMessage() {
+    return jspb_internal_adapters.getStringFieldWithDefault(this, 12);
+  }
+
+
+  /**
+   * @param {string|null|undefined} value
+   * @return {!jspb$devtools_jetski_provisioning$MutableInstance} returns this
+   */
+  setErrorMessage(value) {
+    return jspb_internal_adapters.setStringField(this, 12, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$devtools_jetski_provisioning$MutableInstance} returns this
+   */
+  clearErrorMessage() {
+    return jspb_internal_adapters.clearField(this, 12);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasErrorMessage() {
+    return jspb_internal_adapters.hasStringField(this, 12);
+  }
+
+
+  /**
+   * optional string error_message = 12;
+   * @override
+   * @return {string|undefined}
+   */
+  getErrorMessageOrUndefined() {
+    return jspb_internal_adapters.getStringFieldOrUndefined(this, 12);
+  }
+
+
+  /**
+   * optional google.protobuf.Timestamp create_time = 13;
+   * @override
+   * @return {!jspb$google$protobuf$MutableTimestamp|undefined}
+   */
+  getCreateTime() {
+    return jspb_internal_adapters.getWrapperFieldOrUndefined(this, jspb$google$protobuf$MutableTimestamp, 13);
+  }
+
+
+  /**
+   * optional google.protobuf.Timestamp create_time = 13;
+   * @override
+   * @return {!jspb$ro.google$protobuf$ReadonlyTimestamp}
+   */
+  getReadonlyCreateTime() {
+    return jspb_internal_adapters.getReadonlyWrapperField(this, jspb$google$protobuf$MutableTimestamp, 13);
+  }
+
+
+  /**
+   * optional google.protobuf.Timestamp create_time = 13;
+   * @param {!jspb_internal_public_for_gencode.OrUndefinedToken<U>=} legacyOrUndefined
+   * @return {!jspb$google$protobuf$MutableTimestamp|R}
+   * @template U
+   * @template R := cond(eq(U, 'undefined'), 'undefined', 'jspb$google$protobuf$MutableTimestamp') =:
+   * @tsType (legacyOrUndefined: import('google3/javascript/apps/jspb/internal_public').OrUndefinedToken<undefined>): ಠ_ಠ.clutz.jspb$google$protobuf$MutableTimestamp|undefined
+   * @tsType (): ಠ_ಠ.clutz.jspb$google$protobuf$MutableTimestamp
+   */
+  getMutableCreateTime(legacyOrUndefined) {
+    return jspb_internal_adapters.getMutableWrapperField(this, jspb$google$protobuf$MutableTimestamp, 13, legacyOrUndefined);
+  }
+
+
+  /**
+   * @param {!jspb$ro.google$protobuf$ReadonlyTimestamp|null|undefined} value
+   * @return {!jspb$devtools_jetski_provisioning$MutableInstance} returns this
+   */
+  setCreateTime(value) {
+    return jspb_internal_adapters.setWrapperField(this, jspb$google$protobuf$MutableTimestamp, 13, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$devtools_jetski_provisioning$MutableInstance} returns this
+   */
+  clearCreateTime() {
+    return jspb_internal_adapters.clearField(this, 13);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasCreateTime() {
+    return jspb_internal_adapters.hasWrapperField(this, jspb$google$protobuf$MutableTimestamp, 13);
+  }
+
+
+  /**
+   * optional google.protobuf.Timestamp create_time = 13;
+   * @override
+   * @return {!jspb$ro.google$protobuf$ReadonlyTimestamp|undefined}
+   */
+  getCreateTimeOrUndefined() {
+    return jspb_internal_adapters.getReadonlyWrapperFieldOrUndefined(this, jspb$google$protobuf$MutableTimestamp, 13);
+  }
+
+
+  /**
+   * optional google.protobuf.Timestamp stop_time = 14;
+   * @override
+   * @return {!jspb$google$protobuf$MutableTimestamp|undefined}
+   */
+  getStopTime() {
+    return jspb_internal_adapters.getWrapperFieldOrUndefined(this, jspb$google$protobuf$MutableTimestamp, 14);
+  }
+
+
+  /**
+   * optional google.protobuf.Timestamp stop_time = 14;
+   * @override
+   * @return {!jspb$ro.google$protobuf$ReadonlyTimestamp}
+   */
+  getReadonlyStopTime() {
+    return jspb_internal_adapters.getReadonlyWrapperField(this, jspb$google$protobuf$MutableTimestamp, 14);
+  }
+
+
+  /**
+   * optional google.protobuf.Timestamp stop_time = 14;
+   * @param {!jspb_internal_public_for_gencode.OrUndefinedToken<U>=} legacyOrUndefined
+   * @return {!jspb$google$protobuf$MutableTimestamp|R}
+   * @template U
+   * @template R := cond(eq(U, 'undefined'), 'undefined', 'jspb$google$protobuf$MutableTimestamp') =:
+   * @tsType (legacyOrUndefined: import('google3/javascript/apps/jspb/internal_public').OrUndefinedToken<undefined>): ಠ_ಠ.clutz.jspb$google$protobuf$MutableTimestamp|undefined
+   * @tsType (): ಠ_ಠ.clutz.jspb$google$protobuf$MutableTimestamp
+   */
+  getMutableStopTime(legacyOrUndefined) {
+    return jspb_internal_adapters.getMutableWrapperField(this, jspb$google$protobuf$MutableTimestamp, 14, legacyOrUndefined);
+  }
+
+
+  /**
+   * @param {!jspb$ro.google$protobuf$ReadonlyTimestamp|null|undefined} value
+   * @return {!jspb$devtools_jetski_provisioning$MutableInstance} returns this
+   */
+  setStopTime(value) {
+    return jspb_internal_adapters.setWrapperField(this, jspb$google$protobuf$MutableTimestamp, 14, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$devtools_jetski_provisioning$MutableInstance} returns this
+   */
+  clearStopTime() {
+    return jspb_internal_adapters.clearField(this, 14);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasStopTime() {
+    return jspb_internal_adapters.hasWrapperField(this, jspb$google$protobuf$MutableTimestamp, 14);
+  }
+
+
+  /**
+   * optional google.protobuf.Timestamp stop_time = 14;
+   * @override
+   * @return {!jspb$ro.google$protobuf$ReadonlyTimestamp|undefined}
+   */
+  getStopTimeOrUndefined() {
+    return jspb_internal_adapters.getReadonlyWrapperFieldOrUndefined(this, jspb$google$protobuf$MutableTimestamp, 14);
+  }
+
+
 };
 
 /**
@@ -752,7 +992,11 @@ jspb$devtools_jetski_provisioning$MutableInstance.hasInstance = /** @pureOrBreak
  *  status: (?number|undefined),
  *  metrics: (?jspb$devtools_jetski_provisioning$MutableInstanceMetrics.ObjectFormat|undefined),
  *  sidecarsList: (?Array<!jspb$devtools_jetski_provisioning$storage$MutableSidecarStatusInfo.ObjectFormat>|undefined),
- *  version: (?string|undefined)
+ *  version: (?string|undefined),
+ *  uptime7d: (?number|undefined),
+ *  errorMessage: (?string|undefined),
+ *  createTime: (?jspb$google$protobuf$MutableTimestamp.ObjectFormat|undefined),
+ *  stopTime: (?jspb$google$protobuf$MutableTimestamp.ObjectFormat|undefined)
  * }}
  */
 jspb$devtools_jetski_provisioning$MutableInstance.ObjectFormat;
@@ -821,7 +1065,11 @@ if (goog.DEBUG && !COMPILED) {
  *  status: (!jspb$e.devtools_jetski_provisioning$InstanceStatus|undefined),
  *  metrics: (!jspb$ro.devtools_jetski_provisioning$ReadonlyInstanceMetrics|undefined),
  *  sidecarsList: (!ReadonlyArray<!jspb$ro.devtools_jetski_provisioning$storage$ReadonlySidecarStatusInfo>|undefined),
- *  version: (string|undefined)
+ *  version: (string|undefined),
+ *  uptime7d: (number|undefined),
+ *  errorMessage: (string|undefined),
+ *  createTime: (!jspb$ro.google$protobuf$ReadonlyTimestamp|undefined),
+ *  stopTime: (!jspb$ro.google$protobuf$ReadonlyTimestamp|undefined)
  * }}
  */
 jspb$devtools_jetski_provisioning$MutableInstance.FieldsInterface;

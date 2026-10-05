@@ -11,6 +11,7 @@ goog.provide('jspb$ro.devtools_jetski_provisioning$ReadonlyDeployment');
 
 goog.require('jspb$devtools_jetski_provisioning$MutableBlueprintBinding');
 goog.require('jspb$devtools_jetski_provisioning$MutableDeploymentConfig');
+goog.require('jspb$devtools_jetski_provisioning$MutableDeploymentStatusDetail');
 goog.require('jspb$devtools_jetski_provisioning$MutableInstance');
 goog.require('jspb$devtools_jetski_provisioning$MutableInstanceMetrics');
 goog.require('jspb$devtools_jetski_provisioning$MutableProvisioningConfig');
@@ -27,6 +28,7 @@ goog.requireType('jspb$e.devtools_jetski_provisioning$DeploymentStatus');
 goog.requireType('jspb$r$devtools_jetski_provisioning$Deployment$internalDoNotUseReader');
 goog.requireType('jspb$ro.devtools_jetski_provisioning$ReadonlyBlueprintBinding');
 goog.requireType('jspb$ro.devtools_jetski_provisioning$ReadonlyDeploymentConfig');
+goog.requireType('jspb$ro.devtools_jetski_provisioning$ReadonlyDeploymentStatusDetail');
 goog.requireType('jspb$ro.devtools_jetski_provisioning$ReadonlyInstance');
 goog.requireType('jspb$ro.devtools_jetski_provisioning$ReadonlyInstanceMetrics');
 goog.requireType('jspb$ro.devtools_jetski_provisioning$ReadonlyProvisioningConfig');
@@ -1607,6 +1609,126 @@ jspb$devtools_jetski_provisioning$MutableDeployment = class extends jspb_interna
   }
 
 
+  /**
+   * optional float uptime7d = 29;
+   * @override
+   * @return {number}
+   */
+  getUptime7d() {
+    return jspb_internal_adapters.getFloatingPointFieldWithDefault(this, 29);
+  }
+
+
+  /**
+   * @param {number|null|undefined} value
+   * @return {!jspb$devtools_jetski_provisioning$MutableDeployment} returns this
+   */
+  setUptime7d(value) {
+    return jspb_internal_adapters.setFloatingPointField(this, 29, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$devtools_jetski_provisioning$MutableDeployment} returns this
+   */
+  clearUptime7d() {
+    return jspb_internal_adapters.clearField(this, 29);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasUptime7d() {
+    return jspb_internal_adapters.hasFloatingPointField(this, 29);
+  }
+
+
+  /**
+   * optional float uptime7d = 29;
+   * @override
+   * @return {number|undefined}
+   */
+  getUptime7dOrUndefined() {
+    return jspb_internal_adapters.getFloatingPointFieldOrUndefined(this, 29);
+  }
+
+
+  /**
+   * optional DeploymentStatusDetail status_detail = 30;
+   * @override
+   * @return {!jspb$devtools_jetski_provisioning$MutableDeploymentStatusDetail|undefined}
+   */
+  getStatusDetail() {
+    return jspb_internal_adapters.getWrapperFieldOrUndefined(this, jspb$devtools_jetski_provisioning$MutableDeploymentStatusDetail, 30);
+  }
+
+
+  /**
+   * optional DeploymentStatusDetail status_detail = 30;
+   * @override
+   * @return {!jspb$ro.devtools_jetski_provisioning$ReadonlyDeploymentStatusDetail}
+   */
+  getReadonlyStatusDetail() {
+    return jspb_internal_adapters.getReadonlyWrapperField(this, jspb$devtools_jetski_provisioning$MutableDeploymentStatusDetail, 30);
+  }
+
+
+  /**
+   * optional DeploymentStatusDetail status_detail = 30;
+   * @param {!jspb_internal_public_for_gencode.OrUndefinedToken<U>=} legacyOrUndefined
+   * @return {!jspb$devtools_jetski_provisioning$MutableDeploymentStatusDetail|R}
+   * @template U
+   * @template R := cond(eq(U, 'undefined'), 'undefined', 'jspb$devtools_jetski_provisioning$MutableDeploymentStatusDetail') =:
+   * @tsType (legacyOrUndefined: import('google3/javascript/apps/jspb/internal_public').OrUndefinedToken<undefined>): ಠ_ಠ.clutz.jspb$devtools_jetski_provisioning$MutableDeploymentStatusDetail|undefined
+   * @tsType (): ಠ_ಠ.clutz.jspb$devtools_jetski_provisioning$MutableDeploymentStatusDetail
+   */
+  getMutableStatusDetail(legacyOrUndefined) {
+    return jspb_internal_adapters.getMutableWrapperField(this, jspb$devtools_jetski_provisioning$MutableDeploymentStatusDetail, 30, legacyOrUndefined);
+  }
+
+
+  /**
+   * @param {!jspb$ro.devtools_jetski_provisioning$ReadonlyDeploymentStatusDetail|null|undefined} value
+   * @return {!jspb$devtools_jetski_provisioning$MutableDeployment} returns this
+   */
+  setStatusDetail(value) {
+    return jspb_internal_adapters.setWrapperField(this, jspb$devtools_jetski_provisioning$MutableDeploymentStatusDetail, 30, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$devtools_jetski_provisioning$MutableDeployment} returns this
+   */
+  clearStatusDetail() {
+    return jspb_internal_adapters.clearField(this, 30);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasStatusDetail() {
+    return jspb_internal_adapters.hasWrapperField(this, jspb$devtools_jetski_provisioning$MutableDeploymentStatusDetail, 30);
+  }
+
+
+  /**
+   * optional DeploymentStatusDetail status_detail = 30;
+   * @override
+   * @return {!jspb$ro.devtools_jetski_provisioning$ReadonlyDeploymentStatusDetail|undefined}
+   */
+  getStatusDetailOrUndefined() {
+    return jspb_internal_adapters.getReadonlyWrapperFieldOrUndefined(this, jspb$devtools_jetski_provisioning$MutableDeploymentStatusDetail, 30);
+  }
+
+
 };
 
 /**
@@ -1657,7 +1779,9 @@ jspb$devtools_jetski_provisioning$MutableDeployment.hasInstance = /** @pureOrBre
  *  metrics: (?jspb$devtools_jetski_provisioning$MutableInstanceMetrics.ObjectFormat|undefined),
  *  desiredReplicas: (?number|undefined),
  *  instancesList: (?Array<!jspb$devtools_jetski_provisioning$MutableInstance.ObjectFormat>|undefined),
- *  autoRenewalEligibility: (?number|undefined)
+ *  autoRenewalEligibility: (?number|undefined),
+ *  uptime7d: (?number|undefined),
+ *  statusDetail: (?jspb$devtools_jetski_provisioning$MutableDeploymentStatusDetail.ObjectFormat|undefined)
  * }}
  */
 jspb$devtools_jetski_provisioning$MutableDeployment.ObjectFormat;
@@ -1740,7 +1864,9 @@ if (goog.DEBUG && !COMPILED) {
  *  metrics: (!jspb$ro.devtools_jetski_provisioning$ReadonlyInstanceMetrics|undefined),
  *  desiredReplicas: (number|undefined),
  *  instancesList: (!ReadonlyArray<!jspb$ro.devtools_jetski_provisioning$ReadonlyInstance>|undefined),
- *  autoRenewalEligibility: (!jspb$e.devtools_jetski_provisioning$AutoRenewalEligibility|undefined)
+ *  autoRenewalEligibility: (!jspb$e.devtools_jetski_provisioning$AutoRenewalEligibility|undefined),
+ *  uptime7d: (number|undefined),
+ *  statusDetail: (!jspb$ro.devtools_jetski_provisioning$ReadonlyDeploymentStatusDetail|undefined)
  * }}
  */
 jspb$devtools_jetski_provisioning$MutableDeployment.FieldsInterface;

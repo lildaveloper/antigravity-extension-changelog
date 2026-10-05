@@ -80,7 +80,7 @@ function buffer(event, flushAfterTimeout = false, buffer = [], disposables) {
      * @param {!tsickle_lifecycle_2.DisposableStore} store
      * @return {?}
      */
-    (store) => event_1.Event.buffer((/** @type {?} */ (event)), flushAfterTimeout, buffer, store)));
+    (store) => event_1.Event.buffer((/** @type {?} */ (event)), 'extensionutils.buffer', flushAfterTimeout, buffer, store)));
 }
 exports.buffer = buffer;
 /**

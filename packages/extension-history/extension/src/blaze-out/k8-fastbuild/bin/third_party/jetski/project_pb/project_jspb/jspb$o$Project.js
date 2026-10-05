@@ -46,6 +46,7 @@ jspb$o$exa$project_pb$Project.internal_toObject = function(msg) {
     updatedAt: jspb$o$google$protobuf$Timestamp.internal_toObject(msg.getUpdatedAt()),
     isWorkspaceOnly: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getBooleanFieldLegacyNullable(msg, 12)),
     archived: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getBooleanFieldLegacyNullable(msg, 13)),
+    backendType: jspb_internal_adapters.getEnumFieldWithDefault(msg, 14),
   }));
 
 };
@@ -106,6 +107,7 @@ jspb$o$exa$project_pb$Project.fromObject = function(obj) {
       11, jspb_internal_public_for_gencode.fromObjectNullable(obj.updatedAt, jspb$o$google$protobuf$Timestamp.fromObject));
   jspb_internal_adapters.setBooleanField(msg, 12, obj.isWorkspaceOnly);
   jspb_internal_adapters.setBooleanField(msg, 13, obj.archived);
+  jspb_internal_adapters.setProto3EnumField(msg, 14, obj.backendType);
   return msg;
 };
 }

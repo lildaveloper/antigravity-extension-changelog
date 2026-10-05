@@ -596,7 +596,7 @@ class LinkedMap {
     }
     /**
      * @public
-     * @param {function(V, K, !LinkedMap): void} callbackfn
+     * @param {function(V, K, !Map<K, V>): void} callbackfn
      * @param {*=} thisArg
      * @return {void}
      */
@@ -630,7 +630,6 @@ class LinkedMap {
         const state = this._state;
         /** @type {(undefined|!Item<K, V>)} */
         let current = this._head;
-        // go/vscode-patch/typescript#esnext
         /** @type {!MapIterator<K>} */
         const iterator = {
             /**
@@ -640,7 +639,6 @@ class LinkedMap {
             [Symbol.iterator]() {
                 return iterator;
             },
-            // go/vscode-patch/typescript#esnext
             /**
              * @public
              * @return {void}
@@ -679,7 +677,6 @@ class LinkedMap {
         const state = this._state;
         /** @type {(undefined|!Item<K, V>)} */
         let current = this._head;
-        // go/vscode-patch/typescript#esnext
         /** @type {!MapIterator<V>} */
         const iterator = {
             /**
@@ -689,7 +686,6 @@ class LinkedMap {
             [Symbol.iterator]() {
                 return iterator;
             },
-            // go/vscode-patch/typescript#esnext
             /**
              * @public
              * @return {void}
@@ -728,7 +724,6 @@ class LinkedMap {
         const state = this._state;
         /** @type {(undefined|!Item<K, V>)} */
         let current = this._head;
-        // go/vscode-patch/typescript#esnext
         /** @type {!MapIterator<!Array<?>>} */
         const iterator = {
             /**
@@ -738,7 +733,6 @@ class LinkedMap {
             [Symbol.iterator]() {
                 return iterator;
             },
-            // go/vscode-patch/typescript#esnext
             /**
              * @public
              * @return {void}
@@ -1550,6 +1544,68 @@ class NKeyMap {
     }
     /**
      * @public
+     * @param {...TKeys} keys
+     * @return {boolean}
+     */
+    delete(...keys) {
+        /** @type {!Array<!Map<?, ?>>} */
+        const maps = [this._data];
+        /** @type {!Map<?, ?>} */
+        let currentMap = this._data;
+        for (let i = 0; i < keys.length - 1; i++) {
+            /** @type {?} */
+            const nextMap = currentMap.get(keys[i]);
+            if (nextMap === undefined) {
+                return false;
+            }
+            currentMap = nextMap;
+            maps.push(currentMap);
+        }
+        /** @type {boolean} */
+        const deleted = currentMap.delete(keys[keys.length - 1]);
+        for (let i = keys.length - 2; deleted && i >= 0; i--) {
+            if (maps[i + 1].size === 0) {
+                maps[i].delete(keys[i]);
+            }
+        }
+        return deleted;
+    }
+    /**
+     * @public
+     * @param {...?} keys
+     * @return {boolean}
+     */
+    deleteAll(...keys) {
+        if (keys.length === 0) {
+            /** @type {boolean} */
+            const hadData = this._data.size > 0;
+            this._data.clear();
+            return hadData;
+        }
+        /** @type {!Array<!Map<?, ?>>} */
+        const maps = [this._data];
+        /** @type {!Map<?, ?>} */
+        let currentMap = this._data;
+        for (let i = 0; i < keys.length - 1; i++) {
+            /** @type {?} */
+            const nextMap = currentMap.get(keys[i]);
+            if (nextMap === undefined) {
+                return false;
+            }
+            currentMap = nextMap;
+            maps.push(currentMap);
+        }
+        /** @type {boolean} */
+        const deleted = currentMap.delete(keys[keys.length - 1]);
+        for (let i = keys.length - 2; deleted && i >= 0; i--) {
+            if (maps[i + 1].size === 0) {
+                maps[i].delete(keys[i]);
+            }
+        }
+        return deleted;
+    }
+    /**
+     * @public
      * @return {void}
      */
     clear() {
@@ -1557,24 +1613,43 @@ class NKeyMap {
     }
     /**
      * @public
+     * @param {...?} keys
+     * @return {!IterableIterator<TValue, ?, ?>}
+     */
+    *getAll(...keys) {
+        /** @type {!Map<?, ?>} */
+        let currentMap = this._data;
+        for (const key of keys) {
+            /** @type {?} */
+            const nextMap = currentMap.get(key);
+            if (nextMap === undefined) {
+                return;
+            }
+            currentMap = nextMap;
+        }
+        yield* this._values(currentMap);
+    }
+    /**
+     * @public
      * @return {!IterableIterator<TValue, ?, ?>}
      */
     *values() {
-        /**
-         * @param {!Map<?, ?>} map
-         * @return {!IterableIterator<TValue, ?, ?>}
-         */
-        function* iterate(map) {
-            for (const value of map.values()) {
-                if (value instanceof Map) {
-                    yield* iterate(value);
-                }
-                else {
-                    yield value;
-                }
+        yield* this._values(this._data);
+    }
+    /**
+     * @private
+     * @param {!Map<?, ?>} map
+     * @return {!IterableIterator<TValue, ?, ?>}
+     */
+    *_values(map) {
+        for (const value of map.values()) {
+            if (value instanceof Map) {
+                yield* this._values(value);
+            }
+            else {
+                yield value;
             }
         }
-        yield* iterate(this._data);
     }
     /**
      * Get a textual representation of the map for debugging purposes.

@@ -26,6 +26,8 @@ jspb$o$exa$config_pb$ConversationGroupConfig.internal_toObject = function(msg) {
   return /** @type {?} */ (/** @type {!jspb$exa$config_pb$MutableConversationGroupConfig.ObjectFormat} */ ({
     name: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getStringFieldLegacyNullable(msg, 1)),
     sortOrder: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getInt32FieldLegacyNullable(msg, 2)),
+    sortMode: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getEnumFieldLegacyNullable(msg, 3)),
+    conversationIdsList: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getRepeatedStringField(msg, 4, jspb_internal_adapters.RepeatedArrayReturnType.EITHER_FROZEN_OR_UNFROZEN)),
   }));
 
 };
@@ -66,6 +68,8 @@ jspb$o$exa$config_pb$ConversationGroupConfig.fromObject = function(obj) {
   const msg = new jspb$exa$config_pb$MutableConversationGroupConfig();
   jspb_internal_adapters.setStringField(msg, 1, obj.name);
   jspb_internal_adapters.setInt32Field(msg, 2, obj.sortOrder);
+  jspb_internal_adapters.setEnumField(msg, 3, obj.sortMode);
+  jspb_internal_adapters.setRepeatedStringField(msg, 4, obj.conversationIdsList);
   return msg;
 };
 }

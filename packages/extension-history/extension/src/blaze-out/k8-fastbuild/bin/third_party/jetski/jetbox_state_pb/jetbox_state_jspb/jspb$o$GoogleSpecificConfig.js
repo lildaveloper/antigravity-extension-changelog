@@ -28,6 +28,7 @@ jspb$o$jetbox_state_pb$GoogleSpecificConfig.internal_toObject = function(msg) {
   return /** @type {?} */ (/** @type {!jspb$jetbox_state_pb$MutableGoogleSpecificConfig.ObjectFormat} */ ({
     magicWorkspaceVcs: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getEnumFieldLegacyNullable(msg, 1)),
     magicWorkspaceCogConfig: jspb$o$jetbox_state_pb$CogWorkspaceConfig.internal_toObject(msg.getMagicWorkspaceCogConfig()),
+    syncJjWorkspaceToHead: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getBooleanFieldLegacyNullable(msg, 3)),
   }));
 
 };
@@ -70,6 +71,7 @@ jspb$o$jetbox_state_pb$GoogleSpecificConfig.fromObject = function(obj) {
   jspb_internal_adapters.setWrapperField(msg,
       jspb$jetbox_state_pb$MutableCogWorkspaceConfig,
       2, jspb_internal_public_for_gencode.fromObjectNullable(obj.magicWorkspaceCogConfig, jspb$o$jetbox_state_pb$CogWorkspaceConfig.fromObject));
+  jspb_internal_adapters.setBooleanField(msg, 3, obj.syncJjWorkspaceToHead);
   return msg;
 };
 }

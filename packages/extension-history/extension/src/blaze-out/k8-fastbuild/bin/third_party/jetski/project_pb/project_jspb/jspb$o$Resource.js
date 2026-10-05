@@ -10,9 +10,11 @@ goog.provide('jspb$o$exa$project_pb$Resource');
 
 goog.require('jspb$exa$project_pb$MutableGitFolder');
 goog.require('jspb$exa$project_pb$MutableGoogle3');
+goog.require('jspb$exa$project_pb$MutableRemoteResource');
 goog.require('jspb$exa$project_pb$MutableResource');
 goog.require('jspb$o$exa$project_pb$GitFolder');
 goog.require('jspb$o$exa$project_pb$Google3');
+goog.require('jspb$o$exa$project_pb$RemoteResource');
 goog.require('jspb_internal_adapters');
 goog.require('jspb_internal_public_for_gencode');
 
@@ -31,6 +33,7 @@ jspb$o$exa$project_pb$Resource.internal_toObject = function(msg) {
     folderUri: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getOneofStringFieldLegacyNullable(msg, 1, jspb$exa$project_pb$MutableResource.oneofGroup_type_)),
     google3: jspb$o$exa$project_pb$Google3.internal_toObject(msg.getGoogle3()),
     gitFolder: jspb$o$exa$project_pb$GitFolder.internal_toObject(msg.getGitFolder()),
+    remoteResource: jspb$o$exa$project_pb$RemoteResource.internal_toObject(msg.getRemoteResource()),
   }));
 
 };
@@ -76,6 +79,9 @@ jspb$o$exa$project_pb$Resource.fromObject = function(obj) {
   jspb_internal_adapters.setOneofWrapperField(msg,
       jspb$exa$project_pb$MutableGitFolder,
       3, jspb$exa$project_pb$MutableResource.oneofGroup_type_, jspb_internal_public_for_gencode.fromObjectNullable(obj.gitFolder, jspb$o$exa$project_pb$GitFolder.fromObject));
+  jspb_internal_adapters.setOneofWrapperField(msg,
+      jspb$exa$project_pb$MutableRemoteResource,
+      4, jspb$exa$project_pb$MutableResource.oneofGroup_type_, jspb_internal_public_for_gencode.fromObjectNullable(obj.remoteResource, jspb$o$exa$project_pb$RemoteResource.fromObject));
   return msg;
 };
 }

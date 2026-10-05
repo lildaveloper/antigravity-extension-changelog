@@ -68,7 +68,7 @@ jspb$o$exa$project_pb$Google3.fromObject = function(obj) {
 };
 }
 
-var jspb$o$exa$project_pb$Resource;
-Object.defineProperty(this, 'jspb$o$exa$project_pb$Resource', {
-  get() { return jspb$o$exa$project_pb$Resource; },
-  set(v) { jspb$o$exa$project_pb$Resource = v; },
+var jspb$o$exa$project_pb$RemoteResource;
+Object.defineProperty(this, 'jspb$o$exa$project_pb$RemoteResource', {
+  get() { return jspb$o$exa$project_pb$RemoteResource; },
+  set(v) { jspb$o$exa$project_pb$RemoteResource = v; },

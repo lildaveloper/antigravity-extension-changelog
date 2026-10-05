@@ -46,7 +46,13 @@ function _validateUri(ret, _strict) {
     // scheme, https://tools.ietf.org/html/rfc3986#section-3.1
     // ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
     if (ret.scheme && !_schemePattern.test(ret.scheme)) {
-        throw new Error('[UriError]: Scheme contains illegal characters.');
+        /** @type {!Array<!RegExpExecArray>} */
+        const matches = [...ret.scheme.matchAll(/[^\w\d+.-]/gu)];
+        /** @type {string} */
+        const detail = matches.length > 0
+            ? ` Found '${matches[0][0]}' at index ${matches[0].index} (${matches.length} total)`
+            : '';
+        throw new Error(`[UriError]: Scheme contains illegal characters.${detail} (len:${ret.scheme.length})`);
     }
     // path, http://tools.ietf.org/html/rfc3986#section-3.3
     // If a URI contains an authority component, then the path component
@@ -356,7 +362,7 @@ class URI {
      */
     static joinPath(uri, ...pathFragment) {
         if (!uri.path) {
-            throw new Error(`[UriError]: cannot call joinPath on URI without path`);
+            throw new Error(`[UriError]: cannot call joinPath on URI without path: ${uri.toString()}`);
         }
         /** @type {string} */
         let newPath;

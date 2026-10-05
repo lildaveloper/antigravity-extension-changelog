@@ -119,8 +119,8 @@ exports.LOG_CORRECT_XHR_ERROR_STATUSES = toggles.TOGGLE_GoogFlags__use_toggles ?
  * @const {boolean}
  * @see google3/third_party/javascript/closure/flags/flags.proto?q=symbol:\bFC_DATA_USE_FETCH_TRANSPORT\b
  */
-exports.FC_DATA_USE_FETCH_TRANSPORT = toggles.TOGGLE_GoogFlags__use_toggles ? goog.DEBUG || toggles.TOGGLE_GoogFlags__fc_data_use_fetch_transport__enable :
-    goog.readFlagInternalDoNotUseOrElse(283953155, goog.DEBUG);
+exports.FC_DATA_USE_FETCH_TRANSPORT = toggles.TOGGLE_GoogFlags__use_toggles ? goog.FLAGS_STAGING_DEFAULT && (toggles.TOGGLE_GoogFlags__override_disable_toggles || !toggles.TOGGLE_GoogFlags__fc_data_use_fetch_transport__disable) :
+    goog.readFlagInternalDoNotUseOrElse(283953155, STAGING);
 /**
  * @const {boolean}
  * @see google3/third_party/javascript/closure/flags/flags.proto?q=symbol:\bOPTIMIZE_MODULE_INFO_CALLBACKS\b

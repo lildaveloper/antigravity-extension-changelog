@@ -428,6 +428,8 @@ exports.isSafari = !!(!exports.isChrome && (exports.userAgent && exports.userAge
 exports.isEdge = !!(exports.userAgent && exports.userAgent.indexOf('Edg/') >= 0);
 /** @type {boolean} */
 exports.isAndroid = !!(exports.userAgent && exports.userAgent.indexOf('Android') >= 0);
+/** @type {boolean} */
+exports.hasElectronUserAgent = !!(exports.userAgent && exports.userAgent.indexOf('Electron') >= 0);
 /**
  * @param {string} osVersion
  * @return {boolean}

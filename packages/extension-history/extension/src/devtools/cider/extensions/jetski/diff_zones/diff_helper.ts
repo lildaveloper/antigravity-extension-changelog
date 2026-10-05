@@ -56,8 +56,9 @@ exports.getDiffHunks = getDiffHunks;
  * @return {string}
  */
 function getTextWithHunks(originalText, hunks) {
+    // An empty file has no lines, not one empty line.
     /** @type {!Array<string>} */
-    const originalLines = originalText.split(/\r?\n/);
+    const originalLines = originalText === '' ? [] : originalText.split(/\r?\n/);
     /** @type {!Array<string>} */
     const resultLines = [];
     /** @type {number} */

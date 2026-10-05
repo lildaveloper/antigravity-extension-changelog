@@ -33,7 +33,7 @@ jspb$b$exa$project_pb$Google3.fields = /** @pureOrBreakMyCode */([
 jspb$exa$project_pb$MutableGoogle3.prototype.serializeBinary = /** @pureOrBreakMyCode */(jspb_internal_public_for_gencode.makePrototypeSerializeBinaryFunction(jspb$b$exa$project_pb$Google3.fields));
 
 
-var jspb$b$exa$project_pb$Resource;
-Object.defineProperty(this, 'jspb$b$exa$project_pb$Resource', {
-  get() { return jspb$b$exa$project_pb$Resource; },
-  set(v) { jspb$b$exa$project_pb$Resource = v; },
+var jspb$b$exa$project_pb$RemoteResource;
+Object.defineProperty(this, 'jspb$b$exa$project_pb$RemoteResource', {
+  get() { return jspb$b$exa$project_pb$RemoteResource; },
+  set(v) { jspb$b$exa$project_pb$RemoteResource = v; },

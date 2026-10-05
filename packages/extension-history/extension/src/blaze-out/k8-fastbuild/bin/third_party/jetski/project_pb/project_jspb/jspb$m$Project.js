@@ -20,6 +20,7 @@ goog.require('jspb_internal_public_for_gencode');
 /** @suppress {extraRequire} */
 goog.requireType('google3.javascript.apps.jspb.internal_records');
 goog.requireType('google3.javascript.common.asserts.asserts');
+goog.requireType('jspb$e.exa$project_pb$BackendType');
 goog.requireType('jspb$exa$project_pb$ImmutableProject');
 goog.requireType('jspb$r$exa$project_pb$Project$internalDoNotUseReader');
 goog.requireType('jspb$ro.exa$project_pb$ReadonlyEnvironments');
@@ -642,6 +643,34 @@ jspb$exa$project_pb$MutableProject = class extends jspb_internal_public_for_genc
   }
 
 
+  /**
+   * optional BackendType backend_type = 14;
+   * @override
+   * @return {!jspb$e.exa$project_pb$BackendType}
+   */
+  getBackendType() {
+    return /** @type {!jspb$e.exa$project_pb$BackendType} */ (jspb_internal_adapters.getEnumFieldWithDefault(this, 14));
+  }
+
+
+  /**
+   * @param {!jspb$e.exa$project_pb$BackendType|null|undefined} value
+   * @return {!jspb$exa$project_pb$MutableProject} returns this
+   */
+  setBackendType(value) {
+    return jspb_internal_adapters.setProto3EnumField(this, 14, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$exa$project_pb$MutableProject} returns this
+   */
+  clearBackendType() {
+    return jspb_internal_adapters.clearField(this, 14);
+  }
+
+
 };
 
 /**
@@ -677,7 +706,8 @@ jspb$exa$project_pb$MutableProject.hasInstance = /** @pureOrBreakMyCode */ (jspb
  *  settings: (?jspb$exa$project_pb$MutableProjectSettings.ObjectFormat|undefined),
  *  updatedAt: (?jspb$google$protobuf$MutableTimestamp.ObjectFormat|undefined),
  *  isWorkspaceOnly: (?boolean|undefined),
- *  archived: (?boolean|undefined)
+ *  archived: (?boolean|undefined),
+ *  backendType: (?number|undefined)
  * }}
  */
 jspb$exa$project_pb$MutableProject.ObjectFormat;
@@ -745,7 +775,8 @@ if (goog.DEBUG && !COMPILED) {
  *  settings: (!jspb$ro.exa$project_pb$ReadonlyProjectSettings|undefined),
  *  updatedAt: (!jspb$ro.google$protobuf$ReadonlyTimestamp|undefined),
  *  isWorkspaceOnly: (boolean|undefined),
- *  archived: (boolean|undefined)
+ *  archived: (boolean|undefined),
+ *  backendType: (!jspb$e.exa$project_pb$BackendType|undefined)
  * }}
  */
 jspb$exa$project_pb$MutableProject.FieldsInterface;

@@ -50,6 +50,71 @@ exports.ANTIGRAVITY_EXTENSION_SOURCE = 'antigravity-extension';
  */
 let cachedExtensionApi;
 /**
+ * Returns whether `origin` is a trusted host origin allowed to send messages
+ * over the Antigravity extension postMessage bridge.
+ * @param {string} origin
+ * @param {string=} currentOrigin
+ * @return {boolean}
+ */
+function isAllowedExtensionOrigin(origin, currentOrigin = window.location.origin) {
+    if (!origin || origin === 'null') {
+        return false;
+    }
+    if (origin === currentOrigin) {
+        return true;
+    }
+    if (origin.startsWith('vscode-webview://') ||
+        origin.startsWith('vscode-file://')) {
+        return true;
+    }
+    try {
+        /** @type {!URL} */
+        const url = new URL(origin);
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+            return false;
+        }
+        /** @type {string} */
+        const host = url.hostname;
+        if (host === 'localhost' ||
+            host === '127.0.0.1' ||
+            host === '[::1]' ||
+            host === '::1') {
+            return true;
+        }
+        if (url.protocol === 'https:') {
+            return (host.endsWith('.google.com') ||
+                host.endsWith('.googleplex.com') ||
+                host.endsWith('.googlers.com') ||
+                host.endsWith('.googleprod.com'));
+        }
+        return false;
+    }
+    catch {
+        return false;
+    }
+}
+exports.isAllowedExtensionOrigin = isAllowedExtensionOrigin;
+/**
+ * Validates that a MessageEvent originated from an authorized extension host
+ * frame or same-window native webview injection, and never from a cross-origin
+ * popup opener (`window.opener`).
+ * @param {!MessageEvent<?>} event
+ * @param {!Window=} currentWindow
+ * @return {boolean}
+ */
+function isAllowedExtensionMessageEvent(event, currentWindow = window) {
+    if (currentWindow.opener != null &&
+        event.source != null &&
+        event.source === currentWindow.opener) {
+        return false;
+    }
+    if (event.source !== currentWindow.parent && event.source !== currentWindow) {
+        return false;
+    }
+    return isAllowedExtensionOrigin(event.origin, currentWindow.location.origin);
+}
+exports.isAllowedExtensionMessageEvent = isAllowedExtensionMessageEvent;
+/**
  * Returns the Extension API client and router.
  *
  * Do not use this outside of main.tsx - use `useExtensionApi()` and
@@ -75,6 +140,9 @@ function getExtensionApi() {
              * @return {void}
              */
             (event) => {
+                if (!isAllowedExtensionMessageEvent(event)) {
+                    return;
+                }
                 listener(event.data);
             });
             window.addEventListener('message', eventListener);

@@ -10,6 +10,7 @@ goog.provide('jspb$b$devtools_jetski_provisioning$Deployment');
 
 goog.require('jspb$b$devtools_jetski_provisioning$BlueprintBinding');
 goog.require('jspb$b$devtools_jetski_provisioning$DeploymentConfig');
+goog.require('jspb$b$devtools_jetski_provisioning$DeploymentStatusDetail');
 goog.require('jspb$b$devtools_jetski_provisioning$Instance');
 goog.require('jspb$b$devtools_jetski_provisioning$InstanceMetrics');
 goog.require('jspb$b$devtools_jetski_provisioning$ProvisioningConfig');
@@ -55,7 +56,9 @@ jspb$b$devtools_jetski_provisioning$Deployment.fields = /** @pureOrBreakMyCode *
   1,
   jspb$b$google$protobuf$Timestamp.fields,
   jspb_internal_binary.RStringRequireUtf8WString,
-  jspb_internal_binary.RWEnum
+  jspb_internal_binary.RWEnum,
+  jspb_internal_binary.RWFloat,
+  jspb$b$devtools_jetski_provisioning$DeploymentStatusDetail.fields
 ]);
 
 /**

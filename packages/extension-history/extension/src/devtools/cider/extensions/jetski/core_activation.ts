@@ -159,6 +159,7 @@ function activateWithDependencies(context, deps, naming) {
     const provider = new webview_provider_1.JetskiWebviewProvider(context, renderer, naming.viewId, naming);
     /** @type {!tsickle_terminal_panel_provider_11.TerminalPanelProvider} */
     const terminalPanelProvider = new terminal_panel_provider_1.TerminalPanelProvider(context, renderer, 'jetski.terminalView');
+    apiImpl.setChatViewProvider(provider);
     apiImpl.setTerminalPanelProvider(terminalPanelProvider);
     // Instantiate artifact and settings custom editor providers, and register their references
     // with apiImpl so they can coordinate tab deduplication, in-place navigation, and in-memory caching.

@@ -8,6 +8,135 @@ New versions roll out gradually and may take a few days to reach all users.
 
 ---
 
+## [v1.7.0] - 2026-10-05
+
+### Overhauled inline diffs, Auto Save safety, side-by-side reviews, and TLS fallback
+Inline diffs have been re-engineered to be safe to use alongside VS Code's Auto Save, featuring dynamic deletion masking to prevent disk corruption, non-finalizing auto-saves, and full undo/redo support. This release also introduces dedicated side-by-side diff review tabs with title bar actions, automatic TLS root certificate fallbacks for corporate networks, native Windows desktop notifications, and background CDE gateway authentication.
+
+### Highlights
+- **Inline Diff Auto Save Isolation & Deletion Masking**: Re-architected the inline diff engine to eliminate file corruption risks and premature review finalization caused by VS Code's `files.autoSave` (`afterDelay` or `onFocusChange`):
+  - **Dynamic Deletion Masking (`hideDeletedLines`)**: When Auto Save is enabled, Antigravity automatically omits staged deletion lines from the active editor buffer, rendering additions and ensuring Auto Save cannot flush red deleted hunk text into files on disk. If Auto Save is off, the full red/green strikethrough diff is displayed.
+  - **Non-Finalizing Auto-Saves**: Auto-save events no longer accept or close pending reviews in the background; diff markers and controls remain interactive until you explicitly press `Cmd+S` (manual save) or click Accept/Reject.
+  - **Auto Save Advisory (`AutoSaveNotice`)**: Prompts developers when an inline review begins with Auto Save active, offering one-click buttons to turn off Auto Save or switch to side-by-side diffs.
+
+- **Undoable Inline Diff Resolutions (`Ctrl+Z` / `Cmd+Z`)**: Made per-change and whole-file Accept/Reject actions fully reversible via native editor undo/redo keybindings (`antigravity.inlineDiff.undo` / `antigravity.inlineDiff.redo`), restoring pending diff states without corrupting editor buffers.
+
+- **Dedicated Side-by-Side Review Actions**: Added dedicated title bar and context menu commands (`antigravity.sideBySide.acceptAll` and `antigravity.sideBySide.rejectAll`) when reviewing diffs side-by-side (`antigravity.sideBySideReviewPending`), automatically tracking hunk changes and closing review tabs once resolved.
+
+- **Corporate Network & macOS Keychain TLS Fallback**: Implemented `fetchWithRootFallback` in `root_fallback_fetch.ts`, resolving certificate trust failures (`UNABLE_TO_GET_ISSUER_CERT`) caused by cross-signed root CAs in corporate macOS keychains by falling back to Node's default root certificate store.
+
+- **Windows Native Desktop Toast Notifications**: Extended `VscodeNotificationDelegate` to support Windows 10 and 11 via PowerShell WinRT toast notifications (`ToastGeneric`), featuring direct conversation protocol launch URIs, custom app logo badges, and intelligent suppression when the chat panel is active.
+
+- **Cloud Developer Environments (CDE) Native Auth & Background Cookie Refresh**: Added an interactive PTY authentication terminal (`runCdeLoginTerminal`), silent pre-flight credential validation (`checkCdeAuth`), companion extension token synchronization (`onDidChangeHttpAccessToken`), and periodic background session cookie renewal (`CDE_COOKIE_REFRESH_INTERVAL_MS = 30m`).
+
+### Improvements
+- **Deferred Diff Renderer Switching**:
+  - Implemented `DeferredRendererSwitch` to defer switching between inline and side-by-side diff renderers until all active reviews finish, preventing in-flight reviews from being discarded.
+  - Added `keepNewerReviews` option in `SideBySideDiffZoneRenderer` to avoid closing or reverting files if newer turns supersede an existing review.
+
+- **Decorations on Resolved Diffs**:
+  - Registered `resolved_diff_decorations` for virtual diff documents (`jetski-diff://`), decorating rejected insertions and deletions with inline annotations (`✗ Rejected`, `✗ Rejected (lines kept)`), strikethroughs, and explanatory hover tooltips.
+
+- **Multi-File Review Tab Management**:
+  - Agent turn reviews now open modified files as permanent tabs (`keepOpen: true`) instead of transient preview tabs, preventing tab churn when inspecting multi-file edits.
+  - Persisted pending inline review snapshots across window reloads via workspace state key `jetski.pendingInlineEdits`.
+
+- **Enhanced Diagnostic & Error Formatting**:
+  - Added recursive error cause inspection (`describeError`), traversing up to 5 levels of nested `error.cause` to unpack undici `TypeError: fetch failed` and surface underlying connection/TLS failure codes.
+  - Formatted `AggregateError` instances inline to expose root network causes during Happy Eyeballs socket connection failures.
+
+- **Diagnostic Privacy & Secret Protection**:
+  - Stripped developer home directory paths from plain-text feedback issue summaries, retaining full backend paths solely in encrypted diagnostic attachments.
+  - Obfuscated Listnr feedback API keys to ensure compliance with Open VSX secret scanner requirements.
+  - Injected `extensionVersion` and `backendBinaryVersion` metadata keys directly into Listnr telemetry payloads.
+
+- **Protocol & Schema Additions**:
+  - `codeium_common_pb.ts`: Added `MediaResolution` enum (`UNSPECIFIED = 0`, `LOW = 1`, `MEDIUM = 2`, `HIGH = 3`, `ULTRA_HIGH = 4`); added new models: `claude-opus-5-5-thinking` (1374), `barium-b-med-is-p20-tf` (1375), `barium-b-med-is-p50-tf` (1376), `sonnet-5.5-bon-le` (1377), `claude-sonnet-5-5-thinking` (1378), `opus-5.5-high-bon-le` (1380), `gemini-flash-next` (1381), `gemini-flash-next-default` (1382), `fable-5.1-high` (1383), `fable-5.1-internal` (1384), `fable-5.1-low` (1385), `fable-5.1-medium` (1386), `fable-5.1-max` (1387), `fable-5.1-dropdown` (1388), and `barium-b-no-lie-si-tf` (1389).
+  - `cortex_pb.ts`: Added `ContribVariantMetadata` schema (`assigned_variant`, `eligible_variants`, `applied_variant`); added `ViewFileToolConfig.enable_open_document` (field 20).
+  - `UserSettings`: Added `terminal_placement` (field 48, enum `TerminalPlacement`) and `agent_sound_volume` (field 49, int32).
+  - `ConversationGroupConfig`: Added `sort_mode` (field 3, enum `ConversationGroupSortMode`) and `conversation_ids` (field 4, repeated string).
+  - `DeploymentConfig` & Provisioning: Added `preserve_memory_mounts` (field 33), `enable_periodic_backup` (field 34), and `vmstorage_config` (field 35, `VmstorageConfig`); added `DeploymentStatusDetail`, `InstanceFailure`, and `X20QuotaUsage` messages; added `vmstorage_config_jspb` schemas (`MountedDirectory`, `VmstorageConfig`, `VolumeClientConfig`, `VolumeCreationConfig`).
+  - `Project` & `Resource`: Added `Project.backend_type` (field 14, enum `BackendType`); added `remote_resource` (field 4, `RemoteResource`) in `Resource` oneof.
+
+### Fixes
+- **Accurate Side-by-Side Diff Line Counts**: Fixed an issue where the diff indicator in the chat UI and Changes Overview displayed `+0 -0` for modified files in side-by-side mode by introducing `countDiffLines` backed by unified diff hunk parsing (`getDiffHunks`) in `agent_edit_manager.ts`.
+
+- **Auto Save Buffer Disk Corruption**: Resolved an issue where VS Code's background Auto Save wrote staged deletion lines from inline diffs directly to disk by masking deletion ranges dynamically when `files.autoSave` is active.
+
+- **macOS System Keychain Certificate Rejection**: Fixed TLS handshakes failing with `UNABLE_TO_GET_ISSUER_CERT` behind enterprise inspection proxies or corp-managed Macs carrying cross-signed certificates in the System Keychain.
+
+- **Stale Side-by-Side Review Reversions**: Prevented obsolete review closures from overwriting fresh file edits when multiple edits to the same document occur in quick succession.
+
+- **Notification Redundancy**: Avoided spamming desktop toast notifications when the user is actively viewing the target conversation in the Antigravity chat panel.
+
+---
+
+### Under the Hood
+*This section documents exact Google3 monorepo changes, schemas, and build revisions.*
+
+- **Core & Lifecycle (`extension/src/cloud/...`)**:
+  - `root_fallback_fetch.ts`:
+    - Added `fetchWithRootFallback`, `findTlsTrustErrorCode`, `TLS_TRUST_ERROR_CODES`, `nodeDefaultCertificates`, and host caching in `fallbackHosts`.
+  - `binary_downloader.ts`:
+    - Replaced unhandled undici `TypeError: fetch failed` errors with `describeError` cause chain formatter.
+    - Integrated `fetchWithRootFallback` for resilient release downloads.
+  - `server_manager.ts`:
+    - Added `checkCdeAuth` (pre-flight validation check via `AGY_CLI_CDE_AUTH_ACTION=check`).
+    - Added `runCdeLoginTerminal` (PTY terminal session via `AGY_CLI_CDE_AUTH_ACTION=login`).
+    - Added `abortActiveAuthTerminal` cleanup handler.
+  - `cde_auth_service.ts`:
+    - Switched environment check from `CLOUD_WORKSTATIONS` to `GOOGLE_CLOUD_WORKSTATIONS`.
+    - Added `onDidChangeHttpAccessToken` subscription.
+  - `webview_delegate.ts`:
+    - Added `startBackgroundCookieRefresh`, `refreshCdeCookie`, and `CDE_COOKIE_REFRESH_INTERVAL_MS` (30m).
+    - Injected iframe refresh script for background `credentials: 'include'` token fetch.
+  - `auto_save_notice.ts`:
+    - Added `AutoSaveNotice` checking `files.autoSave` with persistent global state `antigravity.autoSaveInlineNotice.dismissed`.
+  - `deferred_renderer_switch.ts`:
+    - Added `DeferredRendererSwitch` tracking `onDidChangeActiveDiffs`.
+  - `vscode_notification_delegate.ts`:
+    - Implemented `showWindowsNotification` using PowerShell WinRT `Windows.UI.Notifications.ToastNotificationManager`.
+    - Added `isConversationVisible` suppression check.
+  - `feedback.ts`:
+    - Obfuscated `LISTNR_API_KEY` via array reversal (`OBFUSCATED_LISTNR_API_KEY`).
+    - Omitted plain-text backend binary paths from user-facing summary strings.
+    - Added `extensionVersion` and `backendBinaryVersion` to Listnr data.
+
+- **Jetski & Diff Zones (`extension/src/devtools/cider/...`)**:
+  - `inline_diff_manager.ts`:
+    - Added `hideDeletionLines`, `restoreHiddenOriginal`, and `textDocumentOf` for auto-save compatibility.
+    - Added `undoInReview`, `replayResolution`, `clearResolutionHistory`, and `updateUndoContext`.
+  - `side_by_side_diff_zone_renderer.ts`:
+    - Added `keepNewerReviews` option and `renders` tracking map to prevent stale review overwrites.
+    - Added `closeReviewTabs(fileUri)` closing open diff tabs cleanly.
+  - `side_by_side_review_actions.ts`:
+    - Registered `antigravity.sideBySide.acceptAll` and `antigravity.sideBySide.rejectAll` commands.
+  - `resolved_diff_decorations.ts`:
+    - Added `registerResolvedDiffDecorations` rendering `✗ Rejected` badges and strikethrough styling for `jetski-diff://` virtual schemes.
+  - `agent_edit_manager.ts`:
+    - Added `keepOpen` flag to `AddAgentEditMessage`.
+    - Added `undoableUserResolutions`, `openSideBySideDiffs`, and `readOnlyNavigationWithoutOpenReview` options.
+    - Added snapshotting of pending reviews to `PENDING_INLINE_EDITS_KEY`.
+
+- **Protobuf & IPC Schemas (`extension/src/blaze-out/` & `extension/src/third_party/jetski/`)**:
+  - `codeium_common_pb.ts`: Added `MediaResolution` enum; registered model enum placeholders 1374 through 1389.
+  - `cortex_pb.ts`: Added `ContribVariantMetadata`; added `ViewFileToolConfig.enable_open_document`.
+  - `UserSettings`: Added `terminal_placement` (48) and `agent_sound_volume` (49).
+  - `ConversationGroupConfig`: Added `sort_mode` (3) and `conversation_ids` (4).
+  - `DeploymentConfig`: Added `preserve_memory_mounts` (33), `enable_periodic_backup` (34), and `vmstorage_config` (35).
+  - `Project` / `Resource`: Added `Project.backend_type` (14) and `Resource.remote_resource` (4).
+  - `vmstorage_config_jspb`: Added `MountedDirectory`, `VmstorageConfig`, `VolumeClientConfig`, and `VolumeCreationConfig`.
+
+- **Webview Bridges (`extension/bridge.js`, `extension/loading_bridge.js`)**:
+  - `loading_bridge.js`: Added `promptAuth` event handling with dedicated `auth-container` UI.
+
+- **Build Metadata (`extension/package.json`)**:
+  - `BUILD_BLAZE_RELEASE`: `release blaze-2026.09.16-7 (mainline @981987536)`
+  - `BUILD_EMBED_LABEL`: `antigravity_vscode_extension_1.7.0_RC00`
+  - `BUILD_HOSTNAME`: `livj7.prod.google.com`
+
+---
+
 ## [v1.6.0] - 2026-09-29
 
 ### Terminal context, resumable downloads, and native OS notifications

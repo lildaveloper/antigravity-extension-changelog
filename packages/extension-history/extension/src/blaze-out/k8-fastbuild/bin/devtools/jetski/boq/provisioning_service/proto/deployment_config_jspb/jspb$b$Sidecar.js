@@ -34,7 +34,7 @@ jspb$b$devtools_jetski_provisioning$Sidecar.fields = /** @pureOrBreakMyCode */([
 jspb$devtools_jetski_provisioning$MutableSidecar.prototype.serializeBinary = /** @pureOrBreakMyCode */(jspb_internal_public_for_gencode.makePrototypeSerializeBinaryFunction(jspb$b$devtools_jetski_provisioning$Sidecar.fields));
 
 
-var jspb$exa$config_pb$MutableConversationGroupConfig;
-Object.defineProperty(this, 'jspb$exa$config_pb$MutableConversationGroupConfig', {
-  get() { return jspb$exa$config_pb$MutableConversationGroupConfig; },
-  set(v) { jspb$exa$config_pb$MutableConversationGroupConfig = v; },
+var jspb$google$protobuf$MutableTimestamp;
+Object.defineProperty(this, 'jspb$google$protobuf$MutableTimestamp', {
+  get() { return jspb$google$protobuf$MutableTimestamp; },
+  set(v) { jspb$google$protobuf$MutableTimestamp = v; },

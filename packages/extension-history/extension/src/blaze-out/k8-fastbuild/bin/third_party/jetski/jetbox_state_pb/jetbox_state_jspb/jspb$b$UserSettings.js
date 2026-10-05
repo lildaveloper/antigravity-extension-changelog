@@ -67,7 +67,9 @@ jspb$b$jetbox_state_pb$UserSettings.fields = /** @pureOrBreakMyCode */([
   jspb_internal_binary.RWBool,
   -2,
   jspb_internal_binary.RStringRequireUtf8WString,
-  jspb$b$jetbox_state_pb$UserSettings$SandboxProxy.fields
+  jspb$b$jetbox_state_pb$UserSettings$SandboxProxy.fields,
+  jspb_internal_binary.RWEnum,
+  jspb_internal_binary.RWInt32
 ]);
 
 /**

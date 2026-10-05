@@ -34,7 +34,7 @@ jspb$b$google$protobuf$Timestamp.fields = /** @pureOrBreakMyCode */([
 jspb$google$protobuf$MutableTimestamp.prototype.serializeBinary = /** @pureOrBreakMyCode */(jspb_internal_public_for_gencode.makePrototypeSerializeBinaryFunction(jspb$b$google$protobuf$Timestamp.fields));
 
 
-var jspb$b$exa$project_pb$GitFolder;
-Object.defineProperty(this, 'jspb$b$exa$project_pb$GitFolder', {
-  get() { return jspb$b$exa$project_pb$GitFolder; },
-  set(v) { jspb$b$exa$project_pb$GitFolder = v; },
+var jspb$b$devtools_jetski_provisioning$VolumeClientConfig;
+Object.defineProperty(this, 'jspb$b$devtools_jetski_provisioning$VolumeClientConfig', {
+  get() { return jspb$b$devtools_jetski_provisioning$VolumeClientConfig; },
+  set(v) { jspb$b$devtools_jetski_provisioning$VolumeClientConfig = v; },

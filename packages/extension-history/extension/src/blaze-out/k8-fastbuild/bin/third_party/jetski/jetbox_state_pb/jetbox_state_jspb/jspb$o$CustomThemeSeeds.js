@@ -28,6 +28,7 @@ jspb$o$jetbox_state_pb$CustomThemeSeeds.internal_toObject = function(msg) {
     primary: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getStringFieldLegacyNullable(msg, 2)),
     foregroundOverride: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getStringFieldLegacyNullable(msg, 3)),
     primaryForegroundOverride: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getStringFieldLegacyNullable(msg, 4)),
+    codeForegroundOverride: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getStringFieldLegacyNullable(msg, 5)),
   }));
 
 };
@@ -70,6 +71,7 @@ jspb$o$jetbox_state_pb$CustomThemeSeeds.fromObject = function(obj) {
   jspb_internal_adapters.setStringField(msg, 2, obj.primary);
   jspb_internal_adapters.setStringField(msg, 3, obj.foregroundOverride);
   jspb_internal_adapters.setStringField(msg, 4, obj.primaryForegroundOverride);
+  jspb_internal_adapters.setStringField(msg, 5, obj.codeForegroundOverride);
   return msg;
 };
 }

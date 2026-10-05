@@ -56,7 +56,7 @@ exports.TOGGLE_GoogFlags__check_fc_data_parser_breakers__disable = goog.readTogg
 /** @type {boolean} */
 exports.TOGGLE_GoogFlags__log_correct_xhr_error_statuses__disable = goog.readToggleInternalDoNotCallDirectly('GoogFlags__log_correct_xhr_error_statuses__disable');
 /** @type {boolean} */
-exports.TOGGLE_GoogFlags__fc_data_use_fetch_transport__enable = goog.readToggleInternalDoNotCallDirectly('GoogFlags__fc_data_use_fetch_transport__enable');
+exports.TOGGLE_GoogFlags__fc_data_use_fetch_transport__disable = goog.readToggleInternalDoNotCallDirectly('GoogFlags__fc_data_use_fetch_transport__disable');
 /** @type {boolean} */
 exports.TOGGLE_GoogFlags__optimize_module_info_callbacks__disable = goog.readToggleInternalDoNotCallDirectly('GoogFlags__optimize_module_info_callbacks__disable');
 /** @type {boolean} */

@@ -257,15 +257,22 @@ exports.isEqual = isEqual;
  * @param {string} base
  * @param {string} parentCandidate
  * @param {(undefined|boolean)=} ignoreCase
- * @param {string=} separator
+ * @param {boolean=} forcePosixSemantics
  * @return {boolean}
  */
-function isEqualOrParent(base, parentCandidate, ignoreCase, separator = path_1.sep) {
+function isEqualOrParent(base, parentCandidate, ignoreCase, forcePosixSemantics = false) {
+    /** @type {string} */
+    const separator = forcePosixSemantics ? path_1.posix.sep : path_1.sep;
     if (base === parentCandidate) {
         return true;
     }
     if (!base || !parentCandidate) {
         return false;
+    }
+    if (base.indexOf('..') >= 0 ||
+        parentCandidate.indexOf('..') >= 0) {
+        base = forcePosixSemantics ? path_1.posix.normalize(base) : (0, path_1.normalize)(base);
+        parentCandidate = forcePosixSemantics ? path_1.posix.normalize(parentCandidate) : (0, path_1.normalize)(parentCandidate);
     }
     if (parentCandidate.length > base.length) {
         return false;

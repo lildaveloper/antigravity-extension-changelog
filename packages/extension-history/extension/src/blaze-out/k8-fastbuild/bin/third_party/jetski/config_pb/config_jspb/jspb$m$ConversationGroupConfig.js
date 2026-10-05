@@ -14,6 +14,7 @@ goog.require('jspb_internal_public_for_gencode');
 /** @suppress {extraRequire} */
 goog.requireType('google3.javascript.apps.jspb.internal_records');
 goog.requireType('google3.javascript.common.asserts.asserts');
+goog.requireType('jspb$e.exa$config_pb$ConversationGroupSortMode');
 goog.requireType('jspb$exa$config_pb$ImmutableConversationGroupConfig');
 goog.requireType('jspb$r$exa$config_pb$ConversationGroupConfig$internalDoNotUseReader');
 
@@ -128,6 +129,144 @@ jspb$exa$config_pb$MutableConversationGroupConfig = class extends jspb_internal_
   }
 
 
+  /**
+   * optional ConversationGroupSortMode sort_mode = 3;
+   * @override
+   * @return {!jspb$e.exa$config_pb$ConversationGroupSortMode}
+   */
+  getSortMode() {
+    return /** @type {!jspb$e.exa$config_pb$ConversationGroupSortMode} */ (jspb_internal_adapters.getEnumFieldWithDefault(this, 3));
+  }
+
+
+  /**
+   * @param {!jspb$e.exa$config_pb$ConversationGroupSortMode|null|undefined} value
+   * @return {!jspb$exa$config_pb$MutableConversationGroupConfig} returns this
+   */
+  setSortMode(value) {
+    return jspb_internal_adapters.setEnumField(this, 3, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$exa$config_pb$MutableConversationGroupConfig} returns this
+   */
+  clearSortMode() {
+    return jspb_internal_adapters.clearField(this, 3);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasSortMode() {
+    return jspb_internal_adapters.hasEnumField(this, 3);
+  }
+
+
+  /**
+   * optional ConversationGroupSortMode sort_mode = 3;
+   * @override
+   * @return {!jspb$e.exa$config_pb$ConversationGroupSortMode|undefined}
+   */
+  getSortModeOrUndefined() {
+    return /** @type {!jspb$e.exa$config_pb$ConversationGroupSortMode|undefined} */ (jspb_internal_adapters.getEnumFieldOrUndefined(this, 3));
+  }
+
+
+  /**
+   * repeated string conversation_ids = 4;
+   * @override
+   * @param {!jspb_internal_public_for_gencode.DoNotFreezeToken=} freezeOptOut
+   * @tsType (freezeOptOut: import('google3/javascript/apps/jspb/internal_public').DoNotFreezeToken): string[]
+   * @tsType (): readonly string[]
+   * @return {!ReadonlyArray<string>}
+   */
+  getConversationIdsList(freezeOptOut) {
+    return jspb_internal_adapters.getRepeatedStringField(this, 4, jspb_internal_adapters.getRepeatedFieldReturnType(freezeOptOut));
+  }
+
+
+  /**
+   * @param {!ReadonlyArray<string>|null|undefined} value
+   * @return {!jspb$exa$config_pb$MutableConversationGroupConfig} returns this
+   */
+  setConversationIdsList(value) {
+    return jspb_internal_adapters.setRepeatedStringField(this, 4, value);
+  }
+
+
+  /**
+   * @param {string} value
+   * @param {number=} index
+   * @return {!jspb$exa$config_pb$MutableConversationGroupConfig} returns this
+   */
+  addConversationIds(value, index) {
+    return jspb_internal_adapters.addToRepeatedStringField(this, 4, value, index);
+  }
+
+
+  /**
+   * @param {!Iterable<string>} values
+   * @return {!jspb$exa$config_pb$MutableConversationGroupConfig} returns this
+   */
+  addAllConversationIds(values) {
+    return jspb_internal_adapters.addAllToRepeatedStringField(this, 4, values);
+  }
+
+
+  /**
+   * @param {number=} index If not passed, defaults to the end.
+   * @return {!jspb$exa$config_pb$MutableConversationGroupConfig} returns this
+   */
+  removeConversationIds(index) {
+    return jspb_internal_adapters.removeFromRepeatedStringField(this, 4, index);
+  }
+
+
+  /**
+   * Returns value at `index`.
+   * @override
+   * @param {number} index
+   * @return {string}
+   */
+  getConversationIds(index) {
+   return jspb_internal_adapters.getRepeatedIndexedStringField(this, 4, index);
+  }
+
+
+  /**
+   * @param {number} index
+   * @param {string} value
+   * @return {!jspb$exa$config_pb$MutableConversationGroupConfig} returns this
+   */
+  setConversationIds(index, value) {
+    return jspb_internal_adapters.setRepeatedIndexedStringField(this, 4, index, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$exa$config_pb$MutableConversationGroupConfig} returns this
+   */
+  clearConversationIdsList() {
+    return jspb_internal_adapters.clearField(this, 4);
+  }
+
+
+  /**
+   * Returns the size of this field.
+   * @override
+   * @return {number}
+   */
+  getConversationIdsCount() {
+    return jspb_internal_adapters.getRepeatedStringCount(this, 4);
+  }
+
+
 };
 
 /**
@@ -155,7 +294,9 @@ jspb$exa$config_pb$MutableConversationGroupConfig.hasInstance = /** @pureOrBreak
  * Object form of ConversationGroupConfig as accepted by the `fromObject` method.
  * @typedef {{
  *  name: (?string|undefined),
- *  sortOrder: (?number|undefined)
+ *  sortOrder: (?number|undefined),
+ *  sortMode: (?number|undefined),
+ *  conversationIdsList: (?Array<string>|undefined)
  * }}
  */
 jspb$exa$config_pb$MutableConversationGroupConfig.ObjectFormat;
@@ -215,7 +356,9 @@ if (goog.DEBUG && !COMPILED) {
  * Interface form of ConversationGroupConfig as accepted by `fromFields` and produced by `getFields`.
  * @typedef {{
  *  name: (string|undefined),
- *  sortOrder: (number|undefined)
+ *  sortOrder: (number|undefined),
+ *  sortMode: (!jspb$e.exa$config_pb$ConversationGroupSortMode|undefined),
+ *  conversationIdsList: (!ReadonlyArray<string>|undefined)
  * }}
  */
 jspb$exa$config_pb$MutableConversationGroupConfig.FieldsInterface;

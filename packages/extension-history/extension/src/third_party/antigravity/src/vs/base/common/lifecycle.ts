@@ -1210,7 +1210,7 @@ class AsyncReferenceCollection {
     /**
      * @public
      * @param {string} key
-     * @param {...?} args
+     * @param {...*} args
      * @return {!Promise<!IReference<T>>}
      */
     async acquire(key, ...args) {
@@ -1428,6 +1428,130 @@ if (false) {
      * @private
      */
     DisposableMap.prototype._isDisposed;
+}
+/**
+ * A set that manages the lifecycle of the values that it stores.
+ * @template V
+ * @implements {IDisposable}
+ */
+class DisposableSet {
+    /**
+     * @public
+     * @param {!Set<V>=} store
+     */
+    constructor(store = new Set()) {
+        this._isDisposed = false;
+        this._store = store;
+        trackDisposable(this);
+    }
+    /**
+     * Disposes of all stored values and mark this object as disposed.
+     *
+     * Trying to use this object after it has been disposed of is an error.
+     * @public
+     * @return {void}
+     */
+    dispose() {
+        markAsDisposed(this);
+        this._isDisposed = true;
+        this.clearAndDisposeAll();
+    }
+    /**
+     * Disposes of all stored values and clear the set, but DO NOT mark this object as disposed.
+     * @public
+     * @return {void}
+     */
+    clearAndDisposeAll() {
+        if (!this._store.size) {
+            return;
+        }
+        try {
+            dispose(this._store.values());
+        }
+        finally {
+            this._store.clear();
+        }
+    }
+    /**
+     * @public
+     * @param {V} value
+     * @return {boolean}
+     */
+    has(value) {
+        return this._store.has(value);
+    }
+    /**
+     * @public
+     * @return {number}
+     */
+    get size() {
+        return this._store.size;
+    }
+    /**
+     * @public
+     * @param {V} value
+     * @return {void}
+     */
+    add(value) {
+        if (this._isDisposed) {
+            console.warn(new Error('Trying to add a disposable to a DisposableSet that has already been disposed of. The added object will be leaked!').stack);
+        }
+        this._store.add(value);
+        setParentOfDisposable(value, this);
+    }
+    /**
+     * Delete the value from this set and also dispose of it.
+     * @public
+     * @param {V} value
+     * @return {void}
+     */
+    deleteAndDispose(value) {
+        if (this._store.delete(value)) {
+            value.dispose();
+        }
+    }
+    /**
+     * Delete the value from this set but return it. The caller is
+     * responsible for disposing of the value.
+     * @public
+     * @param {V} value
+     * @return {(undefined|V)}
+     */
+    deleteAndLeak(value) {
+        if (this._store.delete(value)) {
+            setParentOfDisposable(value, null);
+            return value;
+        }
+        return undefined;
+    }
+    /**
+     * @public
+     * @return {!IterableIterator<V, ?, ?>}
+     */
+    values() {
+        return this._store.values();
+    }
+    /**
+     * @public
+     * @return {!IterableIterator<V, ?, ?>}
+     */
+    [Symbol.iterator]() {
+        return this._store[Symbol.iterator]();
+    }
+}
+exports.DisposableSet = DisposableSet;
+/* istanbul ignore if */
+if (false) {
+    /**
+     * @const {!Set<V>}
+     * @private
+     */
+    DisposableSet.prototype._store;
+    /**
+     * @type {boolean}
+     * @private
+     */
+    DisposableSet.prototype._isDisposed;
 }
 /**
  * Call `then` on a Promise, unless the returned disposable is disposed.

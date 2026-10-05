@@ -23,7 +23,9 @@ goog.require('jspb_internal_public_for_gencode');
 jspb$b$exa$config_pb$ConversationGroupConfig.fields = /** @pureOrBreakMyCode */([
   0,
   jspb_internal_binary.RStringRequireUtf8WString,
-  jspb_internal_binary.RWInt32
+  jspb_internal_binary.RWInt32,
+  jspb_internal_binary.RWEnum,
+  jspb_internal_binary.RRepeatedStringRequireUtf8WRepeatedString
 ]);
 
 /**

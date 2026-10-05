@@ -36,7 +36,11 @@ jspb$b$devtools_jetski_provisioning$Instance.fields = /** @pureOrBreakMyCode */(
   jspb_internal_binary.RWRepeatedMessage,
   jspb$b$devtools_jetski_provisioning$storage$SidecarStatusInfo.fields,
   jspb_internal_binary.RStringRequireUtf8WString,
-  6,
+  jspb_internal_binary.RWFloat,
+  jspb_internal_binary.RStringRequireUtf8WString,
+  jspb$b$google$protobuf$Timestamp.fields,
+  -1,
+  2,
   jspb$b$google$protobuf$Timestamp.fields
 ]);
 

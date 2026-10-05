@@ -26,14 +26,16 @@ const tsickle_functional_5 = goog.requireType("google3.third_party.antigravity.s
 const tsickle_lifecycle_6 = goog.requireType("google3.third_party.antigravity.src.vs.base.common.lifecycle");
 const tsickle_linkedList_7 = goog.requireType("google3.third_party.antigravity.src.vs.base.common.linkedList");
 const tsickle_observable_8 = goog.requireType("google3.third_party.antigravity.src.vs.base.common.observable");
-const tsickle_stopwatch_9 = goog.requireType("google3.third_party.antigravity.src.vs.base.common.stopwatch");
-const tsickle_symbols_10 = goog.requireType("google3.third_party.antigravity.src.vs.base.common.symbols");
-const tsickle_debugservice_11 = goog.requireType("fava.debug.DebugService");
+const tsickle_process_9 = goog.requireType("google3.third_party.antigravity.src.vs.base.common.process");
+const tsickle_stopwatch_10 = goog.requireType("google3.third_party.antigravity.src.vs.base.common.stopwatch");
+const tsickle_symbols_11 = goog.requireType("google3.third_party.antigravity.src.vs.base.common.symbols");
+const tsickle_debugservice_12 = goog.requireType("fava.debug.DebugService");
 const collections_1 = goog.require('google3.third_party.antigravity.src.vs.base.common.collections');
 const errors_1 = goog.require('google3.third_party.antigravity.src.vs.base.common.errors');
 const functional_1 = goog.require('google3.third_party.antigravity.src.vs.base.common.functional');
 const lifecycle_1 = goog.require('google3.third_party.antigravity.src.vs.base.common.lifecycle');
 const linkedList_1 = goog.require('google3.third_party.antigravity.src.vs.base.common.linkedList');
+const process_1 = goog.require('google3.third_party.antigravity.src.vs.base.common.process');
 const stopwatch_1 = goog.require('google3.third_party.antigravity.src.vs.base.common.stopwatch');
 // go/vscode-patch/telemetry/#3eye
 const debugService = goog.require('fava.debug.DebugService');
@@ -48,6 +50,17 @@ const _enableDisposeWithListenerWarning = false;
 // -----------------------------------------------------------------------------------------------------------------------
 /** @type {boolean} */
 const _enableSnapshotPotentialLeakWarning = false;
+/** @type {number} */
+const _bufferLeakWarnCountThreshold = 100;
+/** @type {number} */
+const _bufferLeakWarnTimeThreshold = 60_000;
+// 1 minute
+/**
+ * @return {boolean}
+ */
+function _isBufferLeakWarningEnabled() {
+    return !!process_1.env['VSCODE_DEV'];
+}
 // WARNING: interface has both a type and a value, skipping emit
 var Event;
 (function (Event) {
@@ -93,14 +106,17 @@ var Event;
      * returned event causes this utility to leak a listener on the original event.
      *
      * @param {?} event The event source for the new event.
+     * @param {(undefined|boolean)=} flushOnListenerRemove Whether to fire all debounced events when a listener is removed. If this is not
+     * specified, some events could go missing. Use this if it's important that all events are processed, even if the
+     * listener gets disposed before the debounced event fires.
      * @param {(undefined|!tsickle_lifecycle_6.DisposableStore)=} disposable A disposable store to add the new EventEmitter to.
      * @return {?}
      */
-    function defer(event, disposable) {
+    function defer(event, flushOnListenerRemove, disposable) {
         return debounce(event, (/**
          * @return {undefined}
          */
-        () => void 0), 0, undefined, true, undefined, disposable);
+        () => void 0), 0, undefined, flushOnListenerRemove ?? true, undefined, disposable);
     }
     Event.defer = defer;
     /**
@@ -448,13 +464,17 @@ var Event;
      * *NOTE* that this function returns an `Event` and it MUST be called with a `DisposableStore` whenever the returned
      * event is accessible to "third parties", e.g the event is a public property. Otherwise a leaked listener on the
      * returned event causes this utility to leak a listener on the original event.
+     *
      * @template T
-     * @param {?} event
-     * @param {(number|symbol)=} delay
-     * @param {(undefined|!tsickle_lifecycle_6.DisposableStore)=} disposable
+     * @param {?} event The event source for the new event.
+     * @param {(number|symbol)=} delay The number of milliseconds to debounce.
+     * @param {(undefined|boolean)=} flushOnListenerRemove Whether to fire all debounced events when a listener is removed. If this is not
+     * specified, some events could go missing. Use this if it's important that all events are processed, even if the
+     * listener gets disposed before the debounced event fires.
+     * @param {(undefined|!tsickle_lifecycle_6.DisposableStore)=} disposable A disposable store to add the new EventEmitter to.
      * @return {?}
      */
-    function accumulate(event, delay = 0, disposable) {
+    function accumulate(event, delay = 0, flushOnListenerRemove, disposable) {
         return Event.debounce(event, (/**
          * @param {(undefined|!Array<?>)} last
          * @param {?} e
@@ -466,9 +486,105 @@ var Event;
             }
             last.push(e);
             return last;
-        }), delay, undefined, true, undefined, disposable);
+        }), delay, undefined, flushOnListenerRemove ?? true, undefined, disposable);
     }
     Event.accumulate = accumulate;
+    /**
+     * @template I, O
+     * @param {?} event
+     * @param {?} merge
+     * @param {(number|symbol)=} delay
+     * @param {boolean=} leading
+     * @param {boolean=} trailing
+     * @param {(undefined|number)=} leakWarningThreshold
+     * @param {(undefined|!tsickle_lifecycle_6.DisposableStore)=} disposable
+     * @return {?}
+     */
+    function throttle(event, merge, delay = 100, leading = true, trailing = true, leakWarningThreshold, disposable) {
+        /** @type {!tsickle_lifecycle_6.IDisposable} */
+        let subscription;
+        /** @type {(undefined|?)} */
+        let output = undefined;
+        // go/vscode-patch/timeout
+        /** @type {(undefined|number)} */
+        let handle = undefined;
+        /** @type {number} */
+        let numThrottledCalls = 0;
+        /** @type {(undefined|!EmitterOptions)} */
+        const options = {
+            leakWarningThreshold,
+            /**
+             * @public
+             * @return {void}
+             */
+            onWillAddFirstListener() {
+                subscription = event((/**
+                 * @param {?} cur
+                 * @return {void}
+                 */
+                cur => {
+                    numThrottledCalls++;
+                    output = merge(output, cur);
+                    // If not currently throttling, fire immediately if leading is enabled
+                    if (handle === undefined) {
+                        if (leading) {
+                            emitter.fire(output);
+                            output = undefined;
+                            numThrottledCalls = 0;
+                        }
+                        // Set up the throttle period
+                        if (typeof delay === 'number') {
+                            handle = setTimeout((/**
+                             * @return {void}
+                             */
+                            () => {
+                                // Fire on trailing edge if there were calls during throttle period
+                                if (trailing && numThrottledCalls > 0) {
+                                    emitter.fire((/** @type {?} */ (output)));
+                                }
+                                output = undefined;
+                                handle = undefined;
+                                numThrottledCalls = 0;
+                            }), delay);
+                        }
+                        else {
+                            // Use a special marker to indicate microtask is pending
+                            // go/vscode-patch/timeout
+                            handle = 0;
+                            queueMicrotask((/**
+                             * @return {void}
+                             */
+                            () => {
+                                // Fire on trailing edge if there were calls during throttle period
+                                if (trailing && numThrottledCalls > 0) {
+                                    emitter.fire((/** @type {?} */ (output)));
+                                }
+                                output = undefined;
+                                handle = undefined;
+                                numThrottledCalls = 0;
+                            }));
+                        }
+                    }
+                    // If already throttling, just accumulate the value for trailing edge
+                }));
+            },
+            /**
+             * @public
+             * @return {void}
+             */
+            onDidRemoveLastListener() {
+                subscription.dispose();
+            }
+        };
+        if (!disposable) {
+            _addLeakageTraceLogic(options);
+        }
+        /** @type {!Emitter<?>} */
+        const emitter = new Emitter(options);
+        disposable?.add(emitter);
+        return emitter.event;
+    }
+    Event.throttle = throttle;
     /**
      * Filters an event such that some condition is _not_ met more than once in a row, effectively ensuring duplicate
      * event objects from different sources do not fire the same event object.
@@ -554,10 +670,11 @@ var Event;
      * // Start accumulating events, when the first listener is attached, flush
      * // the event after a timeout such that multiple listeners attached before
      * // the timeout would receive the event
-     * this.onInstallExtension = Event.buffer(service.onInstallExtension, true);
+     * this.onInstallExtension = Event.buffer(service.onInstallExtension, 'onInstallExtension', true);
      * ```
      * @template T
      * @param {?} event The event source for the new event.
+     * @param {string} debugName A name for this buffer, used in leak detection warnings.
      * @param {boolean=} flushAfterTimeout Determines whether to flush the buffer after a timeout immediately or after a
      * `setTimeout` when the first event listener is added.
      * @param {!Array<?>=} _buffer Internal: A source event array used for tests.
@@ -565,9 +682,44 @@ var Event;
      * @param {(undefined|!tsickle_lifecycle_6.DisposableStore)=} disposable
      * @return {?}
      */
-    function buffer(event, flushAfterTimeout = false, _buffer = [], disposable) {
+    function buffer(event, debugName, flushAfterTimeout = false, _buffer = [], disposable) {
         /** @type {(null|!Array<?>)} */
         let buffer = _buffer.slice();
+        // Dev-only leak detection: track when buffer was created and warn
+        // if events accumulate without ever being consumed.
+        /** @type {(undefined|?)} */
+        let bufferLeakWarningData;
+        if (_isBufferLeakWarningEnabled()) {
+            bufferLeakWarningData = {
+                stack: Stacktrace.create(),
+                timerId: setTimeout((/**
+                 * @return {void}
+                 */
+                () => {
+                    if (buffer && buffer.length > 0 && bufferLeakWarningData && !bufferLeakWarningData.warned) {
+                        bufferLeakWarningData.warned = true;
+                        console.warn(`[Event.buffer][${debugName}] potential LEAK detected: ${buffer.length} events buffered for ${_bufferLeakWarnTimeThreshold / 1000}s without being consumed. Buffered here:`);
+                        bufferLeakWarningData.stack.print();
+                    }
+                }), _bufferLeakWarnTimeThreshold),
+                warned: false
+            };
+            if (disposable) {
+                disposable.add((0, lifecycle_1.toDisposable)((/**
+                 * @return {void}
+                 */
+                () => clearTimeout((/** @type {?} */ (bufferLeakWarningData)).timerId))));
+            }
+        }
+        /** @type {?} */
+        const clearLeakWarningTimer = (/**
+         * @return {void}
+         */
+        () => {
+            if (bufferLeakWarningData) {
+                clearTimeout(bufferLeakWarningData.timerId);
+            }
+        });
         /** @type {(null|!tsickle_lifecycle_6.IDisposable)} */
         let listener = event((/**
          * @param {?} e
@@ -576,6 +728,11 @@ var Event;
         e => {
             if (buffer) {
                 buffer.push(e);
+                if (_isBufferLeakWarningEnabled() && bufferLeakWarningData && !bufferLeakWarningData.warned && buffer.length >= _bufferLeakWarnCountThreshold) {
+                    bufferLeakWarningData.warned = true;
+                    console.warn(`[Event.buffer][${debugName}] potential LEAK detected: ${buffer.length} events buffered without being consumed. Buffered here:`);
+                    bufferLeakWarningData.stack.print();
+                }
             }
             else {
                 emitter.fire(e);
@@ -595,6 +752,7 @@ var Event;
              */
             e => emitter.fire(e)));
             buffer = null;
+            clearLeakWarningTimer();
         });
         /** @type {!Emitter<?>} */
         const emitter = new Emitter({
@@ -637,6 +795,7 @@ var Event;
                     listener.dispose();
                 }
                 listener = null;
+                clearLeakWarningTimer();
             }
         });
         if (disposable) {
@@ -911,7 +1070,7 @@ var Event;
     id => id)) {
         /** @type {?} */
         const fn = (/**
-         * @param {...?} args
+         * @param {...*} args
          * @return {void}
          */
         (...args) => result.fire(map(...args)));
@@ -967,7 +1126,7 @@ var Event;
     id => id)) {
         /** @type {?} */
         const fn = (/**
-         * @param {...?} args
+         * @param {...*} args
          * @return {void}
          */
         (...args) => result.fire(map(...args)));
@@ -1317,6 +1476,13 @@ if (false) {
      */
     EmitterOptions.prototype.leakWarningThreshold;
     /**
+     * Human-readable name for the emitter, included in leak warning error
+     * messages to help identify which emitter is leaking in telemetry.
+     * @type {(undefined|string)}
+     * @public
+     */
+    EmitterOptions.prototype.leakWarningName;
+    /**
      * Pass in a delivery queue, which is useful for ensuring
      * in order event delivery across multiple emitters.
      * @type {(undefined|!EventDeliveryQueue)}
@@ -1408,7 +1574,7 @@ if (false) {
      */
     EventProfiling.prototype.durations;
     /**
-     * @type {(undefined|!tsickle_stopwatch_9.StopWatch)}
+     * @type {(undefined|!tsickle_stopwatch_10.StopWatch)}
      * @private
      */
     EventProfiling.prototype._stopWatch;
@@ -1480,12 +1646,16 @@ class LeakageMonitor {
             const [topStack__tsickle_destructured_1, topCount__tsickle_destructured_2] = (/** @type {!Array<?>} */ (this.getMostFrequentStack()));
             const topStack = /** @type {string} */ (topStack__tsickle_destructured_1);
             const topCount = /** @type {number} */ (topCount__tsickle_destructured_2);
+            /** @type {(undefined|string)} */
+            const emitterName = /^[0-9a-f]+$/i.test(this.name) ? undefined : this.name;
             /** @type {string} */
             const message = `[${this.name}] potential listener LEAK detected, having ${listenerCount} listeners already. MOST frequent listener (${topCount}):`;
             console.warn(message);
             console.warn(topStack);
+            /** @type {string} */
+            const kind = topCount / listenerCount > 0.3 ? 'dominated' : 'popular';
             /** @type {!ListenerLeakError} */
-            const error = new ListenerLeakError(message, topStack);
+            const error = new ListenerLeakError(kind, message, topStack, listenerCount, emitterName);
             this._errorHandler(error);
             // go/vscode-patch/telemetry/#3eye
             debugService.getJsReporter()?.sendExceptionReport(error, message);
@@ -1596,33 +1766,74 @@ if (false) {
 class ListenerLeakError extends Error {
     /**
      * @public
-     * @param {string} message
+     * @param {string} kind
+     * @param {string} details
      * @param {string} stack
+     * @param {number} listenerCount
+     * @param {(undefined|string)=} emitterName
      */
-    constructor(message, stack) {
-        super(message);
+    constructor(kind, details, stack, listenerCount, emitterName) {
+        super(emitterName
+            ? `[${emitterName}] potential listener LEAK detected, ${kind}`
+            : `potential listener LEAK detected, ${kind}`);
         this.name = 'ListenerLeakError';
+        this.kind = kind;
+        this.listenerCount = listenerCount;
+        this.details = details;
         this.stack = stack;
         // See go/typescript/extending_builtins
         Object.setPrototypeOf(this, ListenerLeakError.prototype);
     }
+    /**
+     * @public
+     * @param {*} err
+     * @return {boolean}
+     */
+    static is(err) {
+        return err instanceof ListenerLeakError
+            || (err instanceof Error && typeof ((/** @type {?} */ (err))).kind === 'string' && typeof ((/** @type {?} */ (err))).listenerCount === 'number');
+    }
 }
 exports.ListenerLeakError = ListenerLeakError;
+/* istanbul ignore if */
+if (false) {
+    /**
+     * @const {string}
+     * @public
+     */
+    ListenerLeakError.prototype.kind;
+    /**
+     * @const {number}
+     * @public
+     */
+    ListenerLeakError.prototype.listenerCount;
+    /**
+     * The detailed message including listener count and most frequent stack.
+     * Available locally for debugging but intentionally not used as the error
+     * `message`. When `emitterName` is provided, errors group by emitter name
+     * and kind in telemetry; otherwise they group by kind alone.
+     * @const {string}
+     * @public
+     */
+    ListenerLeakError.prototype.details;
+}
 // SEVERE error that is logged when having gone way over the configured listener
 // threshold so that the emitter refuses to accept more listeners
 /**
- * @extends {Error}
+ * @extends {ListenerLeakError}
  */
-class ListenerRefusalError extends Error {
+class ListenerRefusalError extends ListenerLeakError {
     /**
      * @public
-     * @param {string} message
+     * @param {string} kind
+     * @param {string} details
      * @param {string} stack
+     * @param {number} listenerCount
+     * @param {(undefined|string)=} emitterName
      */
-    constructor(message, stack) {
-        super(message);
+    constructor(kind, details, stack, listenerCount, emitterName) {
+        super(kind, details, stack, listenerCount, emitterName);
         this.name = 'ListenerRefusalError';
-        this.stack = stack;
         // See go/typescript/extending_builtins
         Object.setPrototypeOf(this, ListenerRefusalError.prototype);
     }
@@ -1715,7 +1926,7 @@ class Emitter {
         this._size = 0;
         this._options = options;
         this._leakageMon = (_globalLeakWarningThreshold > 0 || this._options?.leakWarningThreshold)
-            ? new LeakageMonitor(options?.onListenerError ?? errors_1.onUnexpectedError, this._options?.leakWarningThreshold ?? _globalLeakWarningThreshold) :
+            ? new LeakageMonitor(options?.onListenerError ?? errors_1.onUnexpectedError, this._options?.leakWarningThreshold ?? _globalLeakWarningThreshold, this._options?.leakWarningName) :
             undefined;
         this._perfMon = this._options?._profName ? new EventProfiling(this._options._profName) : undefined;
         this._deliveryQueue = (/** @type {(undefined|!EventDeliveryQueuePrivate)} */ (this._options?.deliveryQueue));
@@ -1781,8 +1992,10 @@ class Emitter {
                 console.warn(message);
                 /** @type {!Array<?>} */
                 const tuple = this._leakageMon.getMostFrequentStack() ?? ['UNKNOWN stack', -1];
+                /** @type {string} */
+                const kind = tuple[1] / this._size > 0.3 ? 'dominated' : 'popular';
                 /** @type {!ListenerRefusalError} */
-                const error = new ListenerRefusalError(`${message}. HINT: Stack shows most frequent listener (${tuple[1]}-times)`, tuple[0]);
+                const error = new ListenerRefusalError(kind, `${message}. HINT: Stack shows most frequent listener (${tuple[1]}-times)`, tuple[0], this._size, this._options?.leakWarningName);
                 /** @type {function(?): void} */
                 const errorHandler = this._options?.onListenerError || errors_1.onUnexpectedError;
                 errorHandler(error);
@@ -2372,24 +2585,28 @@ class MicrotaskEmitter extends Emitter {
             return;
         }
         this._queuedEvents.push(event);
-        if (this._queuedEvents.length === 1) {
-            queueMicrotask((/**
-             * @return {void}
-             */
-            () => {
-                if (this._mergeFn) {
-                    super.fire(this._mergeFn(this._queuedEvents));
-                }
-                else {
-                    this._queuedEvents.forEach((/**
-                     * @param {T} e
-                     * @return {void}
-                     */
-                    e => super.fire(e)));
-                }
-                this._queuedEvents = [];
-            }));
-        }
+        // go/vscode-patch/testing
+        queueMicrotask((/**
+         * @return {void}
+         */
+        () => {
+            if (this._queuedEvents.length === 0) {
+                return;
+            }
+            /** @type {!Array<T>} */
+            const events = this._queuedEvents;
+            this._queuedEvents = [];
+            if (this._mergeFn) {
+                super.fire(this._mergeFn(events));
+            }
+            else {
+                events.forEach((/**
+                 * @param {T} e
+                 * @return {void}
+                 */
+                e => super.fire(e)));
+            }
+        }));
     }
 }
 exports.MicrotaskEmitter = MicrotaskEmitter;

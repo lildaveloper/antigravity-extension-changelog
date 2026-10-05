@@ -9,6 +9,7 @@
 goog.provide('jspb$devtools_jetski_provisioning$MutableInstanceMetrics');
 goog.provide('jspb$ro.devtools_jetski_provisioning$ReadonlyInstanceMetrics');
 
+goog.require('jspb$devtools_jetski_provisioning$MutableX20QuotaUsage');
 goog.require('jspb_internal_adapters');
 goog.require('jspb_internal_public_for_gencode');
 /** @suppress {extraRequire} */
@@ -16,6 +17,7 @@ goog.requireType('google3.javascript.apps.jspb.internal_records');
 goog.requireType('google3.javascript.common.asserts.asserts');
 goog.requireType('jspb$devtools_jetski_provisioning$ImmutableInstanceMetrics');
 goog.requireType('jspb$r$devtools_jetski_provisioning$InstanceMetrics$internalDoNotUseReader');
+goog.requireType('jspb$ro.devtools_jetski_provisioning$ReadonlyX20QuotaUsage');
 
 /**
  * @final
@@ -488,6 +490,131 @@ jspb$devtools_jetski_provisioning$MutableInstanceMetrics = class extends jspb_in
   }
 
 
+  /**
+   * repeated X20QuotaUsage x20_quotas = 7;
+   * @param {!jspb_internal_public_for_gencode.DoNotFreezeToken=} freezeOptOut
+   * @tsType (freezeOptOut: import('google3/javascript/apps/jspb/internal_public').DoNotFreezeToken): ಠ_ಠ.clutz.jspb$devtools_jetski_provisioning$MutableX20QuotaUsage[]
+   * @tsType (): readonly ಠ_ಠ.clutz.jspb$devtools_jetski_provisioning$MutableX20QuotaUsage[]
+   * @override
+   * @return {!ReadonlyArray<!jspb$devtools_jetski_provisioning$MutableX20QuotaUsage>}
+   */
+  getX20QuotasList(freezeOptOut) {
+    return jspb_internal_adapters.getRepeatedWrapperField(this, jspb$devtools_jetski_provisioning$MutableX20QuotaUsage, 7, jspb_internal_adapters.getRepeatedFieldReturnType(freezeOptOut));
+  }
+
+
+  /**
+   * repeated X20QuotaUsage x20_quotas = 7;
+   * @override
+   * @return {!ReadonlyArray<!jspb$ro.devtools_jetski_provisioning$ReadonlyX20QuotaUsage>}
+   */
+  getReadonlyX20QuotasList() {
+    return jspb_internal_adapters.getReadonlyRepeatedWrapperField(this, jspb$devtools_jetski_provisioning$MutableX20QuotaUsage, 7);
+  }
+
+
+  /**
+   * @param {!ReadonlyArray<!jspb$ro.devtools_jetski_provisioning$ReadonlyX20QuotaUsage>|null|undefined} value
+   * @return {!jspb$devtools_jetski_provisioning$MutableInstanceMetrics} returns this
+   */
+  setX20QuotasList(value) {
+    return jspb_internal_adapters.setRepeatedWrapperField(this, jspb$devtools_jetski_provisioning$MutableX20QuotaUsage, 7, value);
+  }
+
+
+  /**
+   * Gets mutable repeated field reference.
+   * @param {number} index
+   * @return {!jspb$devtools_jetski_provisioning$MutableX20QuotaUsage}
+   */
+  getMutableX20Quotas(index) {
+    return jspb_internal_adapters.getRepeatedIndexedMutableWrapper(this, 7, jspb$devtools_jetski_provisioning$MutableX20QuotaUsage, index);
+  }
+
+
+  /**
+   * Gets readonly repeated field reference.
+   * @override
+   * @param {number} index
+   * @return {!jspb$ro.devtools_jetski_provisioning$ReadonlyX20QuotaUsage}
+   */
+  getReadonlyX20Quotas(index) {
+    return jspb_internal_adapters.getRepeatedIndexedReadonlyWrapper(this, 7, jspb$devtools_jetski_provisioning$MutableX20QuotaUsage, index);
+  }
+
+
+  /**
+   * Adds repeated field and returns `this`.
+   * @param {!jspb$ro.devtools_jetski_provisioning$ReadonlyX20QuotaUsage} value
+   * @param {number=} index
+   * @return {!jspb$devtools_jetski_provisioning$MutableInstanceMetrics} returns this
+   */
+  addX20Quotas(value, index) {
+    return jspb_internal_adapters.addToRepeatedWrapperField(this, 7, jspb$devtools_jetski_provisioning$MutableX20QuotaUsage, value, index);
+  }
+
+
+  /**
+   * Adds repeated field and returns newly added submessage.
+   * @param {!jspb$devtools_jetski_provisioning$MutableX20QuotaUsage=} value
+   * @param {number=} index
+   * @return {!jspb$devtools_jetski_provisioning$MutableX20QuotaUsage} the value that was added
+   */
+  addAndReturnX20Quotas(value, index) {
+    return jspb_internal_adapters.addAndReturnRepeatedWrapperField(this, 7, jspb$devtools_jetski_provisioning$MutableX20QuotaUsage, value, index);
+  }
+
+
+  /**
+   * Adds multiple values to a repeated field and returns `this`.
+   * @param {!Iterable<!jspb$ro.devtools_jetski_provisioning$ReadonlyX20QuotaUsage>} values
+   * @return {!jspb$devtools_jetski_provisioning$MutableInstanceMetrics} returns this
+   */
+  addAllX20Quotas(values) {
+    return jspb_internal_adapters.addAllToRepeatedWrapperField(this, 7, jspb$devtools_jetski_provisioning$MutableX20QuotaUsage, values);
+  }
+
+
+  /**
+   * Sets repeated field value at `index` and returns `this`.
+   * @param {number} index
+   * @param {!jspb$ro.devtools_jetski_provisioning$ReadonlyX20QuotaUsage} value
+   * @return {!jspb$devtools_jetski_provisioning$MutableInstanceMetrics} returns this
+   */
+  setX20Quotas(index, value) {
+    return jspb_internal_adapters.setRepeatedIndexedWrapper(this, 7, jspb$devtools_jetski_provisioning$MutableX20QuotaUsage, index, value);
+  }
+
+
+  /**
+   * Removes a value from a repeated field and returns `this`.
+   * @param {number=} index defaults to the end
+   * @return {!jspb$devtools_jetski_provisioning$MutableInstanceMetrics} returns this
+   */
+  removeX20Quotas(index) {
+    return jspb_internal_adapters.removeFromRepeatedWrapperField(this, 7, jspb$devtools_jetski_provisioning$MutableX20QuotaUsage, index);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$devtools_jetski_provisioning$MutableInstanceMetrics} returns this
+   */
+  clearX20QuotasList() {
+    return jspb_internal_adapters.clearField(this, 7);
+  }
+
+
+  /**
+   * Returns the size of this field.
+   * @override
+   * @return {number}
+   */
+  getX20QuotasCount() {
+    return jspb_internal_adapters.getRepeatedWrapperCount(this, jspb$devtools_jetski_provisioning$MutableX20QuotaUsage, 7);
+  }
+
+
 };
 
 /**
@@ -519,7 +646,8 @@ jspb$devtools_jetski_provisioning$MutableInstanceMetrics.hasInstance = /** @pure
  *  ramUsedMbytes: (?number|string|undefined),
  *  ramTotalMbytes: (?number|string|undefined),
  *  diskUsedMbytes: (?number|string|undefined),
- *  diskTotalMbytes: (?number|string|undefined)
+ *  diskTotalMbytes: (?number|string|undefined),
+ *  x20QuotasList: (?Array<!jspb$devtools_jetski_provisioning$MutableX20QuotaUsage.ObjectFormat>|undefined)
  * }}
  */
 jspb$devtools_jetski_provisioning$MutableInstanceMetrics.ObjectFormat;
@@ -587,7 +715,8 @@ if (goog.DEBUG && !COMPILED) {
  *  diskUsedMbytes: (!gbigint|undefined),
  *  diskUsedMbytes_asLegacyNumberOrString: (number|string|undefined),
  *  diskTotalMbytes: (!gbigint|undefined),
- *  diskTotalMbytes_asLegacyNumberOrString: (number|string|undefined)
+ *  diskTotalMbytes_asLegacyNumberOrString: (number|string|undefined),
+ *  x20QuotasList: (!ReadonlyArray<!jspb$ro.devtools_jetski_provisioning$ReadonlyX20QuotaUsage>|undefined)
  * }}
  */
 jspb$devtools_jetski_provisioning$MutableInstanceMetrics.FieldsInterface;

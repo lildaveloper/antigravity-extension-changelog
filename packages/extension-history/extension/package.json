@@ -3,7 +3,7 @@
   "displayName": "Google Antigravity",
   "description": "Bring Google's agent-first development platform to Visual Studio Code.",
   "icon": "img/logo.png",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "publisher": "google",
   "license": "SEE LICENSE IN LICENSE.txt",
   "engines": {
@@ -116,6 +116,18 @@
         "category": "Antigravity"
       },
       {
+        "command": "antigravity.sideBySide.acceptAll",
+        "title": "Accept All Changes",
+        "icon": "$(check)",
+        "category": "Antigravity"
+      },
+      {
+        "command": "antigravity.sideBySide.rejectAll",
+        "title": "Reject All Changes",
+        "icon": "$(close)",
+        "category": "Antigravity"
+      },
+      {
         "command": "antigravity.toggleInlineDiff",
         "title": "Toggle Inline Diff",
         "category": "Antigravity"
@@ -141,6 +153,14 @@
         {
           "command": "antigravity.inlineDiff.rejectAll",
           "when": "antigravity.hasActiveDiff"
+        },
+        {
+          "command": "antigravity.sideBySide.acceptAll",
+          "when": "antigravity.sideBySideReviewPending"
+        },
+        {
+          "command": "antigravity.sideBySide.rejectAll",
+          "when": "antigravity.sideBySideReviewPending"
         }
       ],
       "terminal/context": [
@@ -159,6 +179,16 @@
           "command": "antigravity.inlineDiff.rejectAll",
           "group": "navigation",
           "when": "resourceScheme == file && antigravity.hasActiveDiff"
+        },
+        {
+          "command": "antigravity.sideBySide.acceptAll",
+          "group": "navigation",
+          "when": "antigravity.sideBySideReviewPending"
+        },
+        {
+          "command": "antigravity.sideBySide.rejectAll",
+          "group": "navigation",
+          "when": "antigravity.sideBySideReviewPending"
         }
       ]
     },
@@ -211,6 +241,23 @@
         "key": "escape",
         "mac": "escape",
         "when": "antigravity.agentRunning && focusedView == 'antigravity.panel'"
+      },
+      {
+        "command": "antigravity.inlineDiff.undo",
+        "key": "ctrl+z",
+        "mac": "cmd+z",
+        "when": "editorTextFocus && !editorReadonly && antigravity.inlineDiffCanUndo"
+      },
+      {
+        "command": "antigravity.inlineDiff.redo",
+        "key": "ctrl+y",
+        "mac": "cmd+shift+z",
+        "when": "editorTextFocus && !editorReadonly && antigravity.inlineDiffCanRedo"
+      },
+      {
+        "command": "antigravity.inlineDiff.redo",
+        "key": "ctrl+shift+z",
+        "when": "!isMac && editorTextFocus && !editorReadonly && antigravity.inlineDiffCanRedo"
       }
     ],
     "configuration": {
@@ -274,9 +321,9 @@
     "BUILD_DEPOT_PATH": "//depot/google3",
     "BUILD_DIRECTORY": "/google/src/cloud/buildrabbit-username/buildrabbit-client/google3",
     "BUILD_USERNAME": "kokoro-dedicated",
-    "BUILD_BLAZE_RELEASE": "release blaze-2026.09.11-2 (mainline @979001970)",
-    "BUILD_EMBED_LABEL": "antigravity_vscode_extension_1.6.0_RC00",
-    "BUILD_HOSTNAME": "lmbjo12.prod.google.com",
+    "BUILD_BLAZE_RELEASE": "release blaze-2026.09.16-7 (mainline @981987536)",
+    "BUILD_EMBED_LABEL": "antigravity_vscode_extension_1.7.0_RC00",
+    "BUILD_HOSTNAME": "livj7.prod.google.com",
     "VERIFIABLE": "0",
     "WORKSPACE_STATUS_COMMAND_ARGUMENT": "<precomputed>"
   }

@@ -8,6 +8,7 @@
 
 goog.provide('jspb$b$devtools_jetski_provisioning$InstanceMetrics');
 
+goog.require('jspb$b$devtools_jetski_provisioning$X20QuotaUsage');
 goog.require('jspb$devtools_jetski_provisioning$MutableInstanceMetrics');
 goog.require('jspb_internal_binary');
 goog.require('jspb_internal_public_for_gencode');
@@ -25,7 +26,9 @@ jspb$b$devtools_jetski_provisioning$InstanceMetrics.fields = /** @pureOrBreakMyC
   jspb_internal_binary.RWFloat,
   jspb_internal_binary.RWInt64,
   -3,
-  jspb_internal_binary.RWInt32
+  jspb_internal_binary.RWInt32,
+  jspb_internal_binary.RWRepeatedMessage,
+  jspb$b$devtools_jetski_provisioning$X20QuotaUsage.fields
 ]);
 
 /**

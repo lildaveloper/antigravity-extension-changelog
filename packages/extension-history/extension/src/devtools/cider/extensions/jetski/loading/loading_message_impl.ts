@@ -69,7 +69,7 @@ class MessageNotifierImpl {
     }
     /**
      * @private
-     * @param {(!ErrorMessage|!PlainMessage|!PromptHostMessage)} message
+     * @param {(!ErrorMessage|!PlainMessage|!PromptAuthMessage|!PromptHostMessage)} message
      * @return {!Promise<void>}
      */
     async postMessage(message) {
@@ -91,6 +91,19 @@ class MessageNotifierImpl {
      */
     notifyError(error) {
         this.postMessage({ type: 'error', error });
+    }
+    /**
+     * @public
+     * @param {(undefined|{title: (undefined|string), subtitle: (undefined|string), buttonLabel: (undefined|string)})=} options
+     * @return {void}
+     */
+    promptAuth(options) {
+        this.postMessage({
+            type: 'promptAuth',
+            title: options?.title,
+            subtitle: options?.subtitle,
+            buttonLabel: options?.buttonLabel,
+        });
     }
     /**
      * @public

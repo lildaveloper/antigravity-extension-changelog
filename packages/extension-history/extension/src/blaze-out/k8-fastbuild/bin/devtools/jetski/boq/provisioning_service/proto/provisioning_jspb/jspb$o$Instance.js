@@ -41,6 +41,10 @@ jspb$o$devtools_jetski_provisioning$Instance.internal_toObject = function(msg) {
     metrics: jspb$o$devtools_jetski_provisioning$InstanceMetrics.internal_toObject(msg.getMetrics()),
     sidecarsList: jspb_internal_public_for_gencode.toObjectList(msg.getSidecarsList(), jspb$o$devtools_jetski_provisioning$storage$SidecarStatusInfo.internal_toObject),
     version: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getStringFieldLegacyNullable(msg, 10)),
+    uptime7d: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getFloatingPointFieldLegacyNullable(msg, 11)),
+    errorMessage: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getStringFieldLegacyNullable(msg, 12)),
+    createTime: jspb$o$google$protobuf$Timestamp.internal_toObject(msg.getCreateTime()),
+    stopTime: jspb$o$google$protobuf$Timestamp.internal_toObject(msg.getStopTime()),
   }));
 
 };
@@ -97,6 +101,14 @@ jspb$o$devtools_jetski_provisioning$Instance.fromObject = function(obj) {
   jspb_internal_adapters.setRepeatedWrapperField(msg, jspb$devtools_jetski_provisioning$storage$MutableSidecarStatusInfo,
       9, jspb_internal_public_for_gencode.fromObjectList(obj.sidecarsList,         jspb$o$devtools_jetski_provisioning$storage$SidecarStatusInfo.fromObject));
   jspb_internal_adapters.setStringField(msg, 10, obj.version);
+  jspb_internal_adapters.setFloatingPointField(msg, 11, obj.uptime7d);
+  jspb_internal_adapters.setStringField(msg, 12, obj.errorMessage);
+  jspb_internal_adapters.setWrapperField(msg,
+      jspb$google$protobuf$MutableTimestamp,
+      13, jspb_internal_public_for_gencode.fromObjectNullable(obj.createTime, jspb$o$google$protobuf$Timestamp.fromObject));
+  jspb_internal_adapters.setWrapperField(msg,
+      jspb$google$protobuf$MutableTimestamp,
+      14, jspb_internal_public_for_gencode.fromObjectNullable(obj.stopTime, jspb$o$google$protobuf$Timestamp.fromObject));
   return msg;
 };
 }

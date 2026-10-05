@@ -19,11 +19,13 @@ const tsickle_util_2 = goog.requireType("google3.devtools.cider.extensions.jetsk
 const tsickle_extensionApi_3 = goog.requireType("google3.third_party.gemini_coder.agent_ui_toolkit.src.features.iframe.extensionApi");
 const tsickle_vscode_4 = goog.requireType("vscode");
 const tsickle_cde_auth_service_5 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.cde_auth_service");
-const tsickle_webview_error_component_6 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.webview_error_component");
+const tsickle_extension_version_6 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.extension_version");
+const tsickle_webview_error_component_7 = goog.requireType("google3.cloud.developer_experience.antigravity_extensions.vscode.webview_error_component");
 const extensionApi_1 = goog.require('google3.third_party.gemini_coder.agent_ui_toolkit.src.features.iframe.extensionApi');
 const vscode = goog.require('vscode'); // from //third_party/javascript/typings/vscode
 // from //third_party/javascript/typings/vscode
 const cde_auth_service_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.cde_auth_service');
+const extension_version_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.extension_version');
 const webview_error_component_1 = goog.require('google3.cloud.developer_experience.antigravity_extensions.vscode.webview_error_component');
 /**
  * Official Antigravity loading screen vector logo with gradient mask and blurs.
@@ -334,6 +336,11 @@ class BaseVsCodeWebviewDelegate {
           ${getLoadingContentHtml('Checking your setup...')}
         </div>
         ${(0, webview_error_component_1.getLoadingErrorContentHtml)()}
+        <div id="auth-container" class="container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 24px; box-sizing: border-box;">
+          <div id="auth-title" style="font-size: 15px; font-weight: 600; color: var(--vscode-foreground, #ccc);">Sign in to Antigravity</div>
+          <div id="auth-subtitle" style="font-size: 13px; color: var(--vscode-descriptionForeground, #999); line-height: 1.4; max-width: 340px;">Sign in to start using Antigravity.</div>
+          <button id="auth-button" class="retry-btn">Log In</button>
+        </div>
         <div id="host-input-container" style="display: none;">
           <span id="host-input-message"></span>
           <input id="host-input" type="text" />
@@ -511,6 +518,17 @@ class BaseVsCodeWebviewDelegate {
         const searchParams = new URLSearchParams(baseRouteUrl.search);
         searchParams.set('extensionView', 'true');
         searchParams.set('extensionVariant', 'vs-code');
+        // Consumed by `detectHostVersion()` / `detectIdeVersion()` in
+        // `third_party/gemini_coder/agent_ui_toolkit/src/shared/utils/hostEnvironment.ts`.
+        // The host version is this extension's version; the IDE version is VS Code's.
+        /** @type {string} */
+        const extensionVersion = (0, extension_version_1.getExtensionVersion)(this.context);
+        if (extensionVersion !== 'unknown') {
+            searchParams.set('hostVersion', extensionVersion);
+        }
+        if (vscode.version) {
+            searchParams.set('ideVersion', vscode.version);
+        }
         searchParams.set('useWebSocket', 'true');
         searchParams.set('hostTheme', hostTheme);
         searchParams.set('enableMicrophone', 'false');
@@ -570,19 +588,30 @@ class BaseVsCodeWebviewDelegate {
                     });
                 }
             }));
-            /** @type {!DisposableWebview} */
-            const disposableWebview = webview;
-            if (typeof disposableWebview.onDidDispose === 'function') {
-                disposableWebview.onDidDispose((/**
-                 * @return {void}
-                 */
-                () => {
-                    configSubscription.dispose();
-                }));
-            }
-            else if (this.context?.subscriptions) {
-                this.context.subscriptions.push(configSubscription);
-            }
+            this.bindDisposableToWebview(webview, configSubscription);
+        }
+    }
+    /**
+     * Binds a disposable to the webview's disposal lifecycle, falling back to
+     * extension context subscriptions if the webview does not support onDidDispose.
+     * @protected
+     * @param {!tsickle_vscode_4.Webview} webview
+     * @param {!tsickle_vscode_4.Disposable} disposable
+     * @return {void}
+     */
+    bindDisposableToWebview(webview, disposable) {
+        /** @type {!DisposableWebview} */
+        const disposableWebview = (/** @type {!DisposableWebview} */ (webview));
+        if (typeof disposableWebview.onDidDispose === 'function') {
+            disposableWebview.onDidDispose((/**
+             * @return {void}
+             */
+            () => {
+                disposable.dispose();
+            }));
+        }
+        else if (this.context?.subscriptions) {
+            this.context.subscriptions.push(disposable);
         }
     }
 }
@@ -636,14 +665,24 @@ class DesktopWebviewDelegate extends BaseVsCodeWebviewDelegate {
 }
 exports.DesktopWebviewDelegate = DesktopWebviewDelegate;
 /**
+ * Default interval for refreshing the CDE VM Gateway session cookie (30 minutes).
+ * @type {number}
+ */
+const CDE_COOKIE_REFRESH_INTERVAL_MS = 30 * 60 * 1000;
+/**
  * Remote Extension Host (REH) implementation of WebviewDelegate.
  * Used for web-based (Code OSS in Cloud Workstations/Cloud Shell) or remote hosts.
  *
  * Configures Content Security Policy to allow connecting to remote HTTPS and WSS endpoints,
- * and resolves environment HTTP access tokens (JWT bootstrap) when running in CDE.
+ * resolves environment HTTP access tokens (JWT bootstrap) when running in CDE,
+ * and maintains background cookie freshness.
  * @extends {BaseVsCodeWebviewDelegate}
  */
 class WebUiWebviewDelegate extends BaseVsCodeWebviewDelegate {
+    constructor() {
+        super(...arguments);
+        this.activeRefreshDisposables = new Map();
+    }
     /**
      * @protected
      * @param {!tsickle_vscode_4.Webview} webview
@@ -664,6 +703,122 @@ class WebUiWebviewDelegate extends BaseVsCodeWebviewDelegate {
         const fullUrlString = await this.resolveWebIframeUrl(serverUrl, options);
         console.log(`[Jetski] Loading remote iframe URL: ${redactUrlTokens(fullUrlString)}`);
         this.renderWebviewHtml(webview, serverUrl, fullUrlString, options);
+        /** @type {!tsickle_cde_auth_service_5.CdeAuthService} */
+        const cdeAuth = cde_auth_service_1.CdeAuthService.getInstance();
+        if (cdeAuth.isCdeEnvironment()) {
+            this.startBackgroundCookieRefresh(webview, serverUrl);
+        }
+    }
+    /**
+     * @protected
+     * @param {string} fullUrlString
+     * @return {string}
+     */
+    getConnectionScript(fullUrlString) {
+        /** @type {string} */
+        const baseScript = super.getConnectionScript(fullUrlString);
+        // TODO(b/565053387): Remove reliance on JWT once CDEs support setting
+        // partitioned cookies directly.
+        /** @type {string} */
+        const refreshScript = `
+      <script>
+        (function() {
+          window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'refreshCdeCookie') {
+              var serverUrl = event.data.serverUrl;
+              var urlParameter = event.data.urlParameter;
+              var token = event.data.token;
+              if (serverUrl && urlParameter && token) {
+                try {
+                  var refreshUrl = new URL(serverUrl);
+                  refreshUrl.searchParams.set(urlParameter, token);
+                  fetch(refreshUrl.toString(), {
+                    mode: 'no-cors',
+                    credentials: 'include',
+                  }).catch(function() {});
+                } catch (e) {}
+              }
+            }
+          });
+        })();
+      </script>
+    `;
+        return `${baseScript}\n${refreshScript}`;
+    }
+    /**
+     * Starts periodic background refresh of the CDE VM Gateway session cookie.
+     *
+     * Automatically dispatches fresh HTTP access tokens to the webview container to execute
+     * silent background fetches with credentials: 'include', renewing the browser's partitioned
+     * session cookie (WorkstationJwt / CloudshellJwt) before expiration without reloading the iframe.
+     * TODO(b/565053387): Remove reliance on JWT once CDEs support setting
+     * partitioned cookies directly.
+     * @public
+     * @param {!tsickle_vscode_4.Webview} webview
+     * @param {string} serverUrl
+     * @param {number=} intervalMs
+     * @return {!tsickle_vscode_4.Disposable}
+     */
+    startBackgroundCookieRefresh(webview, serverUrl, intervalMs = CDE_COOKIE_REFRESH_INTERVAL_MS) {
+        this.activeRefreshDisposables.get(webview)?.dispose();
+        /** @type {function((undefined|!tsickle_cde_auth_service_5.EnvironmentHttpAccessToken)=): void} */
+        const onRefresh = (/**
+         * @param {(undefined|!tsickle_cde_auth_service_5.EnvironmentHttpAccessToken)=} token
+         * @return {void}
+         */
+        (token) => {
+            void this.refreshCdeCookie(webview, serverUrl, token);
+        });
+        const intervalId = setInterval(onRefresh, intervalMs);
+        /** @type {!tsickle_cde_auth_service_5.CdeAuthService} */
+        const cdeAuth = cde_auth_service_1.CdeAuthService.getInstance();
+        /** @type {(undefined|!tsickle_vscode_4.Disposable)} */
+        const tokenChangeSub = cdeAuth.onDidChangeHttpAccessToken?.(onRefresh);
+        /** @type {!tsickle_vscode_4.Disposable} */
+        const disposable = {
+            dispose: (/**
+             * @return {void}
+             */
+            () => {
+                clearInterval(intervalId);
+                tokenChangeSub?.dispose();
+                if (this.activeRefreshDisposables.get(webview) === disposable) {
+                    this.activeRefreshDisposables.delete(webview);
+                }
+            }),
+        };
+        this.activeRefreshDisposables.set(webview, disposable);
+        this.bindDisposableToWebview(webview, disposable);
+        return disposable;
+    }
+    /**
+     * @private
+     * @param {!tsickle_vscode_4.Webview} webview
+     * @param {string} serverUrl
+     * @param {(undefined|!tsickle_cde_auth_service_5.EnvironmentHttpAccessToken)=} providedToken
+     * @return {!Promise<void>}
+     */
+    async refreshCdeCookie(webview, serverUrl, providedToken) {
+        try {
+            /** @type {!tsickle_cde_auth_service_5.CdeAuthService} */
+            const cdeAuth = cde_auth_service_1.CdeAuthService.getInstance();
+            /** @type {(undefined|!tsickle_cde_auth_service_5.EnvironmentHttpAccessToken)} */
+            const httpToken = providedToken ??
+                (await this.safeGetHttpToken(cdeAuth, {
+                    forceRefresh: true,
+                }));
+            if (httpToken) {
+                await webview.postMessage({
+                    type: 'refreshCdeCookie',
+                    serverUrl,
+                    urlParameter: httpToken.urlParameter,
+                    token: httpToken.token,
+                });
+            }
+        }
+        catch (e) {
+            console.warn('[Jetski] Error during background CDE cookie refresh:', e);
+        }
     }
     /**
      * Resolves the remote iframe URL, injecting the CDE gateway HTTP access token if applicable.
@@ -700,11 +855,12 @@ class WebUiWebviewDelegate extends BaseVsCodeWebviewDelegate {
     /**
      * @private
      * @param {!tsickle_cde_auth_service_5.CdeAuthService} cdeAuth
+     * @param {(undefined|!tsickle_cde_auth_service_5.GetHttpAccessTokenOptions)=} options
      * @return {!Promise<(undefined|!tsickle_cde_auth_service_5.EnvironmentHttpAccessToken)>}
      */
-    async safeGetHttpToken(cdeAuth) {
+    async safeGetHttpToken(cdeAuth, options) {
         try {
-            return await cdeAuth.getHttpAccessToken();
+            return await cdeAuth.getHttpAccessToken(options);
         }
         catch (e) {
             console.warn('[Jetski] Failed to acquire CDE HTTP access token for iframe URL:', e);
@@ -713,6 +869,14 @@ class WebUiWebviewDelegate extends BaseVsCodeWebviewDelegate {
     }
 }
 exports.WebUiWebviewDelegate = WebUiWebviewDelegate;
+/* istanbul ignore if */
+if (false) {
+    /**
+     * @const {!Map<!tsickle_vscode_4.Webview, !tsickle_vscode_4.Disposable>}
+     * @private
+     */
+    WebUiWebviewDelegate.prototype.activeRefreshDisposables;
+}
 /**
  * @param {string} urlString
  * @return {string}
@@ -795,3 +959,9 @@ function patchWebviewPostMessage(webview) {
         return originalPostMessage(message);
     });
 }
+/** @type {{CDE_COOKIE_REFRESH_INTERVAL_MS: number, patchedWebviews: !WeakSet<!tsickle_vscode_4.Webview>, redactUrlTokens: function(string): string}} */
+exports.TEST_ONLY = {
+    CDE_COOKIE_REFRESH_INTERVAL_MS,
+    patchedWebviews,
+    redactUrlTokens,
+};

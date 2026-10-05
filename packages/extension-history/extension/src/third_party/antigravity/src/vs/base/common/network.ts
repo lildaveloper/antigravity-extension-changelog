@@ -101,6 +101,11 @@ var Schemas;
     /** @type {string} */
     Schemas.vscodeTerminal = 'vscode-terminal';
     /**
+     * Scheme used for the image carousel editor.
+     * @type {string}
+     */
+    Schemas.vscodeImageCarousel = 'vscode-image-carousel';
+    /**
      * Scheme used for code blocks in chat.
      * @type {string}
      */
@@ -135,6 +140,11 @@ var Schemas;
      * @type {string}
      */
     Schemas.vscodeWebview = 'vscode-webview';
+    /**
+     * Scheme used for integrated browser tabs using WebContentsView.
+     * @type {string}
+     */
+    Schemas.vscodeBrowser = 'vscode-browser';
     /**
      * Scheme used for extension pages
      * @type {string}
@@ -312,7 +322,7 @@ class RemoteAuthoritiesImpl {
                 return this._delegate(uri);
             }
             catch (err) {
-                errors.onUnexpectedError(err);
+                errors.onUnexpectedExternalError(err);
                 return uri;
             }
         }

@@ -224,6 +224,54 @@ jspb$jetbox_state_pb$MutableCustomThemeSeeds = class extends jspb_internal_publi
   }
 
 
+  /**
+   * optional string code_foreground_override = 5;
+   * @override
+   * @return {string}
+   */
+  getCodeForegroundOverride() {
+    return jspb_internal_adapters.getStringFieldWithDefault(this, 5);
+  }
+
+
+  /**
+   * @param {string|null|undefined} value
+   * @return {!jspb$jetbox_state_pb$MutableCustomThemeSeeds} returns this
+   */
+  setCodeForegroundOverride(value) {
+    return jspb_internal_adapters.setStringField(this, 5, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$jetbox_state_pb$MutableCustomThemeSeeds} returns this
+   */
+  clearCodeForegroundOverride() {
+    return jspb_internal_adapters.clearField(this, 5);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasCodeForegroundOverride() {
+    return jspb_internal_adapters.hasStringField(this, 5);
+  }
+
+
+  /**
+   * optional string code_foreground_override = 5;
+   * @override
+   * @return {string|undefined}
+   */
+  getCodeForegroundOverrideOrUndefined() {
+    return jspb_internal_adapters.getStringFieldOrUndefined(this, 5);
+  }
+
+
 };
 
 /**
@@ -253,7 +301,8 @@ jspb$jetbox_state_pb$MutableCustomThemeSeeds.hasInstance = /** @pureOrBreakMyCod
  *  background: (?string|undefined),
  *  primary: (?string|undefined),
  *  foregroundOverride: (?string|undefined),
- *  primaryForegroundOverride: (?string|undefined)
+ *  primaryForegroundOverride: (?string|undefined),
+ *  codeForegroundOverride: (?string|undefined)
  * }}
  */
 jspb$jetbox_state_pb$MutableCustomThemeSeeds.ObjectFormat;
@@ -315,7 +364,8 @@ if (goog.DEBUG && !COMPILED) {
  *  background: (string|undefined),
  *  primary: (string|undefined),
  *  foregroundOverride: (string|undefined),
- *  primaryForegroundOverride: (string|undefined)
+ *  primaryForegroundOverride: (string|undefined),
+ *  codeForegroundOverride: (string|undefined)
  * }}
  */
 jspb$jetbox_state_pb$MutableCustomThemeSeeds.FieldsInterface;

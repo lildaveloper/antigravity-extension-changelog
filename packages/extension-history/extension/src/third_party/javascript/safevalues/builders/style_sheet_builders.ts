@@ -85,29 +85,37 @@ function safeStyleRule(templateObj, ...rest) {
 exports.safeStyleRule = safeStyleRule;
 // END-INTERNAL
 /**
- * Creates a SafeStyleSheet object from a template literal (without any
- * embedded expressions).
+ * Creates a SafeStyleSheet object from a template literal.
  *
  * This function is a template literal tag function. It should be called with
- * a template literal that does not contain any expressions. For example,
+ * a template literal, with or without embedded `SafeStyleSheet` expressions.
+ * For example,
  *                         safeStyleSheet`foo`;
- * The argument must not have any < or > characters in it. This is so that
+ * The literal parts must not have any < characters in them. This is so that
  * SafeStyleSheet's contract is preserved, allowing the SafeStyleSheet to
  * correctly be interpreted as a sequence of CSS declarations and without
  * affecting the syntactic structure of any surrounding CSS and HTML.
  *
  * @param {!TemplateStringsArray} templateObj This contains the literal part of the template literal.
+ * @param {...!tsickle_style_sheet_impl_3.SafeStyleSheet} rest This represents the template's embedded `SafeStyleSheet`
+ *     expressions.
  * @return {!tsickle_style_sheet_impl_3.SafeStyleSheet}
  */
-function safeStyleSheet(templateObj) {
+function safeStyleSheet(templateObj, ...rest) {
     if (dev_1.DEV_MODE) {
-        (0, string_literal_1.assertIsTemplateObject)(templateObj, 0);
+        (0, string_literal_1.assertIsTemplateObject)(templateObj, rest.length);
     }
     /** @type {string} */
-    const styleSheet = templateObj[0];
-    if (dev_1.DEV_MODE) {
-        if (/</.test(styleSheet)) {
-            throw new Error(`'<' character is forbidden in styleSheet string: ${styleSheet}`);
+    let styleSheet = '';
+    for (let i = 0; i < templateObj.length; i++) {
+        if (dev_1.DEV_MODE) {
+            if (/</.test(templateObj[i])) {
+                throw new Error(`'<' character is forbidden in styleSheet string: ${templateObj[i]}`);
+            }
+        }
+        styleSheet += templateObj[i];
+        if (i < rest.length) {
+            styleSheet += (0, style_sheet_impl_1.unwrapStyleSheet)(rest[i]);
         }
     }
     return (0, style_sheet_impl_1.createStyleSheetInternal)(styleSheet);

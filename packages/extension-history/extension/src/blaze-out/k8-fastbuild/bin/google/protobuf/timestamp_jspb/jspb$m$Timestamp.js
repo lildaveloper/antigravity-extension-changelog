@@ -288,7 +288,7 @@ jspb$google$protobuf$MutableTimestamp.fromFields = /** @pureOrBreakMyCode */ (js
  */
 jspb$google$protobuf$MutableTimestamp.getFields = /** @pureOrBreakMyCode */ (jspb_internal_public_for_gencode.makeGetFieldsForTesting());
 
-var jspb$exa$project_pb$MutableGitFolder;
-Object.defineProperty(this, 'jspb$exa$project_pb$MutableGitFolder', {
-  get() { return jspb$exa$project_pb$MutableGitFolder; },
-  set(v) { jspb$exa$project_pb$MutableGitFolder = v; },
+var jspb$devtools_jetski_provisioning$MutableVolumeClientConfig;
+Object.defineProperty(this, 'jspb$devtools_jetski_provisioning$MutableVolumeClientConfig', {
+  get() { return jspb$devtools_jetski_provisioning$MutableVolumeClientConfig; },
+  set(v) { jspb$devtools_jetski_provisioning$MutableVolumeClientConfig = v; },

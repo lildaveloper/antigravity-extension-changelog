@@ -184,7 +184,7 @@ jspb$exa$project_pb$MutableGoogle3.fromFields = /** @pureOrBreakMyCode */ (jspb_
  */
 jspb$exa$project_pb$MutableGoogle3.getFields = /** @pureOrBreakMyCode */ (jspb_internal_public_for_gencode.makeGetFieldsForTesting());
 
-var jspb$exa$project_pb$MutableResource;
-Object.defineProperty(this, 'jspb$exa$project_pb$MutableResource', {
-  get() { return jspb$exa$project_pb$MutableResource; },
-  set(v) { jspb$exa$project_pb$MutableResource = v; },
+var jspb$exa$project_pb$MutableRemoteResource;
+Object.defineProperty(this, 'jspb$exa$project_pb$MutableRemoteResource', {
+  get() { return jspb$exa$project_pb$MutableRemoteResource; },
+  set(v) { jspb$exa$project_pb$MutableRemoteResource = v; },

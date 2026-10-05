@@ -13,12 +13,14 @@ goog.require('jspb$devtools_jetski_provisioning$MutableCustomizationConfig');
 goog.require('jspb$devtools_jetski_provisioning$MutableDeploymentConfig');
 goog.require('jspb$devtools_jetski_provisioning$MutableMemoryConfig');
 goog.require('jspb$devtools_jetski_provisioning$MutableSidecar');
+goog.require('jspb$devtools_jetski_provisioning$MutableVmstorageConfig');
 goog.require('jspb$exa$config_pb$MutableUserConfig');
 goog.require('jspb$jetbox_state_pb$MutableJetboxAppState');
 goog.require('jspb$o$devtools_jetski_provisioning$ChatConfig');
 goog.require('jspb$o$devtools_jetski_provisioning$CustomizationConfig');
 goog.require('jspb$o$devtools_jetski_provisioning$MemoryConfig');
 goog.require('jspb$o$devtools_jetski_provisioning$Sidecar');
+goog.require('jspb$o$devtools_jetski_provisioning$VmstorageConfig');
 goog.require('jspb$o$exa$config_pb$UserConfig');
 goog.require('jspb$o$exa$project_pb$Project');
 goog.require('jspb$o$jetbox_state_pb$JetboxAppState');
@@ -63,6 +65,9 @@ jspb$o$devtools_jetski_provisioning$DeploymentConfig.internal_toObject = functio
     extraFilesMap: jspb_internal_public_for_gencode.mapToObject(msg.getExtraFilesMap()),
     enableControlPlaneMonitoring: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getBooleanFieldLegacyNullable(msg, 31)),
     x20GeminiDirPrefix: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getStringFieldLegacyNullable(msg, 32)),
+    preserveMemoryMounts: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getBooleanFieldLegacyNullable(msg, 33)),
+    enablePeriodicBackup: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getBooleanFieldLegacyNullable(msg, 34)),
+    vmstorageConfig: jspb$o$devtools_jetski_provisioning$VmstorageConfig.internal_toObject(msg.getVmstorageConfig()),
   }));
 
 };
@@ -141,11 +146,16 @@ jspb$o$devtools_jetski_provisioning$DeploymentConfig.fromObject = function(obj) 
   obj.extraFilesMap && jspb_internal_public_for_gencode.mapFromObject(msg.getExtraFilesMap(), obj.extraFilesMap);
   jspb_internal_adapters.setBooleanField(msg, 31, obj.enableControlPlaneMonitoring);
   jspb_internal_adapters.setStringField(msg, 32, obj.x20GeminiDirPrefix);
+  jspb_internal_adapters.setBooleanField(msg, 33, obj.preserveMemoryMounts);
+  jspb_internal_adapters.setBooleanField(msg, 34, obj.enablePeriodicBackup);
+  jspb_internal_adapters.setWrapperField(msg,
+      jspb$devtools_jetski_provisioning$MutableVmstorageConfig,
+      35, jspb_internal_public_for_gencode.fromObjectNullable(obj.vmstorageConfig, jspb$o$devtools_jetski_provisioning$VmstorageConfig.fromObject));
   return msg;
 };
 }
 
-var jspb$o$devtools_jetski_provisioning$InstanceMetrics;
-Object.defineProperty(this, 'jspb$o$devtools_jetski_provisioning$InstanceMetrics', {
-  get() { return jspb$o$devtools_jetski_provisioning$InstanceMetrics; },
-  set(v) { jspb$o$devtools_jetski_provisioning$InstanceMetrics = v; },
+var jspb$o$devtools_jetski_provisioning$InstanceFailure;
+Object.defineProperty(this, 'jspb$o$devtools_jetski_provisioning$InstanceFailure', {
+  get() { return jspb$o$devtools_jetski_provisioning$InstanceFailure; },
+  set(v) { jspb$o$devtools_jetski_provisioning$InstanceFailure = v; },

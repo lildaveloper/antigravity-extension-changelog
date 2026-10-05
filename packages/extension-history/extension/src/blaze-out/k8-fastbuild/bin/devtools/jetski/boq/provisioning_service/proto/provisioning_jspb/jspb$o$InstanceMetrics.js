@@ -9,6 +9,8 @@
 goog.provide('jspb$o$devtools_jetski_provisioning$InstanceMetrics');
 
 goog.require('jspb$devtools_jetski_provisioning$MutableInstanceMetrics');
+goog.require('jspb$devtools_jetski_provisioning$MutableX20QuotaUsage');
+goog.require('jspb$o$devtools_jetski_provisioning$X20QuotaUsage');
 goog.require('jspb_internal_adapters');
 goog.require('jspb_internal_public_for_gencode');
 
@@ -30,6 +32,7 @@ jspb$o$devtools_jetski_provisioning$InstanceMetrics.internal_toObject = function
     ramTotalMbytes: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getInt64FieldLegacyNullable(msg, 3)),
     diskUsedMbytes: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getInt64FieldLegacyNullable(msg, 4)),
     diskTotalMbytes: jspb_internal_public_for_gencode.toObjectPrimitive(jspb_internal_adapters.getInt64FieldLegacyNullable(msg, 5)),
+    x20QuotasList: jspb_internal_public_for_gencode.toObjectList(msg.getX20QuotasList(), jspb$o$devtools_jetski_provisioning$X20QuotaUsage.internal_toObject),
   }));
 
 };
@@ -74,6 +77,8 @@ jspb$o$devtools_jetski_provisioning$InstanceMetrics.fromObject = function(obj) {
   jspb_internal_adapters.setInt64Field(msg, 3, obj.ramTotalMbytes);
   jspb_internal_adapters.setInt64Field(msg, 4, obj.diskUsedMbytes);
   jspb_internal_adapters.setInt64Field(msg, 5, obj.diskTotalMbytes);
+  jspb_internal_adapters.setRepeatedWrapperField(msg, jspb$devtools_jetski_provisioning$MutableX20QuotaUsage,
+      7, jspb_internal_public_for_gencode.fromObjectList(obj.x20QuotasList,         jspb$o$devtools_jetski_provisioning$X20QuotaUsage.fromObject));
   return msg;
 };
 }

@@ -27,7 +27,7 @@ const vscode = goog.require('vscode'); // from //third_party/javascript/typings/
  * @enum {string}
  */
 const DeveloperEnvironmentType = {
-    CLOUD_WORKSTATIONS: "CLOUD_WORKSTATIONS",
+    CLOUD_WORKSTATIONS: "GOOGLE_CLOUD_WORKSTATIONS",
     CLOUD_SHELL: "CLOUD_SHELL",
     UNKNOWN: "UNKNOWN",
 };
@@ -175,13 +175,13 @@ class CdeAuthService {
      * Checks whether running in a Cloud Developer Environment (Cloud Workstations or Cloud Shell).
      *
      * Verifies either the presence of container environment variables
-     * (`CLOUD_WORKSTATIONS=true` or `CLOUD_SHELL=true`) or the presence
+     * (`GOOGLE_CLOUD_WORKSTATIONS=true` or `CLOUD_SHELL=true`) or the presence
      * of the bundled companion extension (`google.cloud-developer-environments-auth`).
      * @public
      * @return {boolean}
      */
     isCdeEnvironment() {
-        return (process.env['CLOUD_WORKSTATIONS'] === 'true' ||
+        return (process.env['GOOGLE_CLOUD_WORKSTATIONS'] === 'true' ||
             process.env['CLOUD_SHELL'] === 'true' ||
             this.isExtensionInstalled());
     }
@@ -192,6 +192,23 @@ class CdeAuthService {
      */
     isExtensionInstalled() {
         return Boolean(vscode.extensions.getExtension(CdeAuthService.EXTENSION_ID));
+    }
+    /**
+     * Subscribes to token change events from the companion auth extension if available.
+     *
+     * Note: The companion extension must be activated (e.g. via getHttpAccessToken)
+     * for its exports to be present. Returns `undefined` if uninstalled or inactive.
+     * @public
+     * @param {function((undefined|!EnvironmentHttpAccessToken)=): void} listener
+     * @return {(undefined|!tsickle_vscode_4.Disposable)}
+     */
+    onDidChangeHttpAccessToken(listener) {
+        /** @type {(undefined|!tsickle_vscode_4.Extension<!DeveloperEnvironmentsAuthApi>)} */
+        const ext = vscode.extensions.getExtension(CdeAuthService.EXTENSION_ID);
+        if (typeof ext?.exports?.onDidChangeHttpAccessToken === 'function') {
+            return ext.exports.onDidChangeHttpAccessToken(listener);
+        }
+        return undefined;
     }
     /**
      * Fetches an environment HTTP access token from the companion extension.

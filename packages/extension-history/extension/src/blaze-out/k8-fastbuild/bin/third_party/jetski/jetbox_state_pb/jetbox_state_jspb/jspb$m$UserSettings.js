@@ -27,6 +27,7 @@ goog.requireType('jspb$e.exa$codeium_common_pb$PlanningMode');
 goog.requireType('jspb$e.exa$cortex_pb$MessageDeliveryStrategy');
 goog.requireType('jspb$e.jetbox_state_pb$AgentEnvironment');
 goog.requireType('jspb$e.jetbox_state_pb$ConversationWidth');
+goog.requireType('jspb$e.jetbox_state_pb$TerminalPlacement');
 goog.requireType('jspb$e.jetbox_state_pb$ThemeMode');
 goog.requireType('jspb$jetbox_state_pb$ImmutableUserSettings');
 goog.requireType('jspb$r$jetbox_state_pb$UserSettings$internalDoNotUseReader');
@@ -2297,6 +2298,102 @@ jspb$jetbox_state_pb$MutableUserSettings = class extends jspb_internal_public_fo
   }
 
 
+  /**
+   * optional TerminalPlacement terminal_placement = 48;
+   * @override
+   * @return {!jspb$e.jetbox_state_pb$TerminalPlacement}
+   */
+  getTerminalPlacement() {
+    return /** @type {!jspb$e.jetbox_state_pb$TerminalPlacement} */ (jspb_internal_adapters.getEnumFieldWithDefault(this, 48));
+  }
+
+
+  /**
+   * @param {!jspb$e.jetbox_state_pb$TerminalPlacement|null|undefined} value
+   * @return {!jspb$jetbox_state_pb$MutableUserSettings} returns this
+   */
+  setTerminalPlacement(value) {
+    return jspb_internal_adapters.setEnumField(this, 48, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$jetbox_state_pb$MutableUserSettings} returns this
+   */
+  clearTerminalPlacement() {
+    return jspb_internal_adapters.clearField(this, 48);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasTerminalPlacement() {
+    return jspb_internal_adapters.hasEnumField(this, 48);
+  }
+
+
+  /**
+   * optional TerminalPlacement terminal_placement = 48;
+   * @override
+   * @return {!jspb$e.jetbox_state_pb$TerminalPlacement|undefined}
+   */
+  getTerminalPlacementOrUndefined() {
+    return /** @type {!jspb$e.jetbox_state_pb$TerminalPlacement|undefined} */ (jspb_internal_adapters.getEnumFieldOrUndefined(this, 48));
+  }
+
+
+  /**
+   * optional int32 agent_sound_volume = 49;
+   * @override
+   * @return {number}
+   */
+  getAgentSoundVolume() {
+    return jspb_internal_adapters.getInt32FieldWithDefault(this, 49);
+  }
+
+
+  /**
+   * @param {number|null|undefined} value
+   * @return {!jspb$jetbox_state_pb$MutableUserSettings} returns this
+   */
+  setAgentSoundVolume(value) {
+    return jspb_internal_adapters.setInt32Field(this, 49, value);
+  }
+
+
+  /**
+   * Clears the field.
+   * @return {!jspb$jetbox_state_pb$MutableUserSettings} returns this
+   */
+  clearAgentSoundVolume() {
+    return jspb_internal_adapters.clearField(this, 49);
+  }
+
+
+  /**
+   * Returns whether this field is set.
+   * @override
+   * @return {boolean}
+   */
+  hasAgentSoundVolume() {
+    return jspb_internal_adapters.hasInt32Field(this, 49);
+  }
+
+
+  /**
+   * optional int32 agent_sound_volume = 49;
+   * @override
+   * @return {number|undefined}
+   */
+  getAgentSoundVolumeOrUndefined() {
+    return jspb_internal_adapters.getInt32FieldOrUndefined(this, 49);
+  }
+
+
 };
 
 /**
@@ -2366,7 +2463,9 @@ jspb$jetbox_state_pb$MutableUserSettings.hasInstance = /** @pureOrBreakMyCode */
  *  permissionGrantsV2Migrated: (?boolean|undefined),
  *  sandboxEnabledAtV2Migration: (?boolean|undefined),
  *  vertexServiceTier: (?string|undefined),
- *  sandboxProxy: (?jspb$jetbox_state_pb$UserSettings$MutableSandboxProxy.ObjectFormat|undefined)
+ *  sandboxProxy: (?jspb$jetbox_state_pb$UserSettings$MutableSandboxProxy.ObjectFormat|undefined),
+ *  terminalPlacement: (?number|undefined),
+ *  agentSoundVolume: (?number|undefined)
  * }}
  */
 jspb$jetbox_state_pb$MutableUserSettings.ObjectFormat;
@@ -2468,7 +2567,9 @@ if (goog.DEBUG && !COMPILED) {
  *  permissionGrantsV2Migrated: (boolean|undefined),
  *  sandboxEnabledAtV2Migration: (boolean|undefined),
  *  vertexServiceTier: (string|undefined),
- *  sandboxProxy: (!jspb$ro.jetbox_state_pb$UserSettings$ReadonlySandboxProxy|undefined)
+ *  sandboxProxy: (!jspb$ro.jetbox_state_pb$UserSettings$ReadonlySandboxProxy|undefined),
+ *  terminalPlacement: (!jspb$e.jetbox_state_pb$TerminalPlacement|undefined),
+ *  agentSoundVolume: (number|undefined)
  * }}
  */
 jspb$jetbox_state_pb$MutableUserSettings.FieldsInterface;

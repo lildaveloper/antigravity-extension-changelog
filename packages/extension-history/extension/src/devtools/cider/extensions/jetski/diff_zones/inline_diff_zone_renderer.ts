@@ -19,14 +19,87 @@ const tsickle_agent_edit_manager_2 = goog.requireType("google3.devtools.cider.ex
 const tsickle_diff_helper_3 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.diff_helper");
 const tsickle_diff_zone_renderer_4 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.diff_zone_renderer");
 const tsickle_hunk_storage_5 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.hunk_storage");
-const tsickle_inline_diff_manager_6 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_manager");
-const tsickle_utils_7 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.utils");
-const tsickle_inline_diff_change_range_8 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_change_range");
+const tsickle_inline_diff_change_range_6 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_change_range");
+const tsickle_inline_diff_manager_7 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_manager");
+const tsickle_utils_8 = goog.requireType("google3.devtools.cider.extensions.jetski.diff_zones.utils");
 const vscode = goog.require('vscode');
 const diff_helper_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.diff_helper');
 const hunk_storage_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.hunk_storage');
 const inline_diff_manager_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.inline_diff_manager');
 const utils_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zones.utils');
+/**
+ * Editor range of a change; removals hidden by an auto-save use their line.
+ * @param {!tsickle_inline_diff_change_range_6.InlineDiffChangeRange} r
+ * @return {!tsickle_vscode_1.Range}
+ */
+function changeRange(r) {
+    return (r.additionRange ??
+        r.deletionRange ??
+        new vscode.Range(r.start, 0, r.start, 0));
+}
+/**
+ * Inserted / deleted lines of each hunk, as hashed for stored resolutions.
+ * @param {!Array<!google3$third_party$javascript$typings$diff$index.Hunk>} hunks
+ * @return {!Array<!tsickle_diff_zone_renderer_4.DiffHunkInfo>}
+ */
+function toHunkInfos(hunks) {
+    return hunks.map((/**
+     * @param {!google3$third_party$javascript$typings$diff$index.Hunk} hunk
+     * @return {{startLine: number, insertions: !Array<string>, deletions: !Array<string>}}
+     */
+    (hunk) => ({
+        startLine: hunk.oldStart,
+        insertions: hunk.lines
+            .filter((/**
+         * @param {string} l
+         * @return {boolean}
+         */
+        (l) => l.startsWith('+')))
+            .map((/**
+         * @param {string} l
+         * @return {string}
+         */
+        (l) => l.substring(1))),
+        deletions: hunk.lines
+            .filter((/**
+         * @param {string} l
+         * @return {boolean}
+         */
+        (l) => l.startsWith('-')))
+            .map((/**
+         * @param {string} l
+         * @return {string}
+         */
+        (l) => l.substring(1))),
+    })));
+}
+/**
+ * Where `rejectedHunks` are in the read-only diff: their added lines on the
+ * right, and, for hunks that only delete lines, those lines on the left.
+ * @param {!Array<!google3$third_party$javascript$typings$diff$index.Hunk>} rejectedHunks
+ * @return {!tsickle_diff_zone_renderer_4.RejectedChanges}
+ */
+function toRejectedChanges(rejectedHunks) {
+    /** @type {!Array<!tsickle_diff_zone_renderer_4.LineRange>} */
+    const modifiedRanges = [];
+    /** @type {!Array<!tsickle_diff_zone_renderer_4.LineRange>} */
+    const originalRanges = [];
+    for (const hunk of rejectedHunks) {
+        // jsdiff's starts are 1-based and point at the hunk's first line when it
+        // has lines on that side.
+        if (hunk.newLines > 0) {
+            /** @type {number} */
+            const startLine = hunk.newStart - 1;
+            modifiedRanges.push({ startLine, endLine: startLine + hunk.newLines - 1 });
+        }
+        else if (hunk.oldLines > 0) {
+            /** @type {number} */
+            const startLine = hunk.oldStart - 1;
+            originalRanges.push({ startLine, endLine: startLine + hunk.oldLines - 1 });
+        }
+    }
+    return { modifiedRanges, originalRanges };
+}
 /**
  * Implementation of DiffZoneRenderer using inline decorations and CodeLenses in standard VS Code.
  * @implements {tsickle_diff_zone_renderer_4.DiffZoneRenderer}
@@ -34,7 +107,7 @@ const utils_1 = goog.require('google3.devtools.cider.extensions.jetski.diff_zone
 class InlineDiffZoneRenderer {
     /**
      * @public
-     * @param {!tsickle_inline_diff_manager_6.InlineDiffManager=} inlineDiffManager
+     * @param {!tsickle_inline_diff_manager_7.InlineDiffManager=} inlineDiffManager
      */
     constructor(inlineDiffManager = new inline_diff_manager_1.InlineDiffManager()) {
         this.inlineDiffManager = inlineDiffManager;
@@ -60,35 +133,7 @@ class InlineDiffZoneRenderer {
         /** @type {!Array<!google3$third_party$javascript$typings$diff$index.Hunk>} */
         const diffHunks = (0, diff_helper_1.getDiffHunks)(originalContents, modifiedContents);
         /** @type {!Array<!tsickle_diff_zone_renderer_4.DiffHunkInfo>} */
-        const hunkInfos = diffHunks.map((/**
-         * @param {!google3$third_party$javascript$typings$diff$index.Hunk} hunk
-         * @return {{startLine: number, insertions: !Array<string>, deletions: !Array<string>}}
-         */
-        (hunk) => ({
-            startLine: hunk.oldStart,
-            insertions: hunk.lines
-                .filter((/**
-             * @param {string} l
-             * @return {boolean}
-             */
-            (l) => l.startsWith('+')))
-                .map((/**
-             * @param {string} l
-             * @return {string}
-             */
-            (l) => l.substring(1))),
-            deletions: hunk.lines
-                .filter((/**
-             * @param {string} l
-             * @return {boolean}
-             */
-            (l) => l.startsWith('-')))
-                .map((/**
-             * @param {string} l
-             * @return {string}
-             */
-            (l) => l.substring(1))),
-        })));
+        const hunkInfos = toHunkInfos(diffHunks);
         // Compute hashes for all diff hunks so AgentEditManager can track hunk resolutions.
         /** @type {!Array<string>} */
         const hunkHashes = hunkInfos.map((/**
@@ -134,7 +179,25 @@ class InlineDiffZoneRenderer {
                 });
             }
         }));
-        this.fileSubscriptions.set(normalizedTargetUri, [resolveSub, finalizeSub]);
+        /** @type {!tsickle_vscode_1.Disposable} */
+        const replaySub = this.inlineDiffManager.onDidReplayResolution((/**
+         * @param {{uri: !tsickle_vscode_1.Uri, pendingHunkHashes: !Array<string>, accept: boolean}} event
+         * @return {!Promise<void>}
+         */
+        async (event) => {
+            if ((0, utils_1.normalizeUri)(event.uri.toString()) === normalizedTargetUri) {
+                await onHunkResolved({
+                    fileUri: event.uri.toString(),
+                    accept: event.accept,
+                    pendingHunkHashes: event.pendingHunkHashes,
+                });
+            }
+        }));
+        this.fileSubscriptions.set(normalizedTargetUri, [
+            resolveSub,
+            finalizeSub,
+            replaySub,
+        ]);
         /** @type {boolean} */
         const success = await this.inlineDiffManager.registerDiff(uri, originalContents, modifiedContents);
         return {
@@ -158,6 +221,59 @@ class InlineDiffZoneRenderer {
         return { added: false, fullyResolved: false, hunks: [] };
     }
     /**
+     * From the decisions saved for the hunks (b/548760759):
+     * - all accepted: "Resolved: Accepted";
+     * - all rejected: "Resolved: Rejected";
+     * - mixed: "Resolved: X of Y accepted";
+     * - no hunks, or any hunk without a saved decision (never reviewed,
+     *   evicted, or resolved outside the inline review): undefined, since the
+     *   outcome is unknown.
+     * When any hunk was rejected, `rejectedChanges` says where those hunks are.
+     * @public
+     * @param {string} originalContents
+     * @param {string} modifiedContents
+     * @param {function(string): (undefined|!tsickle_hunk_storage_5.HunkResolutionAction)} getStoredResolution
+     * @return {(undefined|!tsickle_diff_zone_renderer_4.ResolvedDiffView)}
+     */
+    getResolvedDiffView(originalContents, modifiedContents, getStoredResolution) {
+        /** @type {!Array<!google3$third_party$javascript$typings$diff$index.Hunk>} */
+        const hunks = (0, diff_helper_1.getDiffHunks)(originalContents, modifiedContents);
+        /** @type {!Array<(undefined|!tsickle_hunk_storage_5.HunkResolutionAction)>} */
+        const decisions = toHunkInfos(hunks).map((/**
+         * @param {!tsickle_diff_zone_renderer_4.DiffHunkInfo} h
+         * @return {(undefined|!tsickle_hunk_storage_5.HunkResolutionAction)}
+         */
+        (h) => getStoredResolution((0, hunk_storage_1.computeHunkHash)(h.insertions, h.deletions))));
+        if (hunks.length === 0 || decisions.some((/**
+         * @param {(undefined|!tsickle_hunk_storage_5.HunkResolutionAction)} d
+         * @return {boolean}
+         */
+        (d) => d === undefined))) {
+            return undefined;
+        }
+        /** @type {!Array<!google3$third_party$javascript$typings$diff$index.Hunk>} */
+        const rejectedHunks = hunks.filter((/**
+         * @param {!google3$third_party$javascript$typings$diff$index.Hunk} _
+         * @param {number} i
+         * @return {boolean}
+         */
+        (_, i) => decisions[i] !== hunk_storage_1.HunkResolutionAction.ACCEPT));
+        /** @type {number} */
+        const acceptedCount = hunks.length - rejectedHunks.length;
+        if (acceptedCount === hunks.length) {
+            return { outcomeLabel: 'Resolved: Accepted' };
+        }
+        /** @type {!tsickle_diff_zone_renderer_4.RejectedChanges} */
+        const rejectedChanges = toRejectedChanges(rejectedHunks);
+        if (acceptedCount === 0) {
+            return { outcomeLabel: 'Resolved: Rejected', rejectedChanges };
+        }
+        return {
+            outcomeLabel: `Resolved: ${acceptedCount} of ${hunks.length} accepted`,
+            rejectedChanges,
+        };
+    }
+    /**
      * Focuses and reveals a targeted hunk range based on index or relative direction ('next' | 'previous').
      * @public
      * @param {string} fileUri
@@ -171,7 +287,7 @@ class InlineDiffZoneRenderer {
         const editor = (0, utils_1.findEditorForUri)(normalizedUri);
         if (!editor)
             return;
-        /** @type {(undefined|!tsickle_inline_diff_manager_6.ActiveDiff)} */
+        /** @type {(undefined|!tsickle_inline_diff_manager_7.ActiveDiff)} */
         const activeDiff = this.inlineDiffManager.getActiveDiff(normalizedUri);
         if (!activeDiff || activeDiff.changes.ranges.length === 0)
             return;
@@ -187,13 +303,11 @@ class InlineDiffZoneRenderer {
             if (target === 'next') {
                 /** @type {number} */
                 const found = activeDiff.changes.ranges.findIndex((/**
-                 * @param {!tsickle_inline_diff_change_range_8.InlineDiffChangeRange} r
-                 * @return {(undefined|boolean)}
+                 * @param {!tsickle_inline_diff_change_range_6.InlineDiffChangeRange} r
+                 * @return {boolean}
                  */
                 (r) => {
-                    /** @type {(undefined|!tsickle_vscode_1.Range)} */
-                    const range = r.additionRange ?? r.deletionRange;
-                    return range && range.start.line > cursorLine;
+                    return changeRange(r).start.line > cursorLine;
                 }));
                 targetIndex = found !== -1 ? found : 0;
             }
@@ -201,10 +315,7 @@ class InlineDiffZoneRenderer {
                 /** @type {number} */
                 let found = -1;
                 for (let i = activeDiff.changes.ranges.length - 1; i >= 0; i--) {
-                    /** @type {(undefined|!tsickle_vscode_1.Range)} */
-                    const range = activeDiff.changes.ranges[i].additionRange ??
-                        activeDiff.changes.ranges[i].deletionRange;
-                    if (range && range.start.line < cursorLine) {
+                    if (changeRange(activeDiff.changes.ranges[i]).start.line < cursorLine) {
                         found = i;
                         break;
                     }
@@ -213,14 +324,12 @@ class InlineDiffZoneRenderer {
                     found !== -1 ? found : activeDiff.changes.ranges.length - 1;
             }
         }
-        /** @type {!tsickle_inline_diff_change_range_8.InlineDiffChangeRange} */
+        /** @type {!tsickle_inline_diff_change_range_6.InlineDiffChangeRange} */
         const targetChange = activeDiff.changes.ranges[targetIndex];
-        /** @type {(undefined|!tsickle_vscode_1.Range)} */
-        const targetRange = targetChange.additionRange ?? targetChange.deletionRange;
-        if (targetRange) {
-            editor.revealRange(targetRange, vscode.TextEditorRevealType.InCenter);
-            editor.selection = new vscode.Selection(targetRange.start, targetRange.start);
-        }
+        /** @type {!tsickle_vscode_1.Range} */
+        const targetRange = changeRange(targetChange);
+        editor.revealRange(targetRange, vscode.TextEditorRevealType.InCenter);
+        editor.selection = new vscode.Selection(targetRange.start, targetRange.start);
     }
     /**
      * @public
@@ -240,7 +349,7 @@ class InlineDiffZoneRenderer {
         const normalizedUri = (0, utils_1.normalizeUri)(fileUri);
         /** @type {(undefined|!tsickle_vscode_1.TextEditor)} */
         const editor = (0, utils_1.findEditorForUri)(normalizedUri);
-        /** @type {(undefined|!tsickle_inline_diff_manager_6.ActiveDiff)} */
+        /** @type {(undefined|!tsickle_inline_diff_manager_7.ActiveDiff)} */
         const activeDiff = this.inlineDiffManager.getActiveDiff(normalizedUri);
         if (!activeDiff || activeDiff.changes.ranges.length === 0)
             return;
@@ -251,15 +360,13 @@ class InlineDiffZoneRenderer {
             const cursorLine = editor.selection.active.line;
             /** @type {number} */
             const found = activeDiff.changes.ranges.findIndex((/**
-             * @param {!tsickle_inline_diff_change_range_8.InlineDiffChangeRange} r
-             * @return {(undefined|boolean)}
+             * @param {!tsickle_inline_diff_change_range_6.InlineDiffChangeRange} r
+             * @return {boolean}
              */
             (r) => {
-                /** @type {(undefined|!tsickle_vscode_1.Range)} */
-                const range = r.additionRange ?? r.deletionRange;
-                return (range &&
-                    cursorLine >= range.start.line &&
-                    cursorLine <= range.end.line);
+                /** @type {!tsickle_vscode_1.Range} */
+                const range = changeRange(r);
+                return cursorLine >= range.start.line && cursorLine <= range.end.line;
             }));
             if (found !== -1) {
                 targetIndex = found;
@@ -277,7 +384,7 @@ class InlineDiffZoneRenderer {
         const normalizedUri = (0, utils_1.normalizeUri)(fileUri);
         /** @type {(undefined|!tsickle_vscode_1.TextEditor)} */
         const editor = (0, utils_1.findEditorForUri)(normalizedUri);
-        /** @type {(undefined|!tsickle_inline_diff_manager_6.ActiveDiff)} */
+        /** @type {(undefined|!tsickle_inline_diff_manager_7.ActiveDiff)} */
         const activeDiff = this.inlineDiffManager.getActiveDiff(normalizedUri);
         if (!activeDiff || activeDiff.changes.ranges.length === 0)
             return;
@@ -288,15 +395,13 @@ class InlineDiffZoneRenderer {
             const cursorLine = editor.selection.active.line;
             /** @type {number} */
             const found = activeDiff.changes.ranges.findIndex((/**
-             * @param {!tsickle_inline_diff_change_range_8.InlineDiffChangeRange} r
-             * @return {(undefined|boolean)}
+             * @param {!tsickle_inline_diff_change_range_6.InlineDiffChangeRange} r
+             * @return {boolean}
              */
             (r) => {
-                /** @type {(undefined|!tsickle_vscode_1.Range)} */
-                const range = r.additionRange ?? r.deletionRange;
-                return (range &&
-                    cursorLine >= range.start.line &&
-                    cursorLine <= range.end.line);
+                /** @type {!tsickle_vscode_1.Range} */
+                const range = changeRange(r);
+                return cursorLine >= range.start.line && cursorLine <= range.end.line;
             }));
             if (found !== -1) {
                 targetIndex = found;
@@ -308,15 +413,28 @@ class InlineDiffZoneRenderer {
      * @public
      * @param {string} fileUri
      * @param {boolean} accept
+     * @param {(undefined|{undoable: (undefined|boolean)})=} options
      * @return {!Promise<boolean>}
      */
-    async closeDiffZone(fileUri, accept) {
-        this.clearFileSubscriptions((0, utils_1.normalizeUri)(fileUri));
+    async closeDiffZone(fileUri, accept, options) {
+        /** @type {boolean} */
+        const undoable = options?.undoable === true;
+        if (!undoable) {
+            this.clearFileSubscriptions((0, utils_1.normalizeUri)(fileUri));
+            if (accept) {
+                await this.inlineDiffManager.acceptAll(fileUri);
+            }
+            else {
+                await this.inlineDiffManager.rejectAll(fileUri);
+            }
+            return true;
+        }
+        // Keep listening so Ctrl+Z can reopen the review.
         if (accept) {
-            await this.inlineDiffManager.acceptAll(fileUri);
+            await this.inlineDiffManager.acceptAll(fileUri, { undoable });
         }
         else {
-            await this.inlineDiffManager.rejectAll(fileUri);
+            await this.inlineDiffManager.rejectAll(fileUri, { undoable });
         }
         return true;
     }
@@ -355,23 +473,42 @@ class InlineDiffZoneRenderer {
      * @return {boolean}
      */
     hasUserEditedZone(fileUri) {
-        return this.inlineDiffManager.getActiveDiff(fileUri)?.hasUserEdits === true;
+        // A per-change Reject, like typing, is only in the buffer; the next turn
+        // would read the rejected code from disk.
+        return (this.inlineDiffManager.getActiveDiff(fileUri)?.hasUserEdits === true ||
+            this.inlineDiffManager.hasUnsavedRejection(fileUri));
     }
     /**
      * @public
      * @return {void}
      */
     dispose() {
+        this.disposeFileSubscriptions();
+        for (const sub of this.subscriptions) {
+            sub.dispose();
+        }
+        this.subscriptions.length = 0;
+    }
+    /**
+     * @public
+     * @return {void}
+     */
+    disposeForShutdown() {
+        this.disposeFileSubscriptions();
+        this.inlineDiffManager.disposeForShutdown();
+        this.subscriptions.length = 0;
+    }
+    /**
+     * @private
+     * @return {void}
+     */
+    disposeFileSubscriptions() {
         for (const subs of this.fileSubscriptions.values()) {
             for (const sub of subs) {
                 sub.dispose();
             }
         }
         this.fileSubscriptions.clear();
-        for (const sub of this.subscriptions) {
-            sub.dispose();
-        }
-        this.subscriptions.length = 0;
     }
 }
 exports.InlineDiffZoneRenderer = InlineDiffZoneRenderer;
@@ -393,7 +530,7 @@ if (false) {
      */
     InlineDiffZoneRenderer.prototype.fileSubscriptions;
     /**
-     * @const {!tsickle_inline_diff_manager_6.InlineDiffManager}
+     * @const {!tsickle_inline_diff_manager_7.InlineDiffManager}
      * @private
      */
     InlineDiffZoneRenderer.prototype.inlineDiffManager;
