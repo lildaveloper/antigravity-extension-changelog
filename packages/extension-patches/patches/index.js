@@ -1,8 +1,10 @@
 const autoOpenPriority = require('./auto_open_priority');
+const terminalView = require('./terminal_view');
 
 // Registry of active patches in order of execution
 const ALL_PATCHES = [
   autoOpenPriority,
+  terminalView,
 ];
 
 /**

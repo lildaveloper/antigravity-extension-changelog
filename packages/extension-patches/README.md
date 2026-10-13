@@ -24,8 +24,8 @@ A minimal, safe patch manager for the Google Antigravity VS Code extension (`ext
 
 | Patch ID | Description |
 | :--- | :--- |
-| [`line_counts`](patches/line_counts.js) | Fixes `+0 -0` diff count calculation in side-by-side mode by parsing unified diff hunks. |
 | [`auto_open_priority`](patches/auto_open_priority.js) | Ensures files automatically open when modified if `antigravity.autoOpenFiles` is true. |
+| [`terminal_view`](patches/terminal_view.js) | Renders interactive terminal output for background tasks in an editor tab when the Cider panel is unavailable. |
 
 For detailed technical rationales, root cause analyses, and upstream lifecycle tracking, see [`PATCHES.md`](PATCHES.md). For release notes and version history, see [`CHANGELOG.md`](CHANGELOG.md).
 
@@ -48,8 +48,8 @@ node patch.js apply all
 ### 3. Apply a Single Patch
 Apply only a specific patch by its ID without applying others.
 ```bash
-node patch.js apply line_counts
 node patch.js apply auto_open_priority
+node patch.js apply terminal_view
 ```
 
 ### 4. Revert All Patches

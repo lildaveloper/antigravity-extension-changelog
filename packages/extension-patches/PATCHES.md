@@ -11,6 +11,7 @@ The goal of this project is to maintain hotfixes for known issues in the Google 
 | Patch ID | Name | Upstream Status | Target Scope | Verified Version |
 | :--- | :--- | :--- | :--- | :--- |
 | `auto_open_priority` | Prioritize autoOpenFiles over skipOpen | Active | File reveal logic on agent edit events | v1.7.0 |
+| `terminal_view` | Enable Standalone Terminal for Background Tasks | Active | Webview panel fallback for background task terminal UI | v1.7.0 |
 | `line_counts` | Accurate Side-by-Side Line Counts | Resolved Upstream (Retired in v1.7.0) | Diff hunk line count calculation in side-by-side mode | v1.7.0 |
 
 ---
@@ -56,6 +57,31 @@ getOpenOptions(skipOpen, strictNav = false, keepOpen = false) {
 
 #### Upstream Retirement Criteria
 Google adjusts `getOpenOptions` upstream so that user-configured `antigravity.autoOpenFiles: true` takes precedence over internal `skipOpen` parameters.
+
+---
+
+### 2. `terminal_view` - Enable Standalone Terminal for Background Tasks
+
+* **Patch File:** [`patches/terminal_view.js`](patches/terminal_view.js)
+* **Status:** Active (Not resolved upstream)
+* **Target Version:** v1.7.0 (Verified)
+
+#### Problem Statement
+When a user launches background tasks (such as long-running build commands, watchers, or tests) during an Antigravity agent session, clicking the interactive task card in the chat UI fails to open the terminal stream. The user is unable to view real-time compilation logs, compiler warnings, or execution progress inside VS Code.
+
+#### Root Cause Analysis
+In `extension.js`, Google instantiates and registers a `TerminalPanelProvider` for `jetski.terminalView` as a `WebviewViewProvider` meant for Cider's bottom panel. However, `jetski.terminalView` is not declared as a view container in VS Code's `package.json`. Consequently, `resolveWebviewView` is never called by VS Code, leaving `this.view` permanently `undefined`. When `showTerminal(request)` runs, the existing logic checks `if (this.view)` and silently does nothing when `this.view` is absent, while `openTerminal(request)` attempts to focus a non-existent view (`jetski.terminalView.focus`).
+
+#### Fix Mechanism
+1. Guard `jetski.terminalView.focus` in `openTerminal` so it only executes when `this.terminalPanelProvider.view` exists.
+2. In `TerminalPanelProvider.showTerminal(request)`, provide an editor tab fallback: when `this.view` is `undefined`, dynamically create or reveal a `vscode.window.createWebviewPanel('jetski.terminalPanel', 'Antigravity Terminal', vscode.ViewColumn.Beside, ...)` and delegate rendering via `this.renderer.renderJetskiIframe(this.panel, { targetRoute: 'terminal-standalone', extraParams, type: 'terminal', location: 'editor' })`.
+
+#### Upstream Retirement Criteria
+Google either declares `jetski.terminalView` under `contributes.views.panel` in `package.json` or provides an upstream editor tab fallback for standard VS Code environments.
+
+#### Scope & Known Limitations
+> [!NOTE]
+> This patch enables live terminal output for **currently running** background tasks. Clicking older background tasks in the side panel that have already completed or stopped currently renders a blank tab, because Google's webview UI omits `stepIndex` when archiving finished tasks to `accumulatedSections`.
 
 ---
 

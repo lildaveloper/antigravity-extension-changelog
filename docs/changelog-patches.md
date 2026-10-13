@@ -18,6 +18,11 @@ Audited all companion hotfixes against Google Antigravity Extension v1.7.0 relea
 - **Prioritize Auto-Open on Agent Edits (`auto_open_priority`)**:
   - Updated replacement pattern to accommodate upstream's new `keepOpen` argument in `getOpenOptions`, ensuring files open cleanly while preserving `autoOpenFiles` precedence over `skipOpen`.
 
+- **Enable Standalone Terminal for Background Tasks (`terminal_view`)**:
+  - Resolves an issue where clicking running background task cards in the chat UI fails to display terminal output due to `jetski.terminalView` lacking a bottom panel declaration in standard VS Code.
+  - Adds an editor tab (`vscode.window.createWebviewPanel`) fallback that renders the live interactive terminal stream beside the active chat.
+  - *Note:* Streams active running background tasks in real time. Historical finished tasks in the side panel render blank due to an upstream frontend limitation where `stepIndex` is omitted upon task completion.
+
 ### Resolved Upstream
 - **Accurate Side-by-Side Line Counts (`line_counts`)**:
   - **Resolved in Extension v1.7.0**: Google natively resolved the `+0 -0` bug in Extension v1.7.0 by introducing `countDiffLines` using `getDiffHunks` in `agent_edit_manager.ts` and activating `openSideBySideDiffs: true`.

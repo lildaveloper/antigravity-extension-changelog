@@ -2509,11 +2509,11 @@
           
       <details class="rn-accordion" data-release-detail="" data-item-title="Active Hotfixes">
         <summary class="rn-accordion-summary">
-          <span class="rn-cat-title">Active Hotfixes<span class="rn-count">(1)</span></span>
+          <span class="rn-cat-title">Active Hotfixes<span class="rn-count">(2)</span></span>
           <svg class="rn-chevron" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </summary>
         <ul class="rn-list">
-          <li class="rn-item"><strong>Prioritize Auto-Open on Agent Edits (<code>auto_open_priority</code>)</strong>:<ul class="rn-sublist"><li class="rn-subitem">Updated replacement pattern to accommodate upstream's new <code>keepOpen</code> argument in <code>getOpenOptions</code>, ensuring files open cleanly while preserving <code>autoOpenFiles</code> precedence over <code>skipOpen</code>.</li></ul></li>
+          <li class="rn-item"><strong>Prioritize Auto-Open on Agent Edits (<code>auto_open_priority</code>)</strong>:<ul class="rn-sublist"><li class="rn-subitem">Updated replacement pattern to accommodate upstream's new <code>keepOpen</code> argument in <code>getOpenOptions</code>, ensuring files open cleanly while preserving <code>autoOpenFiles</code> precedence over <code>skipOpen</code>.</li></ul></li><li class="rn-item"><strong>Enable Standalone Terminal for Background Tasks (<code>terminal_view</code>)</strong>:<ul class="rn-sublist"><li class="rn-subitem">Resolves an issue where clicking running background task cards in the chat UI fails to display terminal output due to <code>jetski.terminalView</code> lacking a bottom panel declaration in standard VS Code.</li><li class="rn-subitem">Adds an editor tab (<code>vscode.window.createWebviewPanel</code>) fallback that renders the live interactive terminal stream beside the active chat.</li><li class="rn-subitem"><em>Note:</em> Streams active running background tasks in real time. Historical finished tasks in the side panel render blank due to an upstream frontend limitation where <code>stepIndex</code> is omitted upon task completion.</li></ul></li>
         </ul>
       </details>
     
