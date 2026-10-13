@@ -4,7 +4,11 @@ A minimal, safe patch manager for the Google Antigravity VS Code extension (`ext
 
 Community hotfixes and upstream resolution tracking for installed Antigravity releases.
 
-## Antigravity Patches
+## IDE Extension Patches
+
+VS Code
+
+[Extension docs→](https://antigravity.google/docs/ide/extensions/vscode)
 
 ---
 

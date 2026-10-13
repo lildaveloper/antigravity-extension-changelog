@@ -84,9 +84,12 @@ function parseChangelogHeader(md) {
   const lines = md.split('\n');
   let title = '';
   let surfaceName = '';
+  let extPill = '';
+  let extDocsLink = null;
   const introParagraphs = [];
   let currentPara = [];
   let started = false;
+  let seenSurface = false;
 
   for (let i = 0; i < lines.length; i++) {
     const rawLine = lines[i];
@@ -102,6 +105,7 @@ function parseChangelogHeader(md) {
       }
       const surfaceMatch = trimmed.match(/^##\s+([^[\n\r]+)$/);
       if (surfaceMatch) {
+        seenSurface = true;
         surfaceName = surfaceMatch[1].trim();
         if (currentPara.length > 0) {
           introParagraphs.push(currentPara.join(' '));
@@ -110,23 +114,32 @@ function parseChangelogHeader(md) {
         continue;
       }
       if (trimmed === '---') {
-        if (currentPara.length > 0) {
+        if (!seenSurface && currentPara.length > 0) {
           introParagraphs.push(currentPara.join(' '));
           currentPara = [];
         }
         continue;
       }
       if (trimmed.length === 0) {
-        if (currentPara.length > 0) {
+        if (!seenSurface && currentPara.length > 0) {
           introParagraphs.push(currentPara.join(' '));
           currentPara = [];
         }
       } else {
-        currentPara.push(trimmed);
+        if (seenSurface) {
+          const linkMatch = trimmed.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+          if (linkMatch) {
+            extDocsLink = { text: linkMatch[1].trim(), href: linkMatch[2].trim() };
+          } else {
+            extPill = trimmed;
+          }
+        } else {
+          currentPara.push(trimmed);
+        }
       }
     }
   }
-  if (currentPara.length > 0) {
+  if (!seenSurface && currentPara.length > 0) {
     introParagraphs.push(currentPara.join(' '));
   }
 
@@ -137,7 +150,9 @@ function parseChangelogHeader(md) {
     title,
     surfaceName,
     description,
-    rolloutNotice
+    rolloutNotice,
+    extPill,
+    extDocsLink
   };
 }
 
@@ -324,13 +339,49 @@ const tabButtonsHtml = packagesWithData.map((pkg, idx) => `
   <button type="button" role="tab" class="rn-tab-btn ${idx === 0 ? 'active' : ''}" data-tab-target="${pkg.id}" data-md-file="${pkg.mdArtifact}" data-rollout-text="${escapeHtml(pkg.headerData.rolloutNotice || '')}" aria-selected="${idx === 0 ? 'true' : 'false'}" aria-controls="panel-${pkg.id}" id="tab-${pkg.id}">${escapeHtml(pkg.label)}</button>
 `).join('\n');
 
-const tabPanelsHtml = packagesWithData.map((pkg, idx) => `
-  <div id="panel-${pkg.id}" class="tab-panel rn-panel ${idx === 0 ? 'active' : ''}" data-panel-id="${pkg.id}" ${idx === 0 ? '' : 'style="display: none;"'}>
-    <div class="rn-timeline" id="releaseTimeline-${pkg.id}">
-      ${pkg.releaseRowsHtml}
+const tabPanelsHtml = packagesWithData.map((pkg, idx) => {
+  let contentHtml = '';
+  if (pkg.headerData.extPill) {
+    const rawPill = pkg.headerData.extPill;
+    const extTargetId = rawPill.toLowerCase().replace(/\s+/g, '') === 'vscode' ? 'vscode' : rawPill.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const docsUrl = pkg.headerData.extDocsLink ? pkg.headerData.extDocsLink.href : 'https://antigravity.google/docs/ide/extensions/vscode';
+    const docsText = pkg.headerData.extDocsLink ? pkg.headerData.extDocsLink.text.replace(/→$/, '').trim() : 'Extension docs';
+    const docsLinkHtml = `
+      <a href="${escapeHtml(docsUrl)}" target="_blank" rel="noopener noreferrer" class="rn-ext-docs-link" data-ext-docs-anchor="">
+        <span>${escapeHtml(docsText)}</span>
+        <span aria-hidden="true">→</span>
+      </a>
+    `;
+
+    contentHtml = `
+      <div class="rn-extensions-container">
+        <div class="rn-ext-filter-bar" role="tablist" aria-label="${escapeHtml(pkg.label)}">
+          <div class="rn-ext-pills">
+            <button type="button" role="tab" class="rn-ext-pill active" data-ext-target="${extTargetId}" data-ext-docs-url="${escapeHtml(docsUrl)}" aria-selected="true" aria-controls="ext-panel-${pkg.id}-${extTargetId}" id="ext-tab-${pkg.id}-${extTargetId}">${escapeHtml(rawPill)}</button>
+          </div>
+          ${docsLinkHtml}
+        </div>
+        <div id="ext-panel-${pkg.id}-${extTargetId}" class="rn-ext-panel active" role="tabpanel" aria-labelledby="ext-tab-${pkg.id}-${extTargetId}" data-ext-panel="${extTargetId}">
+          <div class="rn-timeline" id="releaseTimeline-${pkg.id}">
+            ${pkg.releaseRowsHtml}
+          </div>
+        </div>
+      </div>
+    `;
+  } else {
+    contentHtml = `
+      <div class="rn-timeline" id="releaseTimeline-${pkg.id}">
+        ${pkg.releaseRowsHtml}
+      </div>
+    `;
+  }
+
+  return `
+    <div id="panel-${pkg.id}" class="tab-panel rn-panel ${idx === 0 ? 'active' : ''}" data-panel-id="${pkg.id}" ${idx === 0 ? '' : 'style="display: none;"'}>
+      ${contentHtml}
     </div>
-  </div>
-`).join('\n');
+  `;
+}).join('\n');
 
 
 // Shared Navigation & Ecosystem Links (Single Source of Truth for Subnav & Footer)
@@ -369,10 +420,11 @@ const fullHtml = `<!DOCTYPE html>
   <meta name="description" content="${escapeHtml(headerDescription)}">
 
   <!-- Favicon & Platform Icons -->
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-  <link rel="icon" type="image/png" href="assets/image/antigravity-logo.png">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/x-icon" href="favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/png" href="apple-touch-icon.png" sizes="180x180">
+  <link rel="icon" type="image/png" href="assets/image/antigravity-logo.png" sizes="276x276">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180">
+  <link rel="shortcut icon" href="favicon.svg" type="image/svg+xml">
 
   <!-- Open Graph / Facebook / iMessage -->
   <meta property="og:type" content="article">
@@ -1220,6 +1272,88 @@ const fullHtml = `<!DOCTYPE html>
     }
     .rn-toggle-btn.expanded .toggle-icon {
       transform: rotate(180deg);
+    }
+
+    /* IDE Extensions Filter Bar & Pills */
+    .rn-extensions-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+    .rn-ext-filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.25rem 0 0.35rem;
+    }
+    .rn-ext-pills {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .rn-ext-pill {
+      border: 1px solid var(--sl-color-hairline, rgba(0, 0, 0, 0.1));
+      color: var(--sl-color-gray-2, #5f6368);
+      cursor: pointer;
+      background-color: transparent;
+      border-radius: 9999px;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.32rem 0.75rem;
+      font-family: inherit;
+      font-size: 0.78125rem;
+      font-weight: 500;
+      line-height: 1.25;
+      transition: 0.15s;
+      display: inline-flex;
+      margin: 0 !important;
+    }
+    .rn-ext-pill:hover {
+      color: var(--sl-color-text, #202124);
+      background-color: var(--sl-color-gray-6, rgba(0, 0, 0, 0.04));
+      border-color: rgba(0, 0, 0, 0.16);
+    }
+    .rn-ext-pill.active {
+      color: var(--sl-color-text-accent, #1a73e8);
+      background-color: rgba(26, 115, 232, 0.08);
+      border-color: rgba(26, 115, 232, 0.28);
+      font-weight: 600;
+    }
+    :root[data-theme="dark"] .rn-ext-pill {
+      color: rgb(154, 160, 166);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+    :root[data-theme="dark"] .rn-ext-pill:hover {
+      color: #ffffff;
+      background-color: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+    :root[data-theme="dark"] .rn-ext-pill.active {
+      color: rgb(138, 180, 248);
+      background-color: rgba(138, 180, 248, 0.14);
+      border-color: rgba(138, 180, 248, 0.35);
+    }
+    .rn-ext-docs-link {
+      color: var(--sl-color-text-accent, #1a73e8);
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.78125rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: opacity 0.15s;
+      display: inline-flex;
+    }
+    .rn-ext-docs-link:hover {
+      text-decoration: underline;
+    }
+    :root[data-theme="dark"] .rn-ext-docs-link {
+      color: rgb(138, 180, 248);
+    }
+    .rn-ext-panel {
+      display: block;
     }
 
     .rn-timeline {
@@ -2384,7 +2518,8 @@ const fullHtml = `<!DOCTYPE html>
       if (!toggleAllBtn) return;
       const activePanel = document.querySelector('.tab-panel.active') || document.getElementById('panel-extension');
       if (!activePanel) return;
-      const accordions = activePanel.querySelectorAll('details.rn-accordion');
+      const currentContainer = activePanel.querySelector('.rn-ext-panel.active') || activePanel;
+      const accordions = currentContainer.querySelectorAll('details.rn-accordion');
       if (accordions.length === 0) return;
       const allOpen = Array.from(accordions).every(acc => acc.open);
       const label = toggleAllBtn.querySelector('.rn-toggle-btn-label') || toggleAllBtn.querySelector('.toggle-text');
@@ -2397,7 +2532,8 @@ const fullHtml = `<!DOCTYPE html>
       toggleAllBtn.addEventListener('click', () => {
         const activePanel = document.querySelector('.tab-panel.active') || document.getElementById('panel-extension');
         if (!activePanel) return;
-        const accordions = activePanel.querySelectorAll('details.rn-accordion');
+        const currentContainer = activePanel.querySelector('.rn-ext-panel.active') || activePanel;
+        const accordions = currentContainer.querySelectorAll('details.rn-accordion');
         if (accordions.length === 0) return;
         const shouldOpen = !Array.from(accordions).every(acc => acc.open);
         accordions.forEach(acc => {
@@ -2462,7 +2598,8 @@ const fullHtml = `<!DOCTYPE html>
 
     function computeActiveId() {
       const activePanel = document.querySelector('.tab-panel.active') || document;
-      const sections = Array.from(activePanel.querySelectorAll('.rn-row'));
+      const currentContainer = activePanel.querySelector('.rn-ext-panel.active') || activePanel;
+      const sections = Array.from(currentContainer.querySelectorAll('.rn-row'));
       if (sections.length === 0) return null;
 
       const scrollY = window.scrollY;
@@ -2519,7 +2656,9 @@ const fullHtml = `<!DOCTYPE html>
     function updateScrollSpy() {
       if (isClickScrolling) return;
       const activePanel = document.querySelector('.tab-panel.active') || document.getElementById('panel-extension');
-      if (!activePanel || activePanel.querySelectorAll('.rn-row').length === 0) return;
+      if (!activePanel) return;
+      const currentContainer = activePanel.querySelector('.rn-ext-panel.active') || activePanel;
+      if (currentContainer.querySelectorAll('.rn-row').length === 0) return;
 
       if (window.scrollY < 80) {
         const displayCurrent = document.querySelector('mobile-starlight-toc .display-current');
@@ -2676,7 +2815,15 @@ const fullHtml = `<!DOCTYPE html>
 
       if (pushState) {
         const url = new URL(window.location.href);
-        url.searchParams.set('tab', tabTarget);
+        const tabParam = tabTarget === 'extension' ? 'extensions' : tabTarget;
+        url.searchParams.set('tab', tabParam);
+        const activePanel = document.querySelector('.tab-panel.active');
+        const activePill = activePanel ? activePanel.querySelector('.rn-ext-pill.active') : null;
+        if (activePill && activePill.dataset.extTarget) {
+          url.searchParams.set('ide', activePill.dataset.extTarget);
+        } else {
+          url.searchParams.delete('ide');
+        }
         history.replaceState(null, '', url.pathname + url.search + (url.hash || ''));
       }
 
@@ -2692,13 +2839,62 @@ const fullHtml = `<!DOCTYPE html>
       });
     });
 
+    // IDE Extension Filter Pills Navigation
+    document.querySelectorAll('.rn-ext-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        const panel = pill.closest('.tab-panel');
+        if (!panel) return;
+        const target = pill.dataset.extTarget;
+        panel.querySelectorAll('.rn-ext-pill').forEach(p => {
+          const isTarget = p.dataset.extTarget === target;
+          p.classList.toggle('active', isTarget);
+          p.setAttribute('aria-selected', isTarget ? 'true' : 'false');
+          if (isTarget) {
+            const docsUrl = p.dataset.extDocsUrl;
+            const docsAnchor = panel.querySelector('[data-ext-docs-anchor]');
+            if (docsAnchor && docsUrl) docsAnchor.href = docsUrl;
+          }
+        });
+        panel.querySelectorAll('.rn-ext-panel').forEach(extPanel => {
+          const isTarget = extPanel.dataset.extPanel === target;
+          extPanel.classList.toggle('active', isTarget);
+          extPanel.style.display = isTarget ? 'block' : 'none';
+        });
+
+        // Update URL query params matching official site (?tab=extensions&ide=vscode)
+        const url = new URL(window.location.href);
+        const panelTab = panel.dataset.panelId;
+        const tabParam = panelTab === 'extension' ? 'extensions' : panelTab;
+        url.searchParams.set('tab', tabParam);
+        url.searchParams.set('ide', target);
+        history.replaceState(null, '', url.pathname + url.search + (url.hash || ''));
+
+        updateToggleAllBtn();
+        if (typeof updateScrollSpy === 'function') {
+          updateScrollSpy();
+        }
+      });
+    });
+
     // Initial Tab Resolution from URL query or hash
     const initialParams = new URLSearchParams(window.location.search);
     let initialTab = initialParams.get('tab');
+    const initialIde = initialParams.get('ide');
+
+    const tabAliases = {
+      'extensions': 'extension',
+      'ide-extensions': 'extension',
+      'vscode': 'extension',
+      'patches': 'patches'
+    };
+    if (initialTab && tabAliases[initialTab]) {
+      initialTab = tabAliases[initialTab];
+    }
+
     if (!initialTab && window.location.hash) {
       if (window.location.hash.startsWith('#rel-patches-')) {
         initialTab = 'patches';
-      } else if (window.location.hash.startsWith('#rel-ext-') || window.location.hash.startsWith('#rel-extension-')) {
+      } else if (window.location.hash.startsWith('#rel-ext-') || window.location.hash.startsWith('#rel-extension-') || window.location.hash.startsWith('#rel-vscode-')) {
         initialTab = 'extension';
       }
     }
@@ -2706,6 +2902,15 @@ const fullHtml = `<!DOCTYPE html>
       initialTab = 'extension';
     }
     switchTab(initialTab, false);
+
+    // If initialIde is present, ensure that pill is activated
+    if (initialIde) {
+      const activePanel = document.querySelector('.tab-panel.active');
+      const targetPill = activePanel ? activePanel.querySelector('.rn-ext-pill[data-ext-target="' + initialIde + '"]') : null;
+      if (targetPill) {
+        targetPill.click();
+      }
+    }
 
     // Changelog Subnav Link - authentic browser reload back to clean base URL
     const changelogNavBtn = document.querySelector('.subnav-right .subnav-pill.active');

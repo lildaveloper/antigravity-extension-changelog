@@ -14,10 +14,11 @@
   <meta name="description" content="Track new features, improvements, and bug fixes across Google Antigravity VS Code Extension releases.">
 
   <!-- Favicon & Platform Icons -->
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-  <link rel="icon" type="image/png" href="assets/image/antigravity-logo.png">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/x-icon" href="favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/png" href="apple-touch-icon.png" sizes="180x180">
+  <link rel="icon" type="image/png" href="assets/image/antigravity-logo.png" sizes="276x276">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180">
+  <link rel="shortcut icon" href="favicon.svg" type="image/svg+xml">
 
   <!-- Open Graph / Facebook / iMessage -->
   <meta property="og:type" content="article">
@@ -865,6 +866,88 @@
     }
     .rn-toggle-btn.expanded .toggle-icon {
       transform: rotate(180deg);
+    }
+
+    /* IDE Extensions Filter Bar & Pills */
+    .rn-extensions-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+    .rn-ext-filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.25rem 0 0.35rem;
+    }
+    .rn-ext-pills {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .rn-ext-pill {
+      border: 1px solid var(--sl-color-hairline, rgba(0, 0, 0, 0.1));
+      color: var(--sl-color-gray-2, #5f6368);
+      cursor: pointer;
+      background-color: transparent;
+      border-radius: 9999px;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.32rem 0.75rem;
+      font-family: inherit;
+      font-size: 0.78125rem;
+      font-weight: 500;
+      line-height: 1.25;
+      transition: 0.15s;
+      display: inline-flex;
+      margin: 0 !important;
+    }
+    .rn-ext-pill:hover {
+      color: var(--sl-color-text, #202124);
+      background-color: var(--sl-color-gray-6, rgba(0, 0, 0, 0.04));
+      border-color: rgba(0, 0, 0, 0.16);
+    }
+    .rn-ext-pill.active {
+      color: var(--sl-color-text-accent, #1a73e8);
+      background-color: rgba(26, 115, 232, 0.08);
+      border-color: rgba(26, 115, 232, 0.28);
+      font-weight: 600;
+    }
+    :root[data-theme="dark"] .rn-ext-pill {
+      color: rgb(154, 160, 166);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+    :root[data-theme="dark"] .rn-ext-pill:hover {
+      color: #ffffff;
+      background-color: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+    :root[data-theme="dark"] .rn-ext-pill.active {
+      color: rgb(138, 180, 248);
+      background-color: rgba(138, 180, 248, 0.14);
+      border-color: rgba(138, 180, 248, 0.35);
+    }
+    .rn-ext-docs-link {
+      color: var(--sl-color-text-accent, #1a73e8);
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.78125rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: opacity 0.15s;
+      display: inline-flex;
+    }
+    .rn-ext-docs-link:hover {
+      text-decoration: underline;
+    }
+    :root[data-theme="dark"] .rn-ext-docs-link {
+      color: rgb(138, 180, 248);
+    }
+    .rn-ext-panel {
+      display: block;
     }
 
     .rn-timeline {
@@ -1851,10 +1934,10 @@
                   <div class="rn-tab-bar">
                     <div class="rn-tabs" role="tablist" aria-label="Surfaces">
                       
-  <button type="button" role="tab" class="rn-tab-btn active" data-tab-target="extension" data-md-file="changelog-extension.md" data-rollout-text="New versions roll out gradually and may take a few days to reach all users." aria-selected="true" aria-controls="panel-extension" id="tab-extension">Antigravity Extension</button>
+  <button type="button" role="tab" class="rn-tab-btn active" data-tab-target="extension" data-md-file="changelog-extension.md" data-rollout-text="New versions roll out gradually and may take a few days to reach all users." aria-selected="true" aria-controls="panel-extension" id="tab-extension">IDE Extensions</button>
 
 
-  <button type="button" role="tab" class="rn-tab-btn " data-tab-target="patches" data-md-file="changelog-patches.md" data-rollout-text="Community hotfixes and upstream resolution tracking for installed Antigravity releases." aria-selected="false" aria-controls="panel-patches" id="tab-patches">Antigravity Patches</button>
+  <button type="button" role="tab" class="rn-tab-btn " data-tab-target="patches" data-md-file="changelog-patches.md" data-rollout-text="Community hotfixes and upstream resolution tracking for installed Antigravity releases." aria-selected="false" aria-controls="panel-patches" id="tab-patches">IDE Extension Patches</button>
 
                     </div>
                   </div>
@@ -1875,9 +1958,23 @@
 
                   <div class="rn-panels-container">
                     
-  <div id="panel-extension" class="tab-panel rn-panel active" data-panel-id="extension" >
-    <div class="rn-timeline" id="releaseTimeline-extension">
+    <div id="panel-extension" class="tab-panel rn-panel active" data-panel-id="extension" >
       
+      <div class="rn-extensions-container">
+        <div class="rn-ext-filter-bar" role="tablist" aria-label="IDE Extensions">
+          <div class="rn-ext-pills">
+            <button type="button" role="tab" class="rn-ext-pill active" data-ext-target="vscode" data-ext-docs-url="https://antigravity.google/docs/ide/extensions/vscode" aria-selected="true" aria-controls="ext-panel-extension-vscode" id="ext-tab-extension-vscode">VS Code</button>
+          </div>
+          
+      <a href="https://antigravity.google/docs/ide/extensions/vscode" target="_blank" rel="noopener noreferrer" class="rn-ext-docs-link" data-ext-docs-anchor="">
+        <span>Extension docs</span>
+        <span aria-hidden="true">→</span>
+      </a>
+    
+        </div>
+        <div id="ext-panel-extension-vscode" class="rn-ext-panel active" role="tabpanel" aria-labelledby="ext-tab-extension-vscode" data-ext-panel="vscode">
+          <div class="rn-timeline" id="releaseTimeline-extension">
+            
     <article class="rn-row" id="rel-ext-1.7.0">
       <div class="rn-version-col">
         <div class="rn-version-row">
@@ -2478,13 +2575,30 @@
       </div>
     </article>
   
+          </div>
+        </div>
+      </div>
+    
     </div>
-  </div>
+  
 
-
-  <div id="panel-patches" class="tab-panel rn-panel " data-panel-id="patches" style="display: none;">
-    <div class="rn-timeline" id="releaseTimeline-patches">
+    <div id="panel-patches" class="tab-panel rn-panel " data-panel-id="patches" style="display: none;">
       
+      <div class="rn-extensions-container">
+        <div class="rn-ext-filter-bar" role="tablist" aria-label="IDE Extension Patches">
+          <div class="rn-ext-pills">
+            <button type="button" role="tab" class="rn-ext-pill active" data-ext-target="vscode" data-ext-docs-url="https://antigravity.google/docs/ide/extensions/vscode" aria-selected="true" aria-controls="ext-panel-patches-vscode" id="ext-tab-patches-vscode">VS Code</button>
+          </div>
+          
+      <a href="https://antigravity.google/docs/ide/extensions/vscode" target="_blank" rel="noopener noreferrer" class="rn-ext-docs-link" data-ext-docs-anchor="">
+        <span>Extension docs</span>
+        <span aria-hidden="true">→</span>
+      </a>
+    
+        </div>
+        <div id="ext-panel-patches-vscode" class="rn-ext-panel active" role="tabpanel" aria-labelledby="ext-tab-patches-vscode" data-ext-panel="vscode">
+          <div class="rn-timeline" id="releaseTimeline-patches">
+            
     <article class="rn-row" id="rel-patches-1.7.0">
       <div class="rn-version-col">
         <div class="rn-version-row">
@@ -2569,9 +2683,12 @@
       </div>
     </article>
   
+          </div>
+        </div>
+      </div>
+    
     </div>
-  </div>
-
+  
                   </div>
                 </div>
               </div>
@@ -2795,7 +2912,8 @@
       if (!toggleAllBtn) return;
       const activePanel = document.querySelector('.tab-panel.active') || document.getElementById('panel-extension');
       if (!activePanel) return;
-      const accordions = activePanel.querySelectorAll('details.rn-accordion');
+      const currentContainer = activePanel.querySelector('.rn-ext-panel.active') || activePanel;
+      const accordions = currentContainer.querySelectorAll('details.rn-accordion');
       if (accordions.length === 0) return;
       const allOpen = Array.from(accordions).every(acc => acc.open);
       const label = toggleAllBtn.querySelector('.rn-toggle-btn-label') || toggleAllBtn.querySelector('.toggle-text');
@@ -2808,7 +2926,8 @@
       toggleAllBtn.addEventListener('click', () => {
         const activePanel = document.querySelector('.tab-panel.active') || document.getElementById('panel-extension');
         if (!activePanel) return;
-        const accordions = activePanel.querySelectorAll('details.rn-accordion');
+        const currentContainer = activePanel.querySelector('.rn-ext-panel.active') || activePanel;
+        const accordions = currentContainer.querySelectorAll('details.rn-accordion');
         if (accordions.length === 0) return;
         const shouldOpen = !Array.from(accordions).every(acc => acc.open);
         accordions.forEach(acc => {
@@ -2873,7 +2992,8 @@
 
     function computeActiveId() {
       const activePanel = document.querySelector('.tab-panel.active') || document;
-      const sections = Array.from(activePanel.querySelectorAll('.rn-row'));
+      const currentContainer = activePanel.querySelector('.rn-ext-panel.active') || activePanel;
+      const sections = Array.from(currentContainer.querySelectorAll('.rn-row'));
       if (sections.length === 0) return null;
 
       const scrollY = window.scrollY;
@@ -2930,7 +3050,9 @@
     function updateScrollSpy() {
       if (isClickScrolling) return;
       const activePanel = document.querySelector('.tab-panel.active') || document.getElementById('panel-extension');
-      if (!activePanel || activePanel.querySelectorAll('.rn-row').length === 0) return;
+      if (!activePanel) return;
+      const currentContainer = activePanel.querySelector('.rn-ext-panel.active') || activePanel;
+      if (currentContainer.querySelectorAll('.rn-row').length === 0) return;
 
       if (window.scrollY < 80) {
         const displayCurrent = document.querySelector('mobile-starlight-toc .display-current');
@@ -3087,7 +3209,15 @@
 
       if (pushState) {
         const url = new URL(window.location.href);
-        url.searchParams.set('tab', tabTarget);
+        const tabParam = tabTarget === 'extension' ? 'extensions' : tabTarget;
+        url.searchParams.set('tab', tabParam);
+        const activePanel = document.querySelector('.tab-panel.active');
+        const activePill = activePanel ? activePanel.querySelector('.rn-ext-pill.active') : null;
+        if (activePill && activePill.dataset.extTarget) {
+          url.searchParams.set('ide', activePill.dataset.extTarget);
+        } else {
+          url.searchParams.delete('ide');
+        }
         history.replaceState(null, '', url.pathname + url.search + (url.hash || ''));
       }
 
@@ -3103,13 +3233,62 @@
       });
     });
 
+    // IDE Extension Filter Pills Navigation
+    document.querySelectorAll('.rn-ext-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        const panel = pill.closest('.tab-panel');
+        if (!panel) return;
+        const target = pill.dataset.extTarget;
+        panel.querySelectorAll('.rn-ext-pill').forEach(p => {
+          const isTarget = p.dataset.extTarget === target;
+          p.classList.toggle('active', isTarget);
+          p.setAttribute('aria-selected', isTarget ? 'true' : 'false');
+          if (isTarget) {
+            const docsUrl = p.dataset.extDocsUrl;
+            const docsAnchor = panel.querySelector('[data-ext-docs-anchor]');
+            if (docsAnchor && docsUrl) docsAnchor.href = docsUrl;
+          }
+        });
+        panel.querySelectorAll('.rn-ext-panel').forEach(extPanel => {
+          const isTarget = extPanel.dataset.extPanel === target;
+          extPanel.classList.toggle('active', isTarget);
+          extPanel.style.display = isTarget ? 'block' : 'none';
+        });
+
+        // Update URL query params matching official site (?tab=extensions&ide=vscode)
+        const url = new URL(window.location.href);
+        const panelTab = panel.dataset.panelId;
+        const tabParam = panelTab === 'extension' ? 'extensions' : panelTab;
+        url.searchParams.set('tab', tabParam);
+        url.searchParams.set('ide', target);
+        history.replaceState(null, '', url.pathname + url.search + (url.hash || ''));
+
+        updateToggleAllBtn();
+        if (typeof updateScrollSpy === 'function') {
+          updateScrollSpy();
+        }
+      });
+    });
+
     // Initial Tab Resolution from URL query or hash
     const initialParams = new URLSearchParams(window.location.search);
     let initialTab = initialParams.get('tab');
+    const initialIde = initialParams.get('ide');
+
+    const tabAliases = {
+      'extensions': 'extension',
+      'ide-extensions': 'extension',
+      'vscode': 'extension',
+      'patches': 'patches'
+    };
+    if (initialTab && tabAliases[initialTab]) {
+      initialTab = tabAliases[initialTab];
+    }
+
     if (!initialTab && window.location.hash) {
       if (window.location.hash.startsWith('#rel-patches-')) {
         initialTab = 'patches';
-      } else if (window.location.hash.startsWith('#rel-ext-') || window.location.hash.startsWith('#rel-extension-')) {
+      } else if (window.location.hash.startsWith('#rel-ext-') || window.location.hash.startsWith('#rel-extension-') || window.location.hash.startsWith('#rel-vscode-')) {
         initialTab = 'extension';
       }
     }
@@ -3117,6 +3296,15 @@
       initialTab = 'extension';
     }
     switchTab(initialTab, false);
+
+    // If initialIde is present, ensure that pill is activated
+    if (initialIde) {
+      const activePanel = document.querySelector('.tab-panel.active');
+      const targetPill = activePanel ? activePanel.querySelector('.rn-ext-pill[data-ext-target="' + initialIde + '"]') : null;
+      if (targetPill) {
+        targetPill.click();
+      }
+    }
 
     // Changelog Subnav Link - authentic browser reload back to clean base URL
     const changelogNavBtn = document.querySelector('.subnav-right .subnav-pill.active');

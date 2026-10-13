@@ -4,7 +4,11 @@ Track new features, improvements, and bug fixes across Google Antigravity VS Cod
 
 New versions roll out gradually and may take a few days to reach all users.
 
-## Antigravity Extension
+## IDE Extensions
+
+VS Code
+
+[Extension docs→](https://antigravity.google/docs/ide/extensions/vscode)
 
 ---
 
