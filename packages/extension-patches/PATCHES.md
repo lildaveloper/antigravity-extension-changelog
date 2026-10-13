@@ -12,6 +12,7 @@ The goal of this project is to maintain hotfixes for known issues in the Google 
 | :--- | :--- | :--- | :--- | :--- |
 | `auto_open_priority` | Prioritize autoOpenFiles over skipOpen | Active | File reveal logic on agent edit events | v1.7.0 |
 | `terminal_view` | Enable Standalone Terminal for Background Tasks | Active | Webview panel fallback for background task terminal UI | v1.7.0 |
+| `binary_file_preview` | Enable Preview for Binary Files and Images | Active | Universal editor fallback for binary assets in openFile | v1.7.0 |
 | `line_counts` | Accurate Side-by-Side Line Counts | Resolved Upstream (Retired in v1.7.0) | Diff hunk line count calculation in side-by-side mode | v1.7.0 |
 
 ---
@@ -82,6 +83,31 @@ Google either declares `jetski.terminalView` under `contributes.views.panel` in 
 #### Scope & Known Limitations
 > [!NOTE]
 > This patch enables live terminal output for **currently running** background tasks. Clicking older background tasks in the side panel that have already completed or stopped currently renders a blank tab, because Google's webview UI omits `stepIndex` when archiving finished tasks to `accumulatedSections`.
+
+---
+
+### 3. `binary_file_preview` - Enable Preview for Binary Files and Images
+
+* **Patch File:** [`patches/binary_file_preview.js`](patches/binary_file_preview.js)
+* **Status:** Active (Not resolved upstream)
+* **Target Version:** v1.7.0 (Verified)
+
+#### Problem Statement
+When an agent inspects images, media, or other non-text files during a session, clicking the file pill or preview button in the chat interface throws an error toast:
+> `Unable to open file:///...: cannot open file:///... Detail: File seems to be binary and cannot be opened as text`
+
+#### Root Cause Analysis
+In `ExtensionApi.openFile(request)`, all incoming file links are opened strictly via `vscode.workspace.openTextDocument(targetUri)`. VS Code's text buffer engine rejects binary assets (e.g. PNG headers or null bytes), throwing an unhandled rejection that gets displayed as an error notification instead of opening in an appropriate editor tab.
+
+#### Fix Mechanism
+When `vscode.workspace.openTextDocument` rejects a binary or non-text file, the patch catches the failure and delegates to VS Code's universal editor command:
+```javascript
+await vscode.commands.executeCommand('vscode.open', uri, { preview: true });
+```
+This lets VS Code's native editor resolver open images in its built-in tabbed Image Viewer, or delegate to user-configured custom editors (such as PDF viewers, audio players, or hex inspectors) without throwing an error toast.
+
+#### Upstream Retirement Criteria
+Google updates `openFile` upstream to detect non-text/binary files and use `vscode.open` or VS Code's editor resolver rather than assuming all clicked files are text buffers.
 
 ---
 

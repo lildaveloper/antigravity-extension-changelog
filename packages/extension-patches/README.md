@@ -26,6 +26,7 @@ A minimal, safe patch manager for the Google Antigravity VS Code extension (`ext
 | :--- | :--- |
 | [`auto_open_priority`](patches/auto_open_priority.js) | Ensures files automatically open when modified if `antigravity.autoOpenFiles` is true. |
 | [`terminal_view`](patches/terminal_view.js) | Renders interactive terminal output for background tasks in an editor tab when the Cider panel is unavailable. |
+| [`binary_file_preview`](patches/binary_file_preview.js) | Falls back to VS Code's universal editor command when `openTextDocument` fails on binary files (e.g. images, media, PDFs). |
 
 For detailed technical rationales, root cause analyses, and upstream lifecycle tracking, see [`PATCHES.md`](PATCHES.md). For release notes and version history, see [`CHANGELOG.md`](CHANGELOG.md).
 

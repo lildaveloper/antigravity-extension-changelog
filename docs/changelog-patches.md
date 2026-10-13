@@ -27,6 +27,10 @@ Audited all companion hotfixes against Google Antigravity Extension v1.7.0 relea
   - Adds an editor tab (`vscode.window.createWebviewPanel`) fallback that renders the live interactive terminal stream beside the active chat.
   - *Note:* Streams active running background tasks in real time. Historical finished tasks in the side panel render blank due to an upstream frontend limitation where `stepIndex` is omitted upon task completion.
 
+- **Enable Preview for Binary Files and Images (`binary_file_preview`)**:
+  - Resolves an issue where clicking viewed images, media, or binary file pills in chat throws `"cannot open ... File seems to be binary and cannot be opened as text"`.
+  - Catches `openTextDocument` rejections for non-text assets and falls back to VS Code's universal editor command (`vscode.open`), opening images in VS Code's native Image Viewer tab and delegating other formats to custom editor extensions.
+
 ### Resolved Upstream
 - **Accurate Side-by-Side Line Counts (`line_counts`)**:
   - **Resolved in Extension v1.7.0**: Google natively resolved the `+0 -0` bug in Extension v1.7.0 by introducing `countDiffLines` using `getDiffHunks` in `agent_edit_manager.ts` and activating `openSideBySideDiffs: true`.
