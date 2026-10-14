@@ -12,6 +12,90 @@ VS Code
 
 ---
 
+## [v1.8.0] - 2026-10-14
+
+### Cumulative multi-turn reviews, disk change watchers, and PII redaction
+Reviews can now stay open across conversation turns with cumulative multi-turn diffs, notifying you when older reviews remain open and protecting pending edits against external disk changes. This release also introduces automated diagnostic PII redaction, concurrent user-edit warnings, and MCP App UI entrypoints.
+
+### Highlights
+- **Cumulative Multi-Turn Inline Diff Reviews (`antigravity.autoAcceptOnChat: false`)**: Enhanced the review engine so pending edits are no longer accepted on your behalf when sending new chat turns:
+  - **Turn Accumulation (`isCumulativeReview`)**: When auto-accept on chat is turned off, active reviews remain open across conversational turns (`b.turnIndex > a.turnIndex`), allowing subsequent edits to accumulate directly onto the existing review without discarding earlier modifications.
+  - **Covered Turns Tracking (`coveredTurns`)**: Automatically tracks all conversational turns spanning an active review session, preserving stored hunk decisions and uncommitted snapshots until explicitly resolved.
+  - **Stale Review Notifications (`notifyStaleReviews`)**: When conversational turns elapsed exceed the threshold (`ageOutThreshold = 5`), Antigravity surfaces an informative alert (`The review of <file> from an earlier turn is still open.`) with an **"Open review"** action that reveals the document and focuses the active diff zone.
+
+- **External Disk Change Watcher & Review Protection (`watchOutsideChanges`)**: Added proactive filesystem monitoring to protect pending inline diff reviews when files are modified externally:
+  - **Filesystem Watcher Integration**: `InlineDiffManager` now initializes a dedicated `vscode.workspace.createFileSystemWatcher("**/*")` listener monitoring on-disk modifications and deletions.
+  - **Debounced Change Safety (`scheduleOutsideChangeCheck`)**: Debounces external disk changes (`outsideChangeDelayMs = 1000ms`) during agent idle periods.
+  - **Safe Dropping & Dirty Buffer Preservation (`endAfterOutsideChange`)**: If a file is modified externally (e.g. by `git checkout`, formatters, or external build tools), Antigravity drops the pending review cleanly without writing to disk. For dirty buffers, it safely reloads the latest disk content while preserving unsaved modifications, prompting the user with `"Reload from disk"` or `"Save agent version"`.
+
+- **Automated Diagnostic PII Redaction (`feedback_redaction.ts`)**: Built end-to-end credential, path, and sensitive data sanitization for diagnostics and feedback reports:
+  - **Secret & Token Stripping**: Automatically masks bearer tokens, session cookies, passwords, and API keys (`access_token`, `refresh_token`, `csrf_token`, `api_key`).
+  - **Path & Directory Redaction**: Redacts CLI workspace arguments (`--add-dir`, `--workspace`, `--cwd`, `--project`) and sanitizes developer home directory paths across macOS, Linux, and Windows to `~`.
+  - **Network & Email Obfuscation**: Masks email addresses and external/corporate IP addresses while preserving local loopback addresses (`127.*`, `0.0.0.0`) for connection debugging.
+  - **Report Deduplication**: Limits automated diagnostic reports to once every 24 hours per extension version, offering a `"Send anyway"` action if manual submission is required.
+
+- **Concurrent User-Edit Overlap Protection**: Integrated 3-way merge conflict detection in `AgentEditManager`. When an incoming agent edit replaces a line the developer recently edited in the active buffer, Antigravity alerts the user (`The agent's change in <file> replaces a line you edited. Reject that change to keep your line.`) so edits are never silently overwritten.
+
+### Improvements
+- **Webview Iframe DOM Recycling**:
+  - Replaced error-prone `contentWindow.location.reload()` calls in `bridge.js` with DOM template cloning (`<template id="jetski-frame-template">`), cleanly swapping refreshed webview frames without triggering cross-origin or destroyed context exceptions.
+  - Added seamless retry animations with opacity transitions when resolving connection timeouts.
+
+- **Protocol & Schema Additions**:
+  - `cortex_pb.ts`: Added Model Context Protocol application entrypoints and view schemas (`McpAppEntrypointSchema`, `McpAppEntrypointType`, `McpAppViewSchema`, `McpToolUiMetaSchema`, `McpResourceSchema`, `McpPromptSpecSchema`, `McpOAuthConfigSchema`, `McpServerInfoSchema`, `CnsSandboxMountSchema`).
+  - `AgentSurface`: Registered `AgentSurface` enum (`UNSPECIFIED = 0`, `BASELINE = 1`, `CLI = 2`, `HUB = 3`).
+  - `Plugins & Workflows`: Added `ListPluginAccountsToolConfigSchema`, `WorkflowsConfigSchema`, `ProfilesConfigSchema`, and `ProfilePathEntrySchema`.
+  - `Turns & Summaries`: Added `TurnsUpdateSchema` and `TurnSummarySchema` for streaming turn updates and summaries; added `CascadeNUXSessionSchema`.
+  - `security_annotations_pb.ts`: Introduced GenAI security annotation schemas: `PartyBoundary` (`FIRST_PARTY`, `FIRST_PARTY_CALLS_THIRD_PARTY`, `THIRD_PARTY`), `ExternalCommunication` (`EgressCapability`), and `DataSensitivity` (`Confidentiality`, `UndoWindow`, `UndoDifficulty`, `ChangeScope`).
+
+- **Optimized Production Packaging**:
+  - Switched the internal Blaze build configuration from unbundled per-module `k8-fastbuild` to production whole-program optimization (`k8-opt`), packaging all Google3 monorepo modules into `extension_bin.js` and reducing overall extension size.
+
+### Fixes
+- **Webview Crash on Timeout Retry**: Resolved `DOMException` and destroyed frame execution errors when clicking "Retry" on loading timeout cards by cloning and re-inserting the iframe node.
+
+- **Silent Overwrites of Active Developer Edits**: Fixed an issue where agent turns generated in the background could silently overwrite lines the user was concurrently editing.
+
+---
+
+### Under the Hood
+*This section documents exact Google3 monorepo changes, schemas, and build revisions.*
+
+- **Core & Lifecycle (`extension/src/cloud/...`)**:
+  - `feedback_redaction.ts`:
+    - Added `redactPii`, `redactDiagnostics`, and regex matchers for secrets (`qc`, `sc`), workspace flags (`rc`), home directories (`vc`), emails (`tc`), and external IPs (`wc`).
+  - `feedback.ts`:
+    - Added 24-hour rate limit check and `"Send anyway"` suppression bypass for diagnostic reports.
+  - `cde_auth_service.ts`:
+    - Synchronized CDE session tokens and cookie refresh intervals.
+
+- **Jetski & Diff Zones (`extension/src/devtools/cider/...`)**:
+  - `agent_edit_manager.ts`:
+    - Added `isCumulativeReview`, `coversTurn`, `coveredTurns`, and `shouldKeepOpenReview` for cumulative multi-turn reviews.
+    - Added `notifyStaleReviews` alerting when open reviews exceed `ageOutThreshold`.
+    - Added `onChatSent` turn counter tracking (`turnsElapsed`).
+    - Added user-edit collision detection (`VO`) warning when agent edits overwrite developer-modified lines.
+  - `inline_diff_manager.ts`:
+    - Added `watchOutsideChanges` option creating `vscode.workspace.createFileSystemWatcher("**/*")`.
+    - Added `scheduleOutsideChangeCheck`, `endAfterOutsideChange`, and `notifyOutsideChange`.
+    - Added safe reload and dirty buffer resolution (`dropDiff`, `forceReloadFromFile`).
+
+- **Protobuf & IPC Schemas (`extension/src/blaze-out/` & `extension/src/third_party/jetski/`)**:
+  - `cortex_pb.ts`: Added MCP App schemas (`McpAppEntrypointSchema`, `McpAppViewSchema`, `McpToolUiMetaSchema`, `McpResourceSchema`, `McpPromptSpecSchema`, `McpOAuthConfigSchema`, `McpServerInfoSchema`, `CnsSandboxMountSchema`); added `AgentSurface` enum; added `ListPluginAccountsToolConfigSchema`, `WorkflowsConfigSchema`, `ProfilesConfigSchema`, `ProfilePathEntrySchema`, `TurnsUpdateSchema`, `TurnSummarySchema`, and `CascadeNUXSessionSchema`.
+  - `security_annotations_pb.ts`: Added `SecurityAnnotationsSchema`, `PartyBoundary`, `ExternalCommunication_EgressCapability`, and `DataSensitivity_Confidentiality`.
+
+- **Webview Bridges (`extension/bridge.js`, `extension/loading_bridge.js`)**:
+  - `bridge.js`:
+    - Implemented `<template id="jetski-frame-template">` DOM cloning for iframe initialization and timeout reload recovery.
+    - Updated focus and theme change listeners (`Ro`, `kp`).
+
+- **Build Metadata (`extension/package.json`)**:
+  - `BUILD_BLAZE_RELEASE`: `release blaze-2026.10.01-2 (mainline @991109274)`
+  - `BUILD_EMBED_LABEL`: `antigravity_vscode_extension_1.8.0_RC00`
+  - `BUILD_HOSTNAME`: `lor5.prod.google.com`
+
+---
+
 ## [v1.7.0] - 2026-10-05
 
 ### Overhauled inline diffs, Auto Save safety, side-by-side reviews, and TLS fallback

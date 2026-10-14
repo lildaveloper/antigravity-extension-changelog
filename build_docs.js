@@ -29,11 +29,30 @@ function escapeHtml(str) {
 }
 
 function inlineMarkdown(text) {
-  let out = text;
-  out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
+  const codes = [];
+  let out = text.replace(/`([^`]+)`/g, (_, code) => {
+    const placeholder = `__CODE_TOKEN_${codes.length}__`;
+    codes.push(`<code>${escapeHtml(code)}</code>`);
+    return placeholder;
+  });
+
+  const links = [];
+  out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => {
+    const placeholder = `__LINK_TOKEN_${links.length}__`;
+    links.push(`<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`);
+    return placeholder;
+  });
+
+  out = out.replace(/</g, '&lt;').replace(/>/g, '&gt;');
   out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   out = out.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-  out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+
+  for (let i = 0; i < links.length; i++) {
+    out = out.replace(`__LINK_TOKEN_${i}__`, links[i]);
+  }
+  for (let i = 0; i < codes.length; i++) {
+    out = out.replace(`__CODE_TOKEN_${i}__`, codes[i]);
+  }
   return out;
 }
 

@@ -32,7 +32,10 @@ function extractSources() {
     const s = map.sections[i];
     const nextS = map.sections[i + 1];
 
-    const rawSource = (s.map && s.map.sources && s.map.sources[0]) || `module_${i}.js`;
+    let rawSource = (s.map && s.map.sources && s.map.sources[0]) || `module_${i}.js`;
+    if (s.map && s.map.file && s.map.sources && s.map.sources.length > 1) {
+      rawSource = s.map.file;
+    }
     const cleanPath = rawSource
       .replace('https://source.corp.google.com/piper///depot/google3/', '')
       .replace(/^\//, '');
