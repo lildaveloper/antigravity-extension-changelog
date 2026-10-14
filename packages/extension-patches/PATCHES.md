@@ -2,7 +2,7 @@
 
 This document serves as the technical rationale and upstream lifecycle tracker for all patches in this repository.
 
-The goal of this project is to maintain hotfixes for known issues in the Google Antigravity VS Code extension (`google.google-antigravity`) while tracking upstream releases. When Google resolves an issue upstream, the corresponding patch is marked as resolved and retired.
+The goal of this project is to maintain hotfixes for known issues in the Google Antigravity VS Code extension (`google.google-antigravity`) while tracking upstream releases. When Google resolves an issue upstream, or when a patch is deprecated/retired, the corresponding patch is archived.
 
 ---
 
@@ -10,62 +10,20 @@ The goal of this project is to maintain hotfixes for known issues in the Google 
 
 | Patch ID | Name | Upstream Status | Target Scope | Verified Version |
 | :--- | :--- | :--- | :--- | :--- |
-| `auto_open_priority` | Prioritize autoOpenFiles over skipOpen | Active | File reveal logic on agent edit events | v1.7.0 |
-| `terminal_view` | Enable Standalone Terminal for Background Tasks | Active | Webview panel fallback for background task terminal UI | v1.7.0 |
-| `binary_file_preview` | Enable Preview for Binary Files and Images | Active | Universal editor fallback for binary assets in openFile | v1.7.0 |
+| `terminal_view` | Enable Standalone Terminal for Background Tasks | Active | Webview panel fallback for background task terminal UI | v1.8.0 |
+| `binary_file_preview` | Enable Preview for Binary Files and Images | Active | Universal editor fallback for binary assets in openFile | v1.8.0 |
+| `auto_open_priority` | Prioritize autoOpenFiles over skipOpen | Retired / Removed (v1.8.0) | File reveal logic on agent edit events | v1.8.0 |
 | `line_counts` | Accurate Side-by-Side Line Counts | Resolved Upstream (Retired in v1.7.0) | Diff hunk line count calculation in side-by-side mode | v1.7.0 |
 
 ---
 
 ## Active Patches
 
-### 1. `auto_open_priority` - Prioritize autoOpenFiles over skipOpen
-
-* **Patch File:** [`patches/auto_open_priority.js`](patches/auto_open_priority.js)
-* **Status:** Active (Not resolved upstream)
-* **Target Version:** v1.7.0 (Verified)
-
-#### Problem Statement
-Users who configure `"antigravity.autoOpenFiles": true` expect files modified by the AI agent to open automatically in the editor for review. However, agent edit stream events frequently send `skipOpen: true`, which unconditionally suppresses the auto-open behavior and keeps modified files hidden in the background.
-
-#### Root Cause Analysis
-In `getOpenOptions(skipOpen, strictNav = false, keepOpen = false)`, the `skipOpen` flag is evaluated before checking `this.isAutoOpenEnabled()`:
-```javascript
-getOpenOptions(skipOpen, strictNav = false, keepOpen = false) {
-    if (skipOpen === true) {
-        return { shouldOpen: false, preview: true };
-    }
-    const autoOpenAll = this.isAutoOpenEnabled();
-    if (strictNav) return { shouldOpen: true, preview: !keepOpen };
-    if (autoOpenAll) return { shouldOpen: true, preview: false };
-    return { shouldOpen: false, preview: true };
-}
-```
-
-#### Fix Mechanism
-The patch reorders the priority so that explicit user configuration (`autoOpenAll = this.isAutoOpenEnabled()`) takes precedence over the agent's default `skipOpen` flag:
-```javascript
-getOpenOptions(skipOpen, strictNav = false, keepOpen = false) {
-    const autoOpenAll = this.isAutoOpenEnabled();
-    if (autoOpenAll) {
-        return { shouldOpen: true, preview: false };
-    }
-    if (strictNav) return { shouldOpen: true, preview: !keepOpen };
-    if (skipOpen === true) return { shouldOpen: false, preview: true };
-    return { shouldOpen: false, preview: true };
-}
-```
-
-#### Upstream Retirement Criteria
-Google adjusts `getOpenOptions` upstream so that user-configured `antigravity.autoOpenFiles: true` takes precedence over internal `skipOpen` parameters.
-
----
-
-### 2. `terminal_view` - Enable Standalone Terminal for Background Tasks
+### 1. `terminal_view` - Enable Standalone Terminal for Background Tasks
 
 * **Patch File:** [`patches/terminal_view.js`](patches/terminal_view.js)
 * **Status:** Active (Not resolved upstream)
-* **Target Version:** v1.7.0 (Verified)
+* **Target Version:** v1.8.0 (Verified)
 
 #### Problem Statement
 When a user launches background tasks (such as long-running build commands, watchers, or tests) during an Antigravity agent session, clicking the interactive task card in the chat UI fails to open the terminal stream. The user is unable to view real-time compilation logs, compiler warnings, or execution progress inside VS Code.
@@ -86,11 +44,11 @@ Google either declares `jetski.terminalView` under `contributes.views.panel` in 
 
 ---
 
-### 3. `binary_file_preview` - Enable Preview for Binary Files and Images
+### 2. `binary_file_preview` - Enable Preview for Binary Files and Images
 
 * **Patch File:** [`patches/binary_file_preview.js`](patches/binary_file_preview.js)
 * **Status:** Active (Not resolved upstream)
-* **Target Version:** v1.7.0 (Verified)
+* **Target Version:** v1.8.0 (Verified)
 
 #### Problem Statement
 When an agent inspects images, media, or other non-text files during a session, clicking the file pill or preview button in the chat interface throws an error toast:
@@ -111,7 +69,7 @@ Google updates `openFile` upstream to detect non-text/binary files and use `vsco
 
 ---
 
-## Resolved Upstream Patches (Archive)
+## Retired & Resolved Patches (Archive)
 
 ### 1. `line_counts` - Accurate Side-by-Side Line Counts
 
@@ -127,14 +85,28 @@ When `antigravity.enableInlineDiff` was set to `false`, the diff indicator in th
 
 ---
 
+### 2. `auto_open_priority` - Prioritize autoOpenFiles over skipOpen
+
+* **Patch File:** [`patches/auto_open_priority.js`](patches/auto_open_priority.js) (Archived)
+* **Status:** Retired / Removed in v1.8.0
+* **Retired In:** Extension v1.8.0
+
+#### Rationale for Removal
+While technically feasible to enforce `autoOpenFiles` precedence over the agent's internal `skipOpen` flag, automatically opening and focusing editor tabs for every file edited during multi-file agent runs creates disruptive window churn and tab clutter without providing substantial workflow utility. Navigating to modified files on demand via chat pills or the review diff interface offers a significantly cleaner, distraction-free experience.
+
+#### Original Problem Statement
+Users who configured `"antigravity.autoOpenFiles": true` expected files modified by the AI agent to open automatically in the editor for review. However, agent edit stream events frequently send `skipOpen: true`, which unconditionally suppressed the auto-open behavior and kept modified files hidden in the background.
+
+---
+
 ## Upstream Lifecycle & Retirement Workflow
 
 When a new version of the Antigravity extension is released:
 1. **Verification:** Inspect whether Google fixed any of the issues in their upstream bundle (using `packages/extension-history/` diffs or the `/audit-patches` skill).
-2. **Retirement:** If an issue is resolved upstream:
-   - Mark the patch status as `Resolved Upstream (vX.Y.Z)` in the matrix above.
+2. **Retirement:** If an issue is resolved upstream or retired:
+   - Mark the patch status in the matrix above.
    - Remove the patch module from [`patches/index.js`](patches/index.js).
-   - Move the patch entry to a "Resolved Upstream Patches" archive section.
+   - Move the patch entry to the archive section.
 
 ---
 

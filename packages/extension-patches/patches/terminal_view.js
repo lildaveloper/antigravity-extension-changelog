@@ -11,51 +11,13 @@ const ID = 'terminal_view';
 const NAME = 'Enable Standalone Terminal for Background Tasks';
 const DESCRIPTION = 'Renders interactive terminal output for background tasks in an editor tab when the Cider panel is unavailable.';
 
-const TARGET_1 = `            await this.terminalPanelProvider.showTerminal(request);
-            await vscode.commands.executeCommand('jetski.terminalView.focus');`;
+const TARGET_1 = `b(await c(this.terminalPanelProvider.showTerminal(a)));b(await c(l.commands.executeCommand("jetski.terminalView.focus")))`;
 
-const REPLACEMENT_1 = `            await this.terminalPanelProvider.showTerminal(request);
-            if (this.terminalPanelProvider.view) {
-                await vscode.commands.executeCommand('jetski.terminalView.focus');
-            }`;
+const REPLACEMENT_1 = `b(await c(this.terminalPanelProvider.showTerminal(a)));this.terminalPanelProvider.view&&b(await c(l.commands.executeCommand("jetski.terminalView.focus")))`;
 
-const TARGET_2 = `        if (this.view) {
-            // If the view is visible, reveal it (which might not be necessary if we already focused it via command,
-            // but good to ensure it's visible).
-            this.view.show(true);
-            await this.renderWebview();
-        }`;
+const TARGET_2 = `this.view&&(this.view.show(!0),b(await c(this.renderWebview())))`;
 
-const REPLACEMENT_2 = `        if (this.view) {
-            // If the view is visible, reveal it (which might not be necessary if we already focused it via command,
-            // but good to ensure it's visible).
-            this.view.show(true);
-            await this.renderWebview();
-        } else {
-            if (!this.panel) {
-                this.panel = vscode.window.createWebviewPanel(
-                    'jetski.terminalPanel',
-                    'Antigravity Terminal',
-                    vscode.ViewColumn.Beside,
-                    {
-                        enableScripts: true,
-                        retainContextWhenHidden: true,
-                        localResourceRoots: [this.context.extensionUri],
-                    }
-                );
-                this.panel.onDidDispose(() => {
-                    this.panel = undefined;
-                });
-            }
-            this.panel.reveal(vscode.ViewColumn.Beside);
-            const extraParams = \`&conversationId=\${encodeURIComponent(request.conversationId)}&stepIndex=\${request.stepIndex}\`;
-            await this.renderer.renderJetskiIframe(this.panel, {
-                targetRoute: 'terminal-standalone',
-                extraParams,
-                type: 'terminal',
-                location: 'editor',
-            });
-        }`;
+const REPLACEMENT_2 = `this.view?(this.view.show(!0),b(await c(this.renderWebview()))):(this.panel||(this.panel=l.window.createWebviewPanel("jetski.terminalPanel","Antigravity Terminal",l.ViewColumn.Beside,{enableScripts:!0,retainContextWhenHidden:!0,localResourceRoots:[this.context.extensionUri]}),this.panel.onDidDispose(()=>{this.panel=void 0})),this.panel.reveal(l.ViewColumn.Beside),b(await c(this.renderer.renderJetskiIframe(this.panel,{targetRoute:"terminal-standalone",extraParams:\`&conversationId=\${encodeURIComponent(a.conversationId)}&stepIndex=\${a.stepIndex}\`,type:"terminal",location:"editor"}))))`;
 
 const REPLACEMENTS = [
   [TARGET_1, REPLACEMENT_1],

@@ -11,40 +11,9 @@ const ID = 'binary_file_preview';
 const NAME = 'Enable Preview for Binary Files and Images';
 const DESCRIPTION = 'Falls back to VS Code\'s universal editor command when openTextDocument fails on binary files (e.g. images, media, PDFs).';
 
-const TARGET_1 = `                let doc;
-                try {
-                    doc = await vscode.workspace.openTextDocument(targetUri);
-                }
-                catch (openErr) {
-                    if (targetUri.toString() === uri.toString()) {
-                        throw openErr;
-                    }
-                    doc = await vscode.workspace.openTextDocument(uri);
-                }`;
+const TARGET_1 = `try{K=b(await c(l.workspace.openTextDocument(H)))}catch(M){b();if(H.toString()===w.toString())throw M;K=b(await c(l.workspace.openTextDocument(w)))}`;
 
-const REPLACEMENT_1 = `                let doc;
-                try {
-                    doc = await vscode.workspace.openTextDocument(targetUri);
-                }
-                catch (openErr) {
-                    if (targetUri.toString() !== uri.toString()) {
-                        try {
-                            doc = await vscode.workspace.openTextDocument(uri);
-                        }
-                        catch {
-                            // Ignore and proceed to vscode.open fallback
-                        }
-                    }
-                    if (!doc) {
-                        try {
-                            await vscode.commands.executeCommand('vscode.open', uri, { preview: true });
-                            return {};
-                        }
-                        catch {
-                            throw openErr;
-                        }
-                    }
-                }`;
+const REPLACEMENT_1 = `try{K=b(await c(l.workspace.openTextDocument(H)))}catch(M){b();if(H.toString()!==w.toString()){try{K=b(await c(l.workspace.openTextDocument(w)))}catch{b()}}if(!K){try{b(await c(l.commands.executeCommand("vscode.open",w,{preview:!0})));return{}}catch{b();throw M;}}}`;
 
 const REPLACEMENTS = [
   [TARGET_1, REPLACEMENT_1],

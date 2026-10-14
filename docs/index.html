@@ -1813,6 +1813,9 @@
     <li data-tab="extension" ><a href="#rel-ext-1.0.0" class="mobile-toc-link" ><span>v1.0.0</span></a></li>
   
 
+    <li data-tab="patches" style="display: none;"><a href="#rel-patches-1.8.0" class="mobile-toc-link" ><span>v1.8.0</span></a></li>
+  
+
     <li data-tab="patches" style="display: none;"><a href="#rel-patches-1.7.0" class="mobile-toc-link" ><span>v1.7.0</span></a></li>
   
 
@@ -1867,6 +1870,9 @@
   
 
     <li data-tab="extension" ><a href="#rel-ext-1.0.0" class="toc-link" ><span>v1.0.0</span></a></li>
+  
+
+    <li data-tab="patches" style="display: none;"><a href="#rel-patches-1.8.0" class="toc-link" ><span>v1.8.0</span></a></li>
   
 
     <li data-tab="patches" style="display: none;"><a href="#rel-patches-1.7.0" class="toc-link" ><span>v1.7.0</span></a></li>
@@ -2673,13 +2679,61 @@
         <div id="ext-panel-patches-vscode" class="rn-ext-panel active" role="tabpanel" aria-labelledby="ext-tab-patches-vscode" data-ext-panel="vscode">
           <div class="rn-timeline" id="releaseTimeline-patches">
             
+    <article class="rn-row" id="rel-patches-1.8.0">
+      <div class="rn-version-col">
+        <div class="rn-version-row">
+          <h3 class="rn-version-heading">
+            <a href="#rel-patches-1.8.0" class="rn-version-tag" title="View release 1.8.0">v1.8.0</a>
+          </h3>
+          <span class="rn-latest-tag">Latest</span>
+        </div>
+        <time class="rn-date-text" datetime="2026-10-14">October 14, 2026</time>
+      </div>
+      <div class="rn-card">
+        
+    <div class="rn-card-header">
+      <h3 class="rn-headline">Compatibility update and retirement of auto_open_priority for Extension v1.8.0</h3>
+      
+    <a href="https://github.com/lildaveloper/antigravity-extension-changelog/tree/main/packages/extension-patches" target="_blank" rel="noopener noreferrer" class="subnav-pill external-link rn-card-action">GitHub <span class="arrow" aria-hidden="true">↗</span></a>
+  
+    </div>
+  
+        <div class="rn-summary"><p>Audited companion hotfixes against Google Antigravity Extension v1.8.0. Upstream transitioned its build pipeline from unbundled TypeScript chunks (<code>k8-fastbuild</code>) to whole-program minification (<code>k8-opt</code>). The <code>auto_open_priority</code> hotfix has been retired and removed from the active registry, while <code>terminal_view</code> and <code>binary_file_preview</code> were updated for the minified bundle syntax and remain active.</p></div>
+        <div class="rn-categories">
+          
+      <details class="rn-accordion" data-release-detail="" data-item-title="Active Hotfixes">
+        <summary class="rn-accordion-summary">
+          <span class="rn-cat-title">Active Hotfixes<span class="rn-count">(2)</span></span>
+          <svg class="rn-chevron" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </summary>
+        <ul class="rn-list">
+          <li class="rn-item"><strong>Enable Standalone Terminal for Background Tasks (<code>terminal_view</code>)</strong>:<ul class="rn-sublist"><li class="rn-subitem">Code drift update: adapted patch syntax for <code>TerminalPanelProvider</code> and its caller in <code>extension_bin.js</code>.</li><li class="rn-subitem">Retains the editor tab (<code>vscode.window.createWebviewPanel</code>) fallback for background task terminal streams in standard VS Code where <code>jetski.terminalView</code> remains undeclared in package contributes.</li></ul></li><li class="rn-item"><strong>Enable Preview for Binary Files and Images (<code>binary_file_preview</code>)</strong>:<ul class="rn-sublist"><li class="rn-subitem">Code drift update: adapted the <code>openFile</code> error-handling fallback in <code>extension_bin.js</code>.</li><li class="rn-subitem">Catches <code>openTextDocument</code> binary asset errors and delegates to <code>vscode.open</code> so images and non-text files open cleanly without error notifications.</li></ul></li>
+        </ul>
+      </details>
+    
+
+      <details class="rn-accordion" data-release-detail="" data-item-title="Removed">
+        <summary class="rn-accordion-summary">
+          <span class="rn-cat-title">Removed<span class="rn-count">(1)</span></span>
+          <svg class="rn-chevron" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </summary>
+        <ul class="rn-list">
+          <li class="rn-item"><strong>Prioritize Auto-Open on Agent Edits (<code>auto_open_priority</code>)</strong>:<ul class="rn-sublist"><li class="rn-subitem"><strong>Retired and removed in Extension v1.8.0</strong>: Removed from the active patch registry. While technically possible to force <code>autoOpenFiles</code> precedence over internal <code>skipOpen</code> flags, automatically popping open tabs for every file edited during multi-file agent runs creates disruptive tab clutter and editor churn without offering real workflow utility. Navigating to modified files on demand via chat pills or the review diff panel provides a much cleaner, distraction-free experience.</li></ul></li>
+        </ul>
+      </details>
+    
+        </div>
+      </div>
+    </article>
+  
+
     <article class="rn-row" id="rel-patches-1.7.0">
       <div class="rn-version-col">
         <div class="rn-version-row">
           <h3 class="rn-version-heading">
             <a href="#rel-patches-1.7.0" class="rn-version-tag" title="View release 1.7.0">v1.7.0</a>
           </h3>
-          <span class="rn-latest-tag">Latest</span>
+          
         </div>
         <time class="rn-date-text" datetime="2026-10-05">October 5, 2026</time>
       </div>

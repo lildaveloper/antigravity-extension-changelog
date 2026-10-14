@@ -12,6 +12,27 @@ VS Code
 
 ---
 
+## [v1.8.0] - 2026-10-14
+
+### Compatibility update and retirement of auto_open_priority for Extension v1.8.0
+
+Audited companion hotfixes against Google Antigravity Extension v1.8.0. Upstream transitioned its build pipeline from unbundled TypeScript chunks (`k8-fastbuild`) to whole-program minification (`k8-opt`). The `auto_open_priority` hotfix has been retired and removed from the active registry, while `terminal_view` and `binary_file_preview` were updated for the minified bundle syntax and remain active.
+
+### Active Hotfixes
+- **Enable Standalone Terminal for Background Tasks (`terminal_view`)**:
+  - Code drift update: adapted patch syntax for `TerminalPanelProvider` and its caller in `extension_bin.js`.
+  - Retains the editor tab (`vscode.window.createWebviewPanel`) fallback for background task terminal streams in standard VS Code where `jetski.terminalView` remains undeclared in package contributes.
+
+- **Enable Preview for Binary Files and Images (`binary_file_preview`)**:
+  - Code drift update: adapted the `openFile` error-handling fallback in `extension_bin.js`.
+  - Catches `openTextDocument` binary asset errors and delegates to `vscode.open` so images and non-text files open cleanly without error notifications.
+
+### Removed
+- **Prioritize Auto-Open on Agent Edits (`auto_open_priority`)**:
+  - **Retired and removed in Extension v1.8.0**: Removed from the active patch registry. While technically possible to force `autoOpenFiles` precedence over internal `skipOpen` flags, automatically popping open tabs for every file edited during multi-file agent runs creates disruptive tab clutter and editor churn without offering real workflow utility. Navigating to modified files on demand via chat pills or the review diff panel provides a much cleaner, distraction-free experience.
+
+---
+
 ## [v1.7.0] - 2026-10-05
 
 ### Compatibility update and upstream retirement for Extension v1.7.0
